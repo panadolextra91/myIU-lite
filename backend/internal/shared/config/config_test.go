@@ -4,7 +4,7 @@ import (
 	"os"
 	"testing"
 
-	"github.com/panadolextra91/myiu-lite/backend/internal/config"
+	"github.com/panadolextra91/myiu-lite/backend/internal/shared/config"
 	"github.com/stretchr/testify/require"
 )
 

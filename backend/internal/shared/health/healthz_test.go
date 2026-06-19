@@ -1,4 +1,4 @@
-package api_test
+package health_test
 
 import (
 	"context"
@@ -8,9 +8,10 @@ import (
 	"os"
 	"testing"
 
+	"github.com/gin-gonic/gin"
 	"github.com/jackc/pgx/v5/pgxpool"
-	"github.com/panadolextra91/myiu-lite/backend/internal/api"
-	"github.com/panadolextra91/myiu-lite/backend/internal/db"
+	"github.com/panadolextra91/myiu-lite/backend/internal/shared/db"
+	"github.com/panadolextra91/myiu-lite/backend/internal/shared/health"
 	"github.com/stretchr/testify/require"
 )
 
@@ -33,7 +34,8 @@ func TestHealthz_Integration(t *testing.T) {
 	require.Equal(t, int64(1), count, "Expected exactly 1 seeded admin")
 
 	// Verify /healthz HTTP response
-	router := api.NewRouter(pool)
+	router := gin.Default()
+	health.RegisterRoutes(router, pool)
 	
 	req, _ := http.NewRequest(http.MethodGet, "/healthz", nil)
 	w := httptest.NewRecorder()
