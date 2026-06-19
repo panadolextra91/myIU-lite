@@ -114,13 +114,57 @@ Which phases cover which requirements. Updated during roadmap creation.
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| (populated during roadmap creation) | — | Pending |
+| INFRA-01 | Phase 1 | Pending |
+| INFRA-02 | Phase 1 | Pending |
+| INFRA-03 | Phase 1 | Pending |
+| INFRA-04 | Phase 1 | Pending |
+| INFRA-05 | Phase 1 | Pending |
+| INFRA-06 | Phase 1 | Pending |
+| INFRA-07 | Phase 1 | Pending |
+| AUTH-01 | Phase 2 | Pending |
+| AUTH-02 | Phase 2 | Pending |
+| AUTH-03 | Phase 2 | Pending |
+| AUTH-04 | Phase 2 | Pending |
+| AUTH-05 | Phase 2 | Pending |
+| ADMIN-01 | Phase 3 | Pending |
+| ADMIN-02 | Phase 3 | Pending |
+| ADMIN-03 | Phase 3 | Pending |
+| ADMIN-04 | Phase 3 | Pending |
+| ADMIN-05 | Phase 3 | Pending |
+| ADMIN-06 | Phase 3 | Pending |
+| ADMIN-07 | Phase 3 | Pending |
+| ADMIN-08 | Phase 3 | Pending |
+| ASMT-01 | Phase 4 | Pending |
+| ASMT-02 | Phase 4 | Pending |
+| ASMT-03 | Phase 4 | Pending |
+| ASMT-04 | Phase 4 | Pending |
+| ASMT-05 | Phase 4 | Pending |
+| ASMT-06 | Phase 4 | Pending |
+| QUIZ-01 | Phase 4 | Pending |
+| QUIZ-02 | Phase 4 | Pending |
+| QUIZ-03 | Phase 4 | Pending |
+| QUIZ-04 | Phase 4 | Pending |
+| QUIZ-05 | Phase 4 | Pending |
+| QUIZ-06 | Phase 4 | Pending |
+| NOTIF-01 | Phase 4 | Pending |
+| NOTIF-02 | Phase 4 | Pending |
+| GRADE-01 | Phase 5 | Pending |
+| GRADE-02 | Phase 5 | Pending |
+| GRADE-03 | Phase 5 | Pending |
+| GRADE-04 | Phase 5 | Pending |
+| GRADE-05 | Phase 5 | Pending |
+| ANNC-01 | Phase 5 | Pending |
+| ANNC-02 | Phase 5 | Pending |
+| ANNC-03 | Phase 5 | Pending |
+| REQ-01 | Phase 5 | Pending |
+| REQ-02 | Phase 5 | Pending |
+| REQ-03 | Phase 5 | Pending |
 
 **Coverage:**
-- v1 requirements: 41 total
-- Mapped to phases: 0 (pending roadmap)
-- Unmapped: 41 ⚠️
+- v1 requirements: 45 total
+- Mapped to phases: 45 ✓
+- Unmapped: 0
 
 ---
 *Requirements defined: 2026-06-19*
-*Last updated: 2026-06-19 after initial definition*
+*Last updated: 2026-06-19 after roadmap creation (traceability populated; v1 count corrected to 45)*
