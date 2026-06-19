@@ -85,6 +85,7 @@ Students and lecturers can run a course end-to-end (assignments, quizzes, grades
 | D-02: Per-assignment late policy (deadline + accept-late + optional threshold days) | Lecturer controls lateness; no global rule | — Pending |
 | D-03: Per-quiz config (max questions, max grade, shuffle, CSV-or-UI question source, retake 0..N) | Lecturer-tunable quizzes | — Pending |
 | D-04: Weighted gradebook — Inclass (with sub-weights) + Midterm + Final, each a % of overall; midterm/final entered manually | Reflects real course grading; midterm/final are offline exams | — Pending |
+| D-05: One project-wide `.planning/DESIGN-SYSTEM.md` instead of per-phase UI-SPEC; minimal shadcn/ui-only, light+dark themes, 6px radius, Lucide icons, WCAG AA | User wants a single global UI ruleset, not per-phase specs | — Pending |
 
 ## Evolution
 
