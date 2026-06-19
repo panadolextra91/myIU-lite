@@ -6,3 +6,21 @@ node_modules
 .DS_Stores
 .planning/research/.cache
 
+# Env
+backend/.env
+frontend/.env
+frontend/.env.local
+
+# Node
+node_modules/
+dist/
+
+# Go
+backend/bin/
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+*.test
+*.out
