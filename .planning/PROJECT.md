@@ -61,6 +61,11 @@ Students and lecturers can run a course end-to-end (assignments, quizzes, grades
 - **Storage**: Cloudinary for uploaded files, configured via environment variables.
 - **Submissions**: PDF and ZIP only, hard 10MB limit.
 - **Security/compliance**: forced first-login password change; audit log for all admin actions.
+- **Database runtime**: PostgreSQL runs via Docker only — never natively.
+- **Repo structure**: two top-level folders — `backend/` (Go source) and `frontend/` (React source). No per-folder README required.
+- **Branching**: exactly three branches — `main`, `backend`, `frontend`.
+- **CI/CD**: GitHub Actions workflow auto-triggers on push to `backend`, `frontend`, and `main`. Merge is blocked unless tests pass and DB + syntax checks succeed.
+- **Testing**: every phase must pass unit tests and integration tests.
 
 ## Key Decisions
 
@@ -73,6 +78,9 @@ Students and lecturers can run a course end-to-end (assignments, quizzes, grades
 | Default password = birthday `DDMMYYYY`, forced change | Simple admin provisioning from CSV, secured by first-login reset | — Pending |
 | Auto soft-delete courses 1 month after end date | Removes manual cleanup for admin; soft delete keeps history | — Pending |
 | Audit log for admin actions | Admin can change others' passwords — needs accountability | — Pending |
+| PostgreSQL via Docker only | Reproducible DB env, no native install drift | — Pending |
+| Monorepo: `backend/` + `frontend/` folders, 3 branches (main/backend/frontend) | Clear separation, simple branch-per-stack CI triggers | — Pending |
+| GitHub Actions CI gate on tests + DB + syntax | No broken code merges to protected branches | — Pending |
 
 ## Evolution
 
