@@ -95,7 +95,8 @@ func TestChangePasswordIntegration(t *testing.T) {
 
 		require.Equal(t, http.StatusForbidden, w.Code)
 		var resp map[string]interface{}
-		json.Unmarshal(w.Body.Bytes(), &resp)
+		err := json.Unmarshal(w.Body.Bytes(), &resp)
+		require.NoError(t, err)
 		errMap := resp["error"].(map[string]interface{})
 		require.Equal(t, "password_change_required", errMap["code"])
 	})
@@ -124,7 +125,8 @@ func TestChangePasswordIntegration(t *testing.T) {
 
 		require.Equal(t, http.StatusBadRequest, w.Code)
 		var resp map[string]interface{}
-		json.Unmarshal(w.Body.Bytes(), &resp)
+		err := json.Unmarshal(w.Body.Bytes(), &resp)
+		require.NoError(t, err)
 		errMap := resp["error"].(map[string]interface{})
 		require.Equal(t, "current_password_invalid", errMap["code"])
 	})
@@ -144,7 +146,8 @@ func TestChangePasswordIntegration(t *testing.T) {
 
 		require.Equal(t, http.StatusBadRequest, w.Code)
 		var resp map[string]interface{}
-		json.Unmarshal(w.Body.Bytes(), &resp)
+		err := json.Unmarshal(w.Body.Bytes(), &resp)
+		require.NoError(t, err)
 		errMap := resp["error"].(map[string]interface{})
 		require.Equal(t, "password_too_short", errMap["code"])
 	})
@@ -164,7 +167,8 @@ func TestChangePasswordIntegration(t *testing.T) {
 
 		require.Equal(t, http.StatusBadRequest, w.Code)
 		var resp map[string]interface{}
-		json.Unmarshal(w.Body.Bytes(), &resp)
+		err := json.Unmarshal(w.Body.Bytes(), &resp)
+		require.NoError(t, err)
 		errMap := resp["error"].(map[string]interface{})
 		require.Equal(t, "same_as_current", errMap["code"])
 	})
@@ -184,7 +188,8 @@ func TestChangePasswordIntegration(t *testing.T) {
 
 		require.Equal(t, http.StatusBadRequest, w.Code)
 		var resp map[string]interface{}
-		json.Unmarshal(w.Body.Bytes(), &resp)
+		err := json.Unmarshal(w.Body.Bytes(), &resp)
+		require.NoError(t, err)
 		errMap := resp["error"].(map[string]interface{})
 		require.Equal(t, "confirm_mismatch", errMap["code"])
 	})

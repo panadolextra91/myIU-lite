@@ -109,7 +109,8 @@ func TestAuthLoginIntegration(t *testing.T) {
 
 		require.Equal(t, http.StatusUnauthorized, w.Code)
 		var resp map[string]interface{}
-		json.Unmarshal(w.Body.Bytes(), &resp)
+		err := json.Unmarshal(w.Body.Bytes(), &resp)
+		require.NoError(t, err)
 		errMap := resp["error"].(map[string]interface{})
 		require.Equal(t, "invalid_credentials", errMap["code"])
 	})

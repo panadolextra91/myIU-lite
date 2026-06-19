@@ -126,7 +126,8 @@ func TestAuthRefreshIntegration(t *testing.T) {
 
 		require.Equal(t, http.StatusForbidden, w.Code)
 		var resp map[string]interface{}
-		json.Unmarshal(w.Body.Bytes(), &resp)
+		err := json.Unmarshal(w.Body.Bytes(), &resp)
+		require.NoError(t, err)
 		errMap := resp["error"].(map[string]interface{})
 		require.Equal(t, "role_forbidden", errMap["code"])
 	})
@@ -167,7 +168,8 @@ func TestAuthRefreshIntegration(t *testing.T) {
 	})
 
 	t.Run("POST /auth/refresh after password change fails", func(t *testing.T) {
-		pool.Exec(context.Background(), "UPDATE users SET password_changed_at = now() WHERE id = $1", adminID)
+		_, err := pool.Exec(context.Background(), "UPDATE users SET password_changed_at = now() WHERE id = $1", adminID)
+		require.NoError(t, err)
 
 		req := httptest.NewRequest(http.MethodPost, "/auth/refresh", nil)
 		req.AddCookie(adminRefreshCookie) 
@@ -176,7 +178,8 @@ func TestAuthRefreshIntegration(t *testing.T) {
 
 		require.Equal(t, http.StatusUnauthorized, w.Code)
 		var resp map[string]interface{}
-		json.Unmarshal(w.Body.Bytes(), &resp)
+		err = json.Unmarshal(w.Body.Bytes(), &resp)
+		require.NoError(t, err)
 		errMap := resp["error"].(map[string]interface{})
 		require.Equal(t, "refresh_invalid", errMap["code"])
 	})
