@@ -616,16 +616,18 @@ The single thinnest "it works" demonstration:
 
 **No `[ASSUMED]` claims touch locked decisions or security-critical controls** — bcrypt/cost-12, no-plaintext, no-committed-secrets, and the merge-block mechanism are all CITED/VERIFIED.
 
-## Open Questions
+## Open Questions (RESOLVED)
 
 1. **Are `backend` and `frontend` branches themselves protected, or only `main`?**
    - What we know: D-09 / INFRA-05 mention all three branches as CI triggers; criteria #4 says "a protected branch."
    - What's unclear: whether PRs target `main` only (so only `main` needs protection) or also into `backend`/`frontend`.
    - Recommendation: protect at least `main`; the user decides during branch-protection setup. The proof PR should target a protected branch.
+   - **(RESOLVED):** Protect `main` at minimum; the user confirms the exact scope (main-only vs all three) during Plan 01-03 Task 1 branch-protection setup. Low-risk — does not affect any other plan.
 
 2. **sqlc `schema:` pointed at `migrations/` with a seed (INSERT) migration present — any parse friction?**
    - What we know: sqlc infers schema from DDL; INSERTs are DML, not DDL, so they're ignored for type inference.
    - Recommendation: keep DDL in `000001` and the seed INSERT in `000002`; if sqlc ever complains, point `schema:` at a dedicated schema-only file. Verify during execution (cheap).
+   - **(RESOLVED):** DDL in `000001`, seed INSERT in `000002` — INSERTs are DML and are ignored by sqlc schema inference, so this layout is verified-safe. Plan 01-01 already splits the migrations this way.
 
 ## Environment Availability
 

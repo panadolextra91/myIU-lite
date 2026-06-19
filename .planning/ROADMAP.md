@@ -7,6 +7,7 @@ myIU lite is built bottom-up along its dependency arrows: a proven-blocking CI g
 ## Phases
 
 **Phase Numbering:**
+
 - Integer phases (1, 2, 3): Planned milestone work
 - Decimal phases (2.1, 2.2): Urgent insertions (marked with INSERTED)
 
@@ -21,71 +22,94 @@ Decimal phases appear between their surrounding integers in numeric order.
 ## Phase Details
 
 ### Phase 1: Foundation & Data Core
+
 **Goal**: A running monorepo skeleton where Postgres comes up via Docker, schema is migration-managed, config loads from `.env`, and the CI gate is proven to block a deliberately-failing PR.
 **Mode:** mvp
 **Depends on**: Nothing (first phase)
 **Requirements**: INFRA-01, INFRA-02, INFRA-03, INFRA-04, INFRA-05, INFRA-06, INFRA-07
 **Success Criteria** (what must be TRUE):
+
   1. A developer can clone the repo, run one Docker command, and have `backend/` + `frontend/` plus a Postgres database running with all migrations applied.
   2. Backend reads DB, JWT secret, and Cloudinary credentials from `.env` with no hardcoded secrets.
   3. Pushing to `main`/`backend`/`frontend` triggers GitHub Actions that runs unit + integration tests against a real Postgres service container.
   4. A pull request that deliberately fails a test or build is blocked from merging by a required status check (verified, not just configured).
+
 **Plans**: 3 plans
+**Wave 1**
+
 - [ ] 01-01-PLAN.md — Walking skeleton: Postgres-only compose, migrations + bootstrap-admin seed, `.env` config, sqlc, Gin `/healthz`, frontend stub (INFRA-01/02/03/04)
+
+**Wave 2** *(blocked on Wave 1 completion)*
+
 - [ ] 01-02-PLAN.md — GitHub Actions `ci` workflow: services Postgres, migrate-before-test, lint + frontend build (INFRA-05/06)
+
+**Wave 3** *(blocked on Wave 2 completion)*
+
 - [ ] 01-03-PLAN.md — Merge-block proof: user branch-protection setup + throwaway failing-PR evidence (INFRA-07)
 
 ### Phase 2: Auth, RBAC & Forced First-Login
+
 **Goal**: Any user can log in and receive a role-carrying JWT, must change a default password before doing anything else, and every route is gated by role and ownership.
 **Mode:** mvp
 **Depends on**: Phase 1
 **Requirements**: AUTH-01, AUTH-02, AUTH-03, AUTH-04, AUTH-05
 **Success Criteria** (what must be TRUE):
+
   1. A user can log in with username + password, receive a JWT carrying their role, and log out.
   2. A logged-in user can change their own password.
   3. A user flagged `must_change_password` is server-side restricted to only change-password/logout until they reset it — bypassing the SPA does not unlock other endpoints.
   4. Requests to endpoints outside a user's role, or against records they don't own, are rejected with 403 (role gate + ownership check, never trusting client-supplied IDs).
+
 **Plans**: TBD
 **UI hint**: yes
 
 ### Phase 3: Admin Provisioning & Course Lifecycle
+
 **Goal**: Admin can provision the entire term — accounts, enrollment, courses — from CSV or UI, every mutation is audit-logged, and stale courses auto-soft-delete.
 **Mode:** mvp
 **Depends on**: Phase 2
 **Requirements**: ADMIN-01, ADMIN-02, ADMIN-03, ADMIN-04, ADMIN-05, ADMIN-06, ADMIN-07, ADMIN-08
 **Success Criteria** (what must be TRUE):
+
   1. Admin can create student/lecturer accounts manually or by uploading a CSV that is validated whole-file, all-or-nothing, with a per-row error report and no partial inserts.
   2. New accounts default to username = ID and password = birthday `DDMMYYYY` with the forced-change flag set; admin can reset any user back to that default.
   3. Admin can CRUD courses (start/end dates) and assign students + lecturers to a course from a CSV list (idempotent enrollment).
   4. Every admin mutation writes an append-only audit row (actor, action, target, timestamp) that cannot be edited or deleted.
   5. Courses are automatically soft-deleted one month after their end date with no manual action, and each sweep is itself audit-logged.
+
 **Plans**: TBD
 **UI hint**: yes
 
 ### Phase 4: Assignments & Quizzes
+
 **Goal**: Lecturers can run graded coursework — file-upload assignments with late policy and auto-graded MCQ quizzes — and students are auto-notified of results via a shared persisted notification primitive.
 **Mode:** mvp
 **Depends on**: Phase 3
 **Requirements**: ASMT-01, ASMT-02, ASMT-03, ASMT-04, ASMT-05, ASMT-06, QUIZ-01, QUIZ-02, QUIZ-03, QUIZ-04, QUIZ-05, QUIZ-06, NOTIF-01, NOTIF-02
 **Success Criteria** (what must be TRUE):
+
   1. A lecturer can create an assignment with a deadline and an accept-late/threshold policy; a student can submit a single PDF or ZIP (≤10MB, magic-byte validated server-side), and the server enforces the late policy by its own timestamp.
   2. Submitted files are stored on Cloudinary as authenticated (non-public) assets and are only downloadable through backend-generated short-lived signed URLs gated by role/ownership.
   3. A lecturer can grade a submission, and saving the grade auto-notifies the student in the same transaction.
   4. A lecturer can create an MCQ quiz (CSV or UI questions; configurable max questions, max grade, shuffle, retake count); the take-quiz API never exposes which option is correct, and shuffle preserves the correct-answer mapping by stable option ID.
   5. The system auto-grades a quiz on submit (idempotent per attempt), records the score, and enforces the configured retake limit with attempts tracked distinctly.
+
 **Plans**: TBD
 **UI hint**: yes
 
 ### Phase 5: Gradebook, Announcements & Requests
+
 **Goal**: A course can be run to completion without email — lecturers compute weighted final grades, broadcast or target announcements, and answer student requests, all auto-delivered to the right students.
 **Mode:** mvp
 **Depends on**: Phase 4
 **Requirements**: GRADE-01, GRADE-02, GRADE-03, GRADE-04, GRADE-05, ANNC-01, ANNC-02, ANNC-03, REQ-01, REQ-02, REQ-03
 **Success Criteria** (what must be TRUE):
+
   1. A lecturer can configure a course grade scheme as Inclass + Midterm + Final summing to 100%, with Inclass sub-components summing to 100% of Inclass, and enter Midterm/Final manually.
   2. The system computes each student's weighted overall grade, and a student can view their grades for a course with availability auto-notified.
   3. A lecturer can send an announcement to all enrolled students or to specific ones, and the targeted students see it persisted on next login (no email).
   4. A student can send a leave-early / absence / custom request to their course's lecturer, and the lecturer's yes/no reply is auto-delivered back to that student.
+
 **Plans**: TBD
 **UI hint**: yes
 
