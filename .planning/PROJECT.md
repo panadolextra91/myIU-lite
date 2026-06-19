@@ -63,7 +63,7 @@ Students and lecturers can run a course end-to-end (assignments, quizzes, grades
 - **Security/compliance**: forced first-login password change; audit log for all admin actions.
 - **Database runtime**: PostgreSQL runs via Docker only — never natively.
 - **Repo structure**: two top-level folders — `backend/` (Go source) and `frontend/` (React source). No per-folder README required.
-- **Branching (GitHub Flow — agents MUST follow):** `main` is the ONLY long-lived branch (protected, always deployable). Never commit directly to `main`. Every change is made on a short-lived branch cut from latest `main`, named `feat/<slug>` | `fix/<slug>` | `chore/<slug>` | `docs/<slug>` — one branch per phase/feature (backend + frontend together). Open a PR, squash-merge into `main`, then delete the branch. (Replaces the former `main`/`backend`/`frontend` three-branch model.)
+- **Branching (GitHub Flow — agents MUST follow):** `main` is the ONLY long-lived branch (protected, always deployable). Never commit directly to `main`. Every change is made on a short-lived branch cut from latest `main`, named `ft/<slug>` | `fix/<slug>` | `chore/<slug>` | `docs/<slug>` — one branch per phase/feature (backend + frontend together). Open a PR, squash-merge into `main`, then delete the branch. (Replaces the former `main`/`backend`/`frontend` three-branch model.)
 - **CI/CD**: GitHub Actions runs the `ci` job on every pull request (and on push to `main`). Merge into `main` is blocked unless `ci` passes (unit + integration tests against real Postgres, DB migrations, lint/build).
 - **Testing**: every phase must pass unit tests and integration tests.
 
@@ -79,7 +79,7 @@ Students and lecturers can run a course end-to-end (assignments, quizzes, grades
 | Auto soft-delete courses 1 month after end date | Removes manual cleanup for admin; soft delete keeps history | — Pending |
 | Audit log for admin actions | Admin can change others' passwords — needs accountability | — Pending |
 | PostgreSQL via Docker only | Reproducible DB env, no native install drift | — Pending |
-| Monorepo: `backend/` + `frontend/` folders. GitHub Flow: `main` is the only long-lived branch; short-lived `feat/`/`fix/`/`chore/`/`docs/` branches per phase (backend + frontend together) → PR → squash-merge → delete | Vertical phases span both stacks; per-stack branches forced an awkward sync dance. Delete-on-merge keeps the repo clean (only `main` + in-flight work). Supersedes the 3-branch model. | — Pending |
+| Monorepo: `backend/` + `frontend/` folders. GitHub Flow: `main` is the only long-lived branch; short-lived `ft/`/`fix/`/`chore/`/`docs/` branches per phase (backend + frontend together) → PR → squash-merge → delete | Vertical phases span both stacks; per-stack branches forced an awkward sync dance. Delete-on-merge keeps the repo clean (only `main` + in-flight work). Supersedes the 3-branch model. | — Pending |
 | GitHub Actions CI gate on tests + DB + syntax | No broken code merges to protected branches | — Pending |
 | D-01: No self-service forgot-password; admin resets to default `DDMMYYYY`, forced change on next login | No email/SMS channel exists in the design | — Pending |
 | D-02: Per-assignment late policy (deadline + accept-late + optional threshold days) | Lecturer controls lateness; no global rule | — Pending |
@@ -106,4 +106,4 @@ This document evolves at phase transitions and milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-06-19 after initialization*
+*Last updated: 2026-06-20 after Phase 2 completion*

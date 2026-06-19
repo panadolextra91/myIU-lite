@@ -17,7 +17,7 @@ A lite student management platform for a university, called **myIU**. It gives t
 - **Security/compliance**: forced first-login password change; audit log for all admin actions.
 - **Database runtime**: PostgreSQL runs via Docker only — never natively.
 - **Repo structure**: two top-level folders — `backend/` (Go source) and `frontend/` (React source). No per-folder README required.
-- **Branching (GitHub Flow — agents MUST follow):** `main` is the ONLY long-lived branch (protected, always deployable). Never commit directly to `main`. Every change is made on a short-lived branch cut from latest `main`, named `feat/<slug>` | `fix/<slug>` | `chore/<slug>` | `docs/<slug>` — one branch per phase/feature (backend + frontend together). Open a PR, squash-merge into `main`, then delete the branch. (Replaces the former `main`/`backend`/`frontend` three-branch model.)
+- **Branching (GitHub Flow — agents MUST follow):** `main` is the ONLY long-lived branch (protected, always deployable). Never commit directly to `main`. Every change is made on a short-lived branch cut from latest `main`, named `ft/<slug>` | `fix/<slug>` | `chore/<slug>` | `docs/<slug>` — one branch per phase/feature (backend + frontend together). Open a PR, squash-merge into `main`, then delete the branch. (Replaces the former `main`/`backend`/`frontend` three-branch model.)
 - **CI/CD**: GitHub Actions runs the `ci` job on every pull request (and on push to `main`). Merge into `main` is blocked unless `ci` passes (unit + integration tests against real Postgres, DB migrations, lint/build).
 - **Testing**: every phase must pass unit tests and integration tests.
 

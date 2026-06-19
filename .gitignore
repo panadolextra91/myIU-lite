@@ -9,7 +9,7 @@
 !.claude/CLAUDE.md
 
 node_modules
-.DS_Stores
+.DS_Store
 
 # Env
 backend/.env

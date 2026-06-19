@@ -13,8 +13,8 @@ myIU lite is built bottom-up along its dependency arrows: a proven-blocking CI g
 
 Decimal phases appear between their surrounding integers in numeric order.
 
-- [ ] **Phase 1: Foundation & Data Core** - Monorepo, Docker Postgres, migrations, .env, and a CI gate proven to block un-mergeable PRs
-- [ ] **Phase 2: Auth, RBAC & Forced First-Login** - Login/logout, server-enforced password change, role + ownership authorization
+- [x] **Phase 1: Foundation & Data Core** - Monorepo, Docker Postgres, migrations, .env, and a CI gate proven to block un-mergeable PRs
+- [x] **Phase 2: Auth, RBAC & Forced First-Login** - Login/logout, server-enforced password change, role + ownership authorization
 - [ ] **Phase 3: Admin Provisioning & Course Lifecycle** - CSV accounts/enrollment, course CRUD, append-only audit log, auto soft-delete sweep
 - [ ] **Phase 4: Assignments & Quizzes** - File-upload submission + grading and auto-graded MCQ quizzes, on a shared notification primitive
 - [ ] **Phase 5: Gradebook, Announcements & Requests** - Weighted grades, announcement fan-out, and student↔lecturer requests with auto-delivered replies
@@ -37,15 +37,15 @@ Decimal phases appear between their surrounding integers in numeric order.
 **Plans**: 3 plans
 **Wave 1**
 
-- [ ] 01-01-PLAN.md — Walking skeleton: Postgres-only compose, migrations + bootstrap-admin seed, `.env` config, sqlc, Gin `/healthz`, frontend stub (INFRA-01/02/03/04)
+- [x] 01-01-PLAN.md — Walking skeleton: Postgres-only compose, migrations + bootstrap-admin seed, `.env` config, sqlc, Gin `/healthz`, frontend stub (INFRA-01/02/03/04)
 
 **Wave 2** *(blocked on Wave 1 completion)*
 
-- [ ] 01-02-PLAN.md — GitHub Actions `ci` workflow: services Postgres, migrate-before-test, lint + frontend build (INFRA-05/06)
+- [x] 01-02-PLAN.md — GitHub Actions `ci` workflow: services Postgres, migrate-before-test, lint + frontend build (INFRA-05/06)
 
 **Wave 3** *(blocked on Wave 2 completion)*
 
-- [ ] 01-03-PLAN.md — Merge-block proof: user branch-protection setup + throwaway failing-PR evidence (INFRA-07)
+- [x] 01-03-PLAN.md — Merge-block proof: user branch-protection setup + throwaway failing-PR evidence (INFRA-07)
 
 ### Phase 2: Auth, RBAC & Forced First-Login
 
@@ -60,7 +60,19 @@ Decimal phases appear between their surrounding integers in numeric order.
   3. A user flagged `must_change_password` is server-side restricted to only change-password/logout until they reset it — bypassing the SPA does not unlock other endpoints.
   4. Requests to endpoints outside a user's role, or against records they don't own, are rejected with 403 (role gate + ownership check, never trusting client-supplied IDs).
 
-**Plans**: TBD
+**Plans**: 3 plans
+**Wave 1**
+
+- [x] 02-01-PLAN.md — Login slice: migration 000003 (password_changed_at), sqlc user queries, JWT helpers, CORS, AuthMiddleware skeleton, config; /auth/login + /auth/me + /auth/logout; FE stack bootstrap + Login + role landing pages (AUTH-01/02)
+
+**Wave 2** *(blocked on Wave 1 completion)*
+
+- [x] 02-02-PLAN.md — Forced first-login slice: AuthMiddleware step-5 allow-list (D-15), /auth/change-password (D-17/18/19), session-kill on change; FE ChangePassword + post-login redirect (AUTH-03/04)
+
+**Wave 3** *(blocked on Wave 2 completion)*
+
+- [x] 02-03-PLAN.md — RBAC slice: RequireRole (403 role_forbidden), /auth/refresh with password_changed_at kill-switch, self-ownership pattern; FE 401 refresh interceptor + ProtectedRoute + RoleGuard + AppLayout + role trees (AUTH-05/01)
+
 **UI hint**: yes
 
 ### Phase 3: Admin Provisioning & Course Lifecycle
@@ -120,8 +132,8 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. Foundation & Data Core | 0/3 | Not started | - |
-| 2. Auth, RBAC & Forced First-Login | 0/TBD | Not started | - |
+| 1. Foundation & Data Core | 3/3 | Completed | 2026-06-20 |
+| 2. Auth, RBAC & Forced First-Login | 3/3 | Completed | 2026-06-20 |
 | 3. Admin Provisioning & Course Lifecycle | 0/TBD | Not started | - |
 | 4. Assignments & Quizzes | 0/TBD | Not started | - |
 | 5. Gradebook, Announcements & Requests | 0/TBD | Not started | - |

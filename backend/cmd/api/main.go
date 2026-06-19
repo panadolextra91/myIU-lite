@@ -3,11 +3,14 @@ package main
 import (
 	"context"
 	"log"
+	"net/http"
 
 	"github.com/gin-gonic/gin"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/panadolextra91/myiu-lite/backend/internal/shared/config"
 	"github.com/panadolextra91/myiu-lite/backend/internal/shared/health"
+	"github.com/panadolextra91/myiu-lite/backend/internal/auth"
+	"github.com/panadolextra91/myiu-lite/backend/internal/shared/middleware"
 )
 
 func main() {
@@ -24,7 +27,13 @@ func main() {
 	defer pool.Close()
 
 	router := gin.Default()
+	router.Use(func(c *gin.Context) {
+		c.SetSameSite(http.SameSiteLaxMode)
+		c.Next()
+	})
+	router.Use(middleware.CORS(cfg.FrontendOrigin))
 	health.RegisterRoutes(router, pool)
+	auth.RegisterRoutes(router, pool, cfg)
 
 	log.Printf("Starting server on port %s", cfg.Port)
 	if err := router.Run(":" + cfg.Port); err != nil {
