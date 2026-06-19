@@ -515,15 +515,17 @@ Confidence: **HIGH** `[CITED: github.com/gin-contrib/cors]`.
 | A3 | Reuse-until-expiry refresh is acceptable (no rotation) given D-13's no-store mandate | Open Item 2 | If stolen-refresh-token detection becomes a requirement, a server store (contradicting D-13) would be needed. |
 | A4 | `Secure` cookie + `http://localhost` works in Vite dev (localhost secure-context exception) | Pattern 1 / Pitfall 1 | If devs use a non-localhost LAN IP, `Secure` cookies drop; doc note added. |
 
-## Open Questions
+## Open Questions (RESOLVED)
 
 1. **`FRONTEND_ORIGIN` env not yet in `Config`.**
    - Known: CORS needs an exact origin; `Config` currently has `DatabaseURL/JWTSecret/CloudinaryURL/Port` only.
    - Unclear: exact prod origin value (deployment not defined yet).
    - Recommendation: planner adds `FrontendOrigin string \`env:"FRONTEND_ORIGIN" envDefault:"http://localhost:5173"\`` and a `CookieSecure bool \`env:"COOKIE_SECURE" envDefault:"true"\`` to `Config`.
+   - **RESOLVED:** Plan 02-01 Task 1 adds both `FrontendOrigin` and `CookieSecure` fields to `Config` with the defaults above; prod origin stays env-driven (no hardcode).
 2. **Where to register the public vs protected route groups in `main.go`.**
    - Known: `main.go` currently only calls `health.RegisterRoutes`; CORS must be `router.Use(...)` before any routes.
    - Recommendation: `auth.RegisterRoutes(router, pool, cfg)` registers `/auth/login` + `/auth/refresh` (public) and a protected group wrapped in `AuthMiddleware`; later phases register their groups behind the same middleware.
+   - **RESOLVED:** Plan 02-01 Task 3 wires `auth.RegisterRoutes(router, pool, cfg)` after `router.Use(CORS)`, registering public `/auth/login` + `/auth/refresh` and a protected group behind `AuthMiddleware`.
 
 ## Environment Availability
 
