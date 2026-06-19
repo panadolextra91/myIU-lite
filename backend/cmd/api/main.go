@@ -10,6 +10,7 @@ import (
 	"github.com/panadolextra91/myiu-lite/backend/internal/shared/config"
 	"github.com/panadolextra91/myiu-lite/backend/internal/shared/health"
 	"github.com/panadolextra91/myiu-lite/backend/internal/auth"
+	"github.com/panadolextra91/myiu-lite/backend/internal/auditlogs"
 	"github.com/panadolextra91/myiu-lite/backend/internal/shared/middleware"
 )
 
@@ -34,6 +35,7 @@ func main() {
 	router.Use(middleware.CORS(cfg.FrontendOrigin))
 	health.RegisterRoutes(router, pool)
 	auth.RegisterRoutes(router, pool, cfg)
+	auditlogs.RegisterRoutes(router, pool, cfg)
 
 	log.Printf("Starting server on port %s", cfg.Port)
 	if err := router.Run(":" + cfg.Port); err != nil {
