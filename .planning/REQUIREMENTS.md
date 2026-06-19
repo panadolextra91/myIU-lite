@@ -9,21 +9,21 @@ Requirements for initial release. Each maps to roadmap phases.
 
 ### Infrastructure (INFRA)
 
-- [ ] **INFRA-01**: Monorepo with `backend/` (Go) and `frontend/` (React) folders
-- [ ] **INFRA-02**: PostgreSQL runs via Docker (compose), never natively
-- [ ] **INFRA-03**: Backend config loaded from `.env` (DB, JWT secret, Cloudinary creds)
-- [ ] **INFRA-04**: DB schema managed by versioned migrations
-- [ ] **INFRA-05**: GitHub Actions CI triggers on push to `main`, `backend`, `frontend`
-- [ ] **INFRA-06**: CI runs unit + integration tests against a real Postgres service/container
-- [ ] **INFRA-07**: Merge to a protected branch is blocked unless tests, DB checks, and syntax/build pass (verified to actually block)
+- [x] **INFRA-01**: Monorepo with `backend/` (Go) and `frontend/` (React) folders
+- [x] **INFRA-02**: PostgreSQL runs via Docker (compose), never natively
+- [x] **INFRA-03**: Backend config loaded from `.env` (DB, JWT secret, Cloudinary creds)
+- [x] **INFRA-04**: DB schema managed by versioned migrations
+- [x] **INFRA-05**: GitHub Actions CI triggers on push
+- [x] **INFRA-06**: CI runs unit + integration tests against a real Postgres service/container
+- [x] **INFRA-07**: Merge to a protected branch is blocked unless tests, DB checks, and syntax/build pass (verified to actually block)
 
 ### Authentication & Accounts (AUTH)
 
-- [ ] **AUTH-01**: User can log in with username + password and receive a session/JWT carrying their role
-- [ ] **AUTH-02**: User can log out
-- [ ] **AUTH-03**: Logged-in user can change their own password
-- [ ] **AUTH-04**: A user flagged `must_change_password` is restricted to the change-password action until they reset it (enforced server-side, not just UI)
-- [ ] **AUTH-05**: Routes are authorized by role (Student / Lecturer / Admin) and by ownership where applicable
+- [x] **AUTH-01**: User can log in with username + password and receive a session/JWT carrying their role
+- [x] **AUTH-02**: User can log out
+- [x] **AUTH-03**: Logged-in user can change their own password
+- [x] **AUTH-04**: A user flagged `must_change_password` is restricted to the change-password action until they reset it (enforced server-side, not just UI)
+- [x] **AUTH-05**: Routes are authorized by role (Student / Lecturer / Admin) and by ownership where applicable
 
 ### Admin — Provisioning & Courses (ADMIN)
 
@@ -121,11 +121,11 @@ Which phases cover which requirements. Updated during roadmap creation.
 | INFRA-05 | Phase 1 | Completed |
 | INFRA-06 | Phase 1 | Completed |
 | INFRA-07 | Phase 1 | Completed |
-| AUTH-01 | Phase 2 | Pending |
-| AUTH-02 | Phase 2 | Pending |
-| AUTH-03 | Phase 2 | Pending |
-| AUTH-04 | Phase 2 | Pending |
-| AUTH-05 | Phase 2 | Pending |
+| AUTH-01 | Phase 2 | Completed |
+| AUTH-02 | Phase 2 | Completed |
+| AUTH-03 | Phase 2 | Completed |
+| AUTH-04 | Phase 2 | Completed |
+| AUTH-05 | Phase 2 | Completed |
 | ADMIN-01 | Phase 3 | Pending |
 | ADMIN-02 | Phase 3 | Pending |
 | ADMIN-03 | Phase 3 | Pending |
@@ -167,4 +167,4 @@ Which phases cover which requirements. Updated during roadmap creation.
 
 ---
 *Requirements defined: 2026-06-19*
-*Last updated: 2026-06-19 after roadmap creation (traceability populated; v1 count corrected to 45)*
+*Last updated: 2026-06-20 after Phase 2 completion*

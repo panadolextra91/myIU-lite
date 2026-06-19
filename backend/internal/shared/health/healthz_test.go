@@ -10,7 +10,6 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/jackc/pgx/v5/pgxpool"
-	"github.com/panadolextra91/myiu-lite/backend/internal/shared/db"
 	"github.com/panadolextra91/myiu-lite/backend/internal/shared/health"
 	"github.com/stretchr/testify/require"
 )
@@ -26,10 +25,8 @@ func TestHealthz_Integration(t *testing.T) {
 	require.NoError(t, err)
 	defer pool.Close()
 
-	queries := db.New(pool)
-	
-	// Verify seeded admin count
-	count, err := queries.CountUsers(ctx)
+	var count int64
+	err = pool.QueryRow(ctx, "SELECT count(*) FROM users WHERE username = 'admin' AND deleted_at IS NULL").Scan(&count)
 	require.NoError(t, err)
 	require.Equal(t, int64(1), count, "Expected exactly 1 seeded admin")
 
