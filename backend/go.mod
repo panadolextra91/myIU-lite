@@ -1,6 +1,6 @@
 module github.com/panadolextra91/myiu-lite/backend
 
-go 1.25.0
+go 1.24.0
 
 require (
 	github.com/caarlos0/env/v11 v11.4.1
