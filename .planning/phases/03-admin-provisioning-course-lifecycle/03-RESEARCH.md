@@ -497,17 +497,21 @@ const importStudents = useMutation({
 
 **If this table is empty:** Not empty — four low-risk assumptions, all verifiable by the planner in one command each.
 
-## Open Questions
+## Open Questions (RESOLVED)
+
+> Both questions are advisory/discretionary and have been resolved in the Phase 3 plans toward the recommended option. No blocking design ambiguity remains.
 
 1. **`operation_id` generation site (Go vs SQL DEFAULT).**
    - What we know: bulk ops need a UUID grouping key (D-33). Postgres has `gen_random_uuid()` built in (pgcrypto/`pg_catalog` in PG13+).
    - What's unclear: whether the team wants the ID echoed back to the client in the import response.
    - Recommendation: column `operation_id UUID NOT NULL DEFAULT gen_random_uuid()`; if the response must carry it, use `INSERT ... RETURNING operation_id`. Avoids a Go uuid dep.
+   - **RESOLVED:** Plan 03-01 adds `audit_log.operation_id UUID DEFAULT gen_random_uuid()` (SQL default, zero new Go deps). Import responses do not need to echo it for MVP.
 
 2. **Accounts-list scope: separate student/lecturer lists vs one filtered list.**
    - What we know: D-24 separates *imports* by role; D-41 has a single "Accounts" nav item.
    - What's unclear: whether the Accounts page filters by role or shows all.
    - Recommendation: one Accounts table with a role filter (shadcn `select`) + search by username/full_name; server paginates. Discretionary per CONTEXT.
+   - **RESOLVED:** Plan 03-02 ships a single Accounts page with a role filter + search (Claude's discretion per CONTEXT.md), matching the single "Accounts" nav item in D-41.
 
 ## Environment Availability
 
