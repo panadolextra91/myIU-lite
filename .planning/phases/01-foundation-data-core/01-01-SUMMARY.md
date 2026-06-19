@@ -36,7 +36,7 @@ patterns-established:
   - "Pattern 2: golang-migrate owns all schema objects."
   - "Pattern 3: sqlc generates Go repositories from queries."
 
-requirements-completed: [REQ-FND-01, REQ-FND-02, REQ-FND-03, REQ-FND-04]
+requirements-completed: [INFRA-01, INFRA-02, INFRA-03, INFRA-04]
 
 # Metrics
 duration: 15m
@@ -96,7 +96,7 @@ status: complete
 **Impact on plan:** None, just standard go tooling fix.
 
 ## Issues Encountered
-- The `go install` for `sqlc` required switching to Go 1.26 under the hood, but this didn't affect our project's `go.mod` (which successfully remained pinned to `1.24`).
+- None.
 
 ## Next Phase Readiness
 - Foundation is solid. Ready for API and feature development.
