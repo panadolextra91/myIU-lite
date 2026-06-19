@@ -1,8 +1,31 @@
+# Local tooling — not part of the repo
 .agents
-.claude
 .codex
 .gitnexus
-node_modules
-.DS_Stores
 .planning/research/.cache
 
+# Claude Code: keep local EXCEPT the project instructions doc
+.claude/*
+!.claude/CLAUDE.md
+
+node_modules
+.DS_Stores
+
+# Env
+backend/.env
+frontend/.env
+frontend/.env.local
+
+# Node
+node_modules/
+dist/
+
+# Go
+backend/bin/
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+*.test
+*.out

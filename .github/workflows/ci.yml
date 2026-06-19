@@ -1,0 +1,73 @@
+name: CI
+
+on:
+  push:
+    branches:
+      - main
+      - backend
+      - frontend
+  pull_request:
+
+jobs:
+  ci:
+    name: ci
+    runs-on: ubuntu-latest
+    
+    services:
+      postgres:
+        image: postgres:17-alpine
+        env:
+          POSTGRES_USER: myiu
+          POSTGRES_PASSWORD: myiu
+          POSTGRES_DB: myiu_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U myiu"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    env:
+      DATABASE_URL: postgres://myiu:myiu@localhost:5432/myiu_test?sslmode=disable
+      JWT_SECRET: test-secret
+      CLOUDINARY_URL: cloudinary://test:test@test
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Setup Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.24'
+
+      - name: Install golang-migrate CLI
+        run: go install -tags 'postgres' github.com/golang-migrate/migrate/v4/cmd/migrate@latest
+        
+      - name: Run Database Migrations
+        working-directory: backend
+        run: $(go env GOPATH)/bin/migrate -path db/migrations -database "$DATABASE_URL" up
+
+      - name: Run golangci-lint
+        uses: golangci/golangci-lint-action@v6
+        with:
+          working-directory: backend
+          version: latest
+          args: --timeout=5m
+
+      - name: Run Go Tests
+        working-directory: backend
+        run: go test ./...
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Frontend Checks
+        working-directory: frontend
+        run: |
+          npm ci
+          npm run lint
+          npm run build

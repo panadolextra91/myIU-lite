@@ -86,6 +86,7 @@ Students and lecturers can run a course end-to-end (assignments, quizzes, grades
 | D-03: Per-quiz config (max questions, max grade, shuffle, CSV-or-UI question source, retake 0..N) | Lecturer-tunable quizzes | — Pending |
 | D-04: Weighted gradebook — Inclass (with sub-weights) + Midterm + Final, each a % of overall; midterm/final entered manually | Reflects real course grading; midterm/final are offline exams | — Pending |
 | D-05: One project-wide `.planning/DESIGN-SYSTEM.md` instead of per-phase UI-SPEC; minimal shadcn/ui-only, light+dark themes, 6px radius, Lucide icons, WCAG AA | User wants a single global UI ruleset, not per-phase specs | — Pending |
+| D-10: Feature-Oriented Monolith — backend organized BY BUSINESS FEATURE (`internal/auth`, `courses`, `assignments`, `quizzes`, `grades`, `announcements`, `requests`, `auditlogs`), each holding `handler/service/repository/model/dto`; cross-cutting infra under `internal/shared/` (config, db, cloudinary, middleware, jwt). Clean-architecture responsibility split INSIDE each feature (handler=HTTP only, service=business+authz, repo=SQL only). Cross-feature deps allowed when business rules require; NO hard bounded-context enforcement and no abstractions for purity. Supersedes the layered layout in `research/ARCHITECTURE.md`. (NB: number is D-10 — D-06…D-09 are Phase 1's CONTEXT decisions.) | Optimizes business-feature discoverability, GitNexus/AI navigation, and solo/small-team maintainability over module-isolation purity | — Pending |
 
 ## Evolution
 

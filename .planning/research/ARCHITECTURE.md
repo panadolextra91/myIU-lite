@@ -1,5 +1,7 @@
 # Architecture Research
 
+> **⚠ SUPERSEDED — folder organization (decision D-10):** The project locked a **Feature-Oriented Monolith** — backend code organized by business feature (`internal/<feature>/{handler,service,repository,model,dto}.go`) with cross-cutting infra under `internal/shared/`. Authoritative sources: PROJECT.md decision **D-10** and `.claude/CLAUDE.md` "## Architecture". The clean-architecture *responsibility* split below (handler → service → repository) still applies INSIDE each feature; only the **folder layout** changed from by-layer to by-feature. Ignore the per-layer `internal/{handler,service,repository}/` tree shown later in this file.
+
 **Domain:** LMS-lite / university student-management platform (myIU lite)
 **Researched:** 2026-06-19
 **Confidence:** HIGH (stack is fixed; patterns are standard and well-documented)
