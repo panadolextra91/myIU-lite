@@ -114,13 +114,13 @@ Which phases cover which requirements. Updated during roadmap creation.
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| INFRA-01 | Phase 1 | Pending |
-| INFRA-02 | Phase 1 | Pending |
-| INFRA-03 | Phase 1 | Pending |
-| INFRA-04 | Phase 1 | Pending |
-| INFRA-05 | Phase 1 | Pending |
-| INFRA-06 | Phase 1 | Pending |
-| INFRA-07 | Phase 1 | Pending |
+| INFRA-01 | Phase 1 | Completed |
+| INFRA-02 | Phase 1 | Completed |
+| INFRA-03 | Phase 1 | Completed |
+| INFRA-04 | Phase 1 | Completed |
+| INFRA-05 | Phase 1 | Completed |
+| INFRA-06 | Phase 1 | Completed |
+| INFRA-07 | Phase 1 | Completed |
 | AUTH-01 | Phase 2 | Pending |
 | AUTH-02 | Phase 2 | Pending |
 | AUTH-03 | Phase 2 | Pending |

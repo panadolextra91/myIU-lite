@@ -13,7 +13,7 @@ myIU lite is built bottom-up along its dependency arrows: a proven-blocking CI g
 
 Decimal phases appear between their surrounding integers in numeric order.
 
-- [ ] **Phase 1: Foundation & Data Core** - Monorepo, Docker Postgres, migrations, .env, and a CI gate proven to block un-mergeable PRs
+- [x] **Phase 1: Foundation & Data Core** - Monorepo, Docker Postgres, migrations, .env, and a CI gate proven to block un-mergeable PRs
 - [ ] **Phase 2: Auth, RBAC & Forced First-Login** - Login/logout, server-enforced password change, role + ownership authorization
 - [ ] **Phase 3: Admin Provisioning & Course Lifecycle** - CSV accounts/enrollment, course CRUD, append-only audit log, auto soft-delete sweep
 - [ ] **Phase 4: Assignments & Quizzes** - File-upload submission + grading and auto-graded MCQ quizzes, on a shared notification primitive
@@ -37,15 +37,15 @@ Decimal phases appear between their surrounding integers in numeric order.
 **Plans**: 3 plans
 **Wave 1**
 
-- [ ] 01-01-PLAN.md — Walking skeleton: Postgres-only compose, migrations + bootstrap-admin seed, `.env` config, sqlc, Gin `/healthz`, frontend stub (INFRA-01/02/03/04)
+- [x] 01-01-PLAN.md — Walking skeleton: Postgres-only compose, migrations + bootstrap-admin seed, `.env` config, sqlc, Gin `/healthz`, frontend stub (INFRA-01/02/03/04)
 
 **Wave 2** *(blocked on Wave 1 completion)*
 
-- [ ] 01-02-PLAN.md — GitHub Actions `ci` workflow: services Postgres, migrate-before-test, lint + frontend build (INFRA-05/06)
+- [x] 01-02-PLAN.md — GitHub Actions `ci` workflow: services Postgres, migrate-before-test, lint + frontend build (INFRA-05/06)
 
 **Wave 3** *(blocked on Wave 2 completion)*
 
-- [ ] 01-03-PLAN.md — Merge-block proof: user branch-protection setup + throwaway failing-PR evidence (INFRA-07)
+- [x] 01-03-PLAN.md — Merge-block proof: user branch-protection setup + throwaway failing-PR evidence (INFRA-07)
 
 ### Phase 2: Auth, RBAC & Forced First-Login
 
@@ -120,7 +120,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. Foundation & Data Core | 0/3 | Not started | - |
+| 1. Foundation & Data Core | 3/3 | Completed | 2026-06-20 |
 | 2. Auth, RBAC & Forced First-Login | 0/TBD | Not started | - |
 | 3. Admin Provisioning & Course Lifecycle | 0/TBD | Not started | - |
 | 4. Assignments & Quizzes | 0/TBD | Not started | - |
