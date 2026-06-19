@@ -134,7 +134,8 @@ func TestAuthLoginIntegration(t *testing.T) {
 
 		require.Equal(t, http.StatusOK, w.Code)
 		var resp auth.MeResponse
-		json.Unmarshal(w.Body.Bytes(), &resp)
+		err := json.Unmarshal(w.Body.Bytes(), &resp)
+		require.NoError(t, err)
 		require.Equal(t, "admin", resp.Role)
 		require.True(t, resp.MustChangePassword)
 	})
