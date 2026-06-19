@@ -30,7 +30,10 @@ Decimal phases appear between their surrounding integers in numeric order.
   2. Backend reads DB, JWT secret, and Cloudinary credentials from `.env` with no hardcoded secrets.
   3. Pushing to `main`/`backend`/`frontend` triggers GitHub Actions that runs unit + integration tests against a real Postgres service container.
   4. A pull request that deliberately fails a test or build is blocked from merging by a required status check (verified, not just configured).
-**Plans**: TBD
+**Plans**: 3 plans
+- [ ] 01-01-PLAN.md — Walking skeleton: Postgres-only compose, migrations + bootstrap-admin seed, `.env` config, sqlc, Gin `/healthz`, frontend stub (INFRA-01/02/03/04)
+- [ ] 01-02-PLAN.md — GitHub Actions `ci` workflow: services Postgres, migrate-before-test, lint + frontend build (INFRA-05/06)
+- [ ] 01-03-PLAN.md — Merge-block proof: user branch-protection setup + throwaway failing-PR evidence (INFRA-07)
 
 ### Phase 2: Auth, RBAC & Forced First-Login
 **Goal**: Any user can log in and receive a role-carrying JWT, must change a default password before doing anything else, and every route is gated by role and ownership.
@@ -93,7 +96,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. Foundation & Data Core | 0/TBD | Not started | - |
+| 1. Foundation & Data Core | 0/3 | Not started | - |
 | 2. Auth, RBAC & Forced First-Login | 0/TBD | Not started | - |
 | 3. Admin Provisioning & Course Lifecycle | 0/TBD | Not started | - |
 | 4. Assignments & Quizzes | 0/TBD | Not started | - |
