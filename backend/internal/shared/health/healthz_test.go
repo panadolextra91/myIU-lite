@@ -16,6 +16,7 @@ import (
 )
 
 func TestHealthz_Integration(t *testing.T) {
+	t.Fatal("Intentional CI block proof")
 	dbURL := os.Getenv("DATABASE_URL")
 	if dbURL == "" {
 		t.Skip("DATABASE_URL is not set; skipping integration test")
