@@ -9,14 +9,16 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/panadolextra91/myiu-lite/backend/internal/shared/config"
 	"github.com/panadolextra91/myiu-lite/backend/internal/shared/health"
-	"github.com/panadolextra91/myiu-lite/backend/internal/auth"
+	"github.com/panadolextra91/myiu-lite/backend/internal/assignments"
 	"github.com/panadolextra91/myiu-lite/backend/internal/auditlogs"
+	"github.com/panadolextra91/myiu-lite/backend/internal/auth"
 	"github.com/panadolextra91/myiu-lite/backend/internal/courses"
 	"github.com/panadolextra91/myiu-lite/backend/internal/enrollments"
 	"github.com/panadolextra91/myiu-lite/backend/internal/lifecycle"
+	"github.com/panadolextra91/myiu-lite/backend/internal/shared/cloudinary"
 	"github.com/panadolextra91/myiu-lite/backend/internal/shared/db"
-	"github.com/panadolextra91/myiu-lite/backend/internal/users"
 	"github.com/panadolextra91/myiu-lite/backend/internal/shared/middleware"
+	"github.com/panadolextra91/myiu-lite/backend/internal/users"
 )
 
 func main() {
@@ -32,6 +34,11 @@ func main() {
 	}
 	defer pool.Close()
 
+	cld, err := cloudinary.New(cfg.CloudinaryURL)
+	if err != nil {
+		log.Fatalf("Failed to initialize Cloudinary: %v", err)
+	}
+
 	router := gin.Default()
 	router.Use(func(c *gin.Context) {
 		c.SetSameSite(http.SameSiteLaxMode)
@@ -44,6 +51,7 @@ func main() {
 	users.RegisterRoutes(router, pool, cfg)
 	courses.RegisterRoutes(router, pool, cfg)
 	enrollments.RegisterRoutes(router, pool, cfg)
+	assignments.RegisterRoutes(router, pool, cfg, cld)
 
 	sysID, err := db.New(pool).GetSystemUserID(ctx)
 	if err == nil {

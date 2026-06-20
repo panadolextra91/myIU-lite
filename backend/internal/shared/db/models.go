@@ -54,6 +54,19 @@ func (ns NullUserRole) Value() (driver.Value, error) {
 	return string(ns.UserRole), nil
 }
 
+type Assignment struct {
+	ID                int64
+	CourseID          int64
+	Title             string
+	Description       pgtype.Text
+	Deadline          pgtype.Timestamptz
+	AcceptLate        bool
+	LateThresholdDays pgtype.Int4
+	CreatedBy         int64
+	CreatedAt         pgtype.Timestamptz
+	UpdatedAt         pgtype.Timestamptz
+}
+
 type AuditLog struct {
 	ID            int64
 	ActorID       pgtype.Int8
@@ -86,11 +99,90 @@ type CourseLecturer struct {
 	CreatedAt  pgtype.Timestamptz
 }
 
+type Notification struct {
+	ID           int64
+	RecipientID  int64
+	Type         string
+	Title        string
+	Body         string
+	ResourceType pgtype.Text
+	ResourceID   pgtype.Int8
+	Link         pgtype.Text
+	CreatedAt    pgtype.Timestamptz
+	ReadAt       pgtype.Timestamptz
+}
+
+type Quiz struct {
+	ID           int64
+	CourseID     int64
+	Title        string
+	PoolSize     pgtype.Int4
+	MaxQuestions pgtype.Int4
+	MaxGrade     pgtype.Numeric
+	Shuffle      pgtype.Bool
+	RetakeCount  pgtype.Int4
+	OpenAt       pgtype.Timestamptz
+	CloseAt      pgtype.Timestamptz
+	CreatedBy    int64
+	CreatedAt    pgtype.Timestamptz
+}
+
+type QuizAttempt struct {
+	ID            int64
+	QuizID        int64
+	StudentID     int64
+	AttemptNumber pgtype.Int4
+	Status        string
+	Score         pgtype.Numeric
+	StartedAt     pgtype.Timestamptz
+	SubmittedAt   pgtype.Timestamptz
+}
+
+type QuizAttemptAnswer struct {
+	ID                int64
+	AttemptID         int64
+	QuestionID        int64
+	SelectedOptionIds []int64
+	CreatedAt         pgtype.Timestamptz
+}
+
+type QuizQuestion struct {
+	ID           int64
+	QuizID       int64
+	Prompt       pgtype.Text
+	QuestionType string
+	CreatedAt    pgtype.Timestamptz
+}
+
+type QuizQuestionOption struct {
+	ID         int64
+	QuestionID int64
+	Text       pgtype.Text
+	IsCorrect  bool
+	CreatedAt  pgtype.Timestamptz
+}
+
 type StudentEnrollment struct {
 	ID        int64
 	CourseID  int64
 	StudentID int64
 	CreatedAt pgtype.Timestamptz
+}
+
+type Submission struct {
+	ID                 int64
+	AssignmentID       int64
+	StudentID          int64
+	Version            int32
+	CloudinaryPublicID string
+	CloudinaryFormat   string
+	OriginalFilename   string
+	IsLate             bool
+	SubmittedAt        pgtype.Timestamptz
+	Score              pgtype.Numeric
+	Feedback           pgtype.Text
+	GradedAt           pgtype.Timestamptz
+	GradedBy           pgtype.Int8
 }
 
 type User struct {
