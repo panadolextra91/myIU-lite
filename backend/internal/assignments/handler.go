@@ -35,6 +35,7 @@ func RegisterRoutes(r *gin.Engine, pool *pgxpool.Pool, cfg config.Config, cld *c
 		lecturer.GET("/courses/:id/assignments", handler.ListAssignments)
 		lecturer.GET("/courses/:id/assignments/:aid/submissions/:sid/download-url", handler.GetDownloadURL)
 		lecturer.POST("/courses/:id/assignments/:aid/submissions/:sid/grade", handler.GradeSubmission)
+		lecturer.POST("/courses/:id/assignments/:aid/finalize", handler.FinalizeGrading)
 	}
 
 	student := api.Group("/student")
@@ -314,20 +315,64 @@ func (h *Handler) GradeSubmission(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"status": "success"})
 }
 
+func (h *Handler) FinalizeGrading(c *gin.Context) {
+	courseID, err := strconv.ParseInt(c.Param("id"), 10, 64)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, errorEnvelope("invalid_id", "invalid course id"))
+		return
+	}
+
+	assignmentID, err := strconv.ParseInt(c.Param("aid"), 10, 64)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, errorEnvelope("invalid_id", "invalid assignment id"))
+		return
+	}
+
+	lecturerID := c.GetInt64("user_id")
+
+	assignment, err := h.service.FinalizeGrading(c.Request.Context(), courseID, assignmentID, lecturerID)
+	if err != nil {
+		if errors.Is(err, ErrForbidden) {
+			c.JSON(http.StatusForbidden, errorEnvelope("forbidden", "access denied"))
+			return
+		}
+		if errors.Is(err, ErrNotFound) {
+			c.JSON(http.StatusNotFound, errorEnvelope("not_found", "assignment not found or already finalized"))
+			return
+		}
+		c.JSON(http.StatusInternalServerError, errorEnvelope("server_error", err.Error()))
+		return
+	}
+
+	c.JSON(http.StatusOK, mapAssignment(assignment))
+}
+
 func mapAssignment(a db.Assignment) AssignmentResponse {
 	var threshold *int32
 	if a.LateThresholdDays.Valid {
 		v := a.LateThresholdDays.Int32
 		threshold = &v
 	}
+	var maxScore float64
+	if a.MaxScore.Valid {
+		f, _ := a.MaxScore.Float64Value()
+		maxScore = f.Float64
+	}
+	var gradingFinalizedAt *time.Time
+	if a.GradingFinalizedAt.Valid {
+		t := a.GradingFinalizedAt.Time
+		gradingFinalizedAt = &t
+	}
 	return AssignmentResponse{
-		ID:                a.ID,
-		Title:             a.Title,
-		Description:       a.Description.String,
-		Deadline:          a.Deadline.Time,
-		AcceptLate:        a.AcceptLate,
-		LateThresholdDays: threshold,
-		CreatedAt:         a.CreatedAt.Time,
+		ID:                   a.ID,
+		Title:                a.Title,
+		Description:          a.Description.String,
+		Deadline:             a.Deadline.Time,
+		AcceptLate:           a.AcceptLate,
+		LateThresholdDays:    threshold,
+		MaxScore:             maxScore,
+		GradingFinalizedAt:   gradingFinalizedAt,
+		CreatedAt:            a.CreatedAt.Time,
 	}
 }
 

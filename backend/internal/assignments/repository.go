@@ -45,3 +45,7 @@ func (r *Repository) ListSubmissionVersions(ctx context.Context, arg db.ListSubm
 func (r *Repository) GetSubmissionByID(ctx context.Context, id int64) (db.GetSubmissionByIDRow, error) {
 	return r.q.GetSubmissionByID(ctx, id)
 }
+
+func (r *Repository) FinalizeAssignmentGrading(ctx context.Context, arg db.FinalizeAssignmentGradingParams) (db.Assignment, error) {
+	return r.q.FinalizeAssignmentGrading(ctx, arg)
+}

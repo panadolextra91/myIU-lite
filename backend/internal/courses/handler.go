@@ -33,6 +33,12 @@ func RegisterRoutes(r *gin.Engine, pool *pgxpool.Pool, cfg config.Config) {
 		g.GET("/:id/students", h.ListStudents)
 		g.GET("/:id/lecturers", h.ListLecturers)
 	}
+
+	lec := r.Group("/api/lecturer/courses")
+	lec.Use(middleware.AuthMiddleware(pool, cfg), middleware.RequireRole(db.UserRoleLecturer))
+	{
+		lec.GET("/:id/students", h.ListStudents)
+	}
 }
 
 func mapToResponse(c db.Course) CourseResponse {

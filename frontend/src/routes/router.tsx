@@ -14,6 +14,12 @@ import LecturerAssignments from '@/pages/lecturer/Assignments';
 import LecturerQuizzes from '@/pages/lecturer/Quizzes';
 import StudentAssignments from '@/pages/student/Assignments';
 import StudentQuizzes from '@/pages/student/Quizzes';
+import LecturerGradebook from '@/pages/lecturer/Gradebook';
+import StudentGrades from '@/pages/student/Grades';
+import LecturerAnnouncements from '@/pages/lecturer/Announcements';
+import StudentAnnouncements from '@/pages/student/Announcements';
+import StudentRequests from '@/pages/student/Requests';
+import LecturerRequestInbox from '@/pages/lecturer/RequestInbox';
 import Notifications from '@/pages/Notifications';
 
 import ProtectedRoute from '@/routes/ProtectedRoute';
@@ -56,6 +62,10 @@ export const router = createBrowserRouter([
               { index: true, element: <StudentIndex /> },
               { path: 'assignments', element: <StudentAssignments /> },
               { path: 'quizzes', element: <StudentQuizzes /> },
+              { path: 'courses/:id/grades', element: <StudentGrades /> },
+              { path: 'courses/:id/announcements', element: <StudentAnnouncements /> },
+              { path: 'courses/:id/announcements/:announcementId', element: <StudentAnnouncements /> },
+              { path: 'courses/:id/requests', element: <StudentRequests /> },
             ],
           },
           {
@@ -65,6 +75,9 @@ export const router = createBrowserRouter([
               { index: true, element: <LecturerIndex /> },
               { path: 'assignments', element: <LecturerAssignments /> },
               { path: 'courses/:id/quizzes', element: <LecturerQuizzes /> },
+              { path: 'courses/:id/gradebook', element: <LecturerGradebook /> },
+              { path: 'courses/:id/announcements', element: <LecturerAnnouncements /> },
+              { path: 'requests', element: <LecturerRequestInbox /> },
             ],
           },
           {

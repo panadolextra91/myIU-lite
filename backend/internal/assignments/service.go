@@ -58,6 +58,11 @@ func (s *Service) CreateAssignment(ctx context.Context, courseID int64, req Crea
 		}
 	}
 
+	var maxScore pgtype.Numeric
+	if err := maxScore.Scan(fmt.Sprintf("%f", req.MaxScore)); err != nil {
+		return db.Assignment{}, fmt.Errorf("invalid max_score format: %w", err)
+	}
+
 	arg := db.CreateAssignmentParams{
 		CourseID:          courseID,
 		Title:             req.Title,
@@ -66,6 +71,7 @@ func (s *Service) CreateAssignment(ctx context.Context, courseID int64, req Crea
 		AcceptLate:        req.AcceptLate,
 		LateThresholdDays: threshold,
 		CreatedBy:         lecturerID,
+		MaxScore:          maxScore,
 	}
 	return s.repo.CreateAssignment(ctx, arg)
 }
@@ -251,5 +257,22 @@ func (s *Service) GradeSubmission(ctx context.Context, courseID, assignmentID, s
 	}
 
 	return tx.Commit(ctx)
+}
+
+func (s *Service) FinalizeGrading(ctx context.Context, courseID, assignmentID, lecturerID int64) (db.Assignment, error) {
+	if err := authz.AssertCourseMember(ctx, s.pool, courseID, lecturerID, db.UserRoleLecturer); err != nil {
+		return db.Assignment{}, ErrForbidden
+	}
+
+	assignment, err := s.repo.FinalizeAssignmentGrading(ctx, db.FinalizeAssignmentGradingParams{
+		ID:       assignmentID,
+		CourseID: courseID,
+	})
+	if err != nil {
+		// If no rows affected, assignment is either not found or already finalized
+		return db.Assignment{}, ErrNotFound
+	}
+
+	return assignment, nil
 }
 

@@ -36,11 +36,14 @@ func TestSecurity_Assignments(t *testing.T) {
 		// We can reuse the same helper even though it creates quizzes
 		// Create an assignment
 		q := db.New(pool)
+		var maxScore pgtype.Numeric
+		_ = maxScore.Scan("100")
 		assignment, err := q.CreateAssignment(ctx, db.CreateAssignmentParams{
 			CourseID:  f.CourseID,
 			Title:     "Test Assign",
 			Deadline:  pgtype.Timestamptz{Valid: true, Time: time.Now().Add(24 * time.Hour)},
 			CreatedBy: f.LecturerID,
+			MaxScore:  maxScore,
 		})
 		require.NoError(t, err)
 

@@ -27,32 +27,32 @@ Requirements for initial release. Each maps to roadmap phases.
 
 ### Admin — Provisioning & Courses (ADMIN)
 
-- [ ] **ADMIN-01**: Admin can create a student or lecturer account manually
-- [ ] **ADMIN-02**: Admin can bulk-create student/lecturer accounts from a CSV file (whole-file validation before insert; duplicate/invalid IDs reported)
-- [ ] **ADMIN-03**: New accounts default to username = student/lecturer ID, password = birthday `DDMMYYYY`, with `must_change_password` set
-- [ ] **ADMIN-04**: Admin can reset any user's password back to the default `DDMMYYYY`, re-setting the forced-change flag (D-01)
-- [ ] **ADMIN-05**: Admin can create, read, update, and delete courses with a start date and end date
-- [ ] **ADMIN-06**: Admin can assign students and lecturers to a course from a CSV list
-- [ ] **ADMIN-07**: System auto soft-deletes courses 1 month after their end date passes, without manual action
-- [ ] **ADMIN-08**: Every admin mutation (account create, password reset, course CRUD, enrollment) writes an append-only audit log entry (actor, action, target, timestamp)
+- [x] **ADMIN-01**: Admin can create a student or lecturer account manually
+- [x] **ADMIN-02**: Admin can bulk-create student/lecturer accounts from a CSV file (whole-file validation before insert; duplicate/invalid IDs reported)
+- [x] **ADMIN-03**: New accounts default to username = student/lecturer ID, password = birthday `DDMMYYYY`, with `must_change_password` set
+- [x] **ADMIN-04**: Admin can reset any user's password back to the default `DDMMYYYY`, re-setting the forced-change flag (D-01)
+- [x] **ADMIN-05**: Admin can create, read, update, and delete courses with a start date and end date
+- [x] **ADMIN-06**: Admin can assign students and lecturers to a course from a CSV list
+- [x] **ADMIN-07**: System auto soft-deletes courses 1 month after their end date passes, without manual action
+- [x] **ADMIN-08**: Every admin mutation (account create, password reset, course CRUD, enrollment) writes an append-only audit log entry (actor, action, target, timestamp)
 
 ### Assignments & Submissions (ASMT)
 
-- [ ] **ASMT-01**: Lecturer can create an assignment for a course with a deadline (date + time)
-- [ ] **ASMT-02**: When creating an assignment, lecturer sets accept-late = yes/no; if yes, sets a late threshold of X days or "no threshold" (accept until the course is soft-deleted); if no, no threshold is collected (D-02)
-- [ ] **ASMT-03**: Student can submit an assignment by uploading a single PDF or ZIP file, max 10MB, validated server-side by magic bytes (not just extension/MIME)
-- [ ] **ASMT-04**: System enforces the assignment's late policy using the server timestamp (block after deadline, or accept-and-flag-late within threshold)
-- [ ] **ASMT-05**: Uploaded files are stored on Cloudinary as non-public (authenticated) assets; downloads go through backend-generated short-lived signed URLs gated by role/ownership
-- [ ] **ASMT-06**: Lecturer can view and grade a student's submission; saving the grade auto-notifies the student
+- [x] **ASMT-01**: Lecturer can create an assignment for a course with a deadline (date + time)
+- [x] **ASMT-02**: When creating an assignment, lecturer sets accept-late = yes/no; if yes, sets a late threshold of X days or "no threshold" (accept until the course is soft-deleted); if no, no threshold is collected (D-02)
+- [x] **ASMT-03**: Student can submit an assignment by uploading a single PDF or ZIP file, max 10MB, validated server-side by magic bytes (not just extension/MIME)
+- [x] **ASMT-04**: System enforces the assignment's late policy using the server timestamp (block after deadline, or accept-and-flag-late within threshold)
+- [x] **ASMT-05**: Uploaded files are stored on Cloudinary as non-public (authenticated) assets; downloads go through backend-generated short-lived signed URLs gated by role/ownership
+- [x] **ASMT-06**: Lecturer can view and grade a student's submission; saving the grade auto-notifies the student
 
 ### Quizzes (QUIZ)
 
-- [ ] **QUIZ-01**: Lecturer can create a quiz for a course, configuring: max number of questions, max grade, shuffle yes/no, and retake count (0 = single attempt, N = N retakes) (D-03)
-- [ ] **QUIZ-02**: Lecturer can supply quiz questions/answers either by uploading a CSV, or by entering them directly in the UI
-- [ ] **QUIZ-03**: Student can take a multiple-choice quiz; the take-quiz API never exposes which option is correct
-- [ ] **QUIZ-04**: When shuffle is on, options are presented in randomized order while preserving the correct-answer mapping by stable option ID
-- [ ] **QUIZ-05**: System auto-grades the quiz on submission against the configured max grade and records the student's score (idempotent per attempt)
-- [ ] **QUIZ-06**: System enforces the configured retake limit; retakes are tracked as attempts distinct from the original submission
+- [x] **QUIZ-01**: Lecturer can create a quiz for a course, configuring: max number of questions, max grade, shuffle yes/no, and retake count (0 = single attempt, N = N retakes) (D-03)
+- [x] **QUIZ-02**: Lecturer can supply quiz questions/answers either by uploading a CSV, or by entering them directly in the UI
+- [x] **QUIZ-03**: Student can take a multiple-choice quiz; the take-quiz API never exposes which option is correct
+- [x] **QUIZ-04**: When shuffle is on, options are presented in randomized order while preserving the correct-answer mapping by stable option ID
+- [x] **QUIZ-05**: System auto-grades the quiz on submission against the configured max grade and records the student's score (idempotent per attempt)
+- [x] **QUIZ-06**: System enforces the configured retake limit; retakes are tracked as attempts distinct from the original submission
 
 ### Gradebook (GRADE)
 
@@ -76,8 +76,8 @@ Requirements for initial release. Each maps to roadmap phases.
 
 ### Notifications (NOTIF)
 
-- [ ] **NOTIF-01**: A single persisted notification primitive backs grade delivery, request replies, and announcements (one row per recipient, with a read marker)
-- [ ] **NOTIF-02**: Notifications that accompany a mutation (grade saved, reply sent) are written in the same transaction as the mutation
+- [x] **NOTIF-01**: A single persisted notification primitive backs grade delivery, request replies, and announcements (one row per recipient, with a read marker)
+- [x] **NOTIF-02**: Notifications that accompany a mutation (grade saved, reply sent) are written in the same transaction as the mutation
 
 ## v2 Requirements
 
@@ -126,28 +126,28 @@ Which phases cover which requirements. Updated during roadmap creation.
 | AUTH-03 | Phase 2 | Completed |
 | AUTH-04 | Phase 2 | Completed |
 | AUTH-05 | Phase 2 | Completed |
-| ADMIN-01 | Phase 3 | Pending |
-| ADMIN-02 | Phase 3 | Pending |
-| ADMIN-03 | Phase 3 | Pending |
-| ADMIN-04 | Phase 3 | Pending |
-| ADMIN-05 | Phase 3 | Pending |
-| ADMIN-06 | Phase 3 | Pending |
-| ADMIN-07 | Phase 3 | Pending |
-| ADMIN-08 | Phase 3 | Pending |
-| ASMT-01 | Phase 4 | Pending |
-| ASMT-02 | Phase 4 | Pending |
-| ASMT-03 | Phase 4 | Pending |
-| ASMT-04 | Phase 4 | Pending |
-| ASMT-05 | Phase 4 | Pending |
-| ASMT-06 | Phase 4 | Pending |
-| QUIZ-01 | Phase 4 | Pending |
-| QUIZ-02 | Phase 4 | Pending |
-| QUIZ-03 | Phase 4 | Pending |
-| QUIZ-04 | Phase 4 | Pending |
-| QUIZ-05 | Phase 4 | Pending |
-| QUIZ-06 | Phase 4 | Pending |
-| NOTIF-01 | Phase 4 | Pending |
-| NOTIF-02 | Phase 4 | Pending |
+| ADMIN-01 | Phase 3 | Completed |
+| ADMIN-02 | Phase 3 | Completed |
+| ADMIN-03 | Phase 3 | Completed |
+| ADMIN-04 | Phase 3 | Completed |
+| ADMIN-05 | Phase 3 | Completed |
+| ADMIN-06 | Phase 3 | Completed |
+| ADMIN-07 | Phase 3 | Completed |
+| ADMIN-08 | Phase 3 | Completed |
+| ASMT-01 | Phase 4 | Completed |
+| ASMT-02 | Phase 4 | Completed |
+| ASMT-03 | Phase 4 | Completed |
+| ASMT-04 | Phase 4 | Completed |
+| ASMT-05 | Phase 4 | Completed |
+| ASMT-06 | Phase 4 | Completed |
+| QUIZ-01 | Phase 4 | Completed |
+| QUIZ-02 | Phase 4 | Completed |
+| QUIZ-03 | Phase 4 | Completed |
+| QUIZ-04 | Phase 4 | Completed |
+| QUIZ-05 | Phase 4 | Completed |
+| QUIZ-06 | Phase 4 | Completed |
+| NOTIF-01 | Phase 4 | Completed |
+| NOTIF-02 | Phase 4 | Completed |
 | GRADE-01 | Phase 5 | Pending |
 | GRADE-02 | Phase 5 | Pending |
 | GRADE-03 | Phase 5 | Pending |
@@ -167,4 +167,4 @@ Which phases cover which requirements. Updated during roadmap creation.
 
 ---
 *Requirements defined: 2026-06-19*
-*Last updated: 2026-06-20 after Phase 2 completion*
+*Last updated: 2026-06-20 after Phase 4 completion*
