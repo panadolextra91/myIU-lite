@@ -88,6 +88,10 @@ func (s *Service) seedAttempt(ctx context.Context, attempt db.QuizAttempt, q db.
 		return err
 	}
 
+	if q.MaxQuestions.Valid && len(questions) < int(q.MaxQuestions.Int32) {
+		return errors.New("quiz does not have enough authored questions")
+	}
+
 	r := rand.New(rand.NewPCG(uint64(attempt.ID), uint64(q.ID)))
 
 	if q.Shuffle.Valid && q.Shuffle.Bool {
