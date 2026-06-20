@@ -7,8 +7,9 @@ import (
 	"io"
 	"time"
 
-	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/jackc/pgx/v5/pgtype"
+	"github.com/jackc/pgx/v5/pgxpool"
+	"github.com/panadolextra91/myiu-lite/backend/internal/shared/authz"
 	"github.com/panadolextra91/myiu-lite/backend/internal/shared/cloudinary"
 	"github.com/panadolextra91/myiu-lite/backend/internal/shared/db"
 )
@@ -63,7 +64,10 @@ func (s *Service) CreateAssignment(ctx context.Context, courseID int64, req Crea
 	return s.repo.CreateAssignment(ctx, arg)
 }
 
-func (s *Service) ListCourseAssignments(ctx context.Context, courseID int64) ([]db.Assignment, error) {
+func (s *Service) ListCourseAssignments(ctx context.Context, courseID, userID int64, role string) ([]db.Assignment, error) {
+	if err := authz.AssertCourseMember(ctx, s.pool, courseID, userID, db.UserRole(role)); err != nil {
+		return nil, err
+	}
 	return s.repo.ListCourseAssignments(ctx, courseID)
 }
 

@@ -1,6 +1,7 @@
 package assignments
 
 import (
+	"errors"
 	"fmt"
 	"io"
 	"net/http"
@@ -12,6 +13,7 @@ import (
 	"github.com/gabriel-vasile/mimetype"
 	"github.com/gin-gonic/gin"
 	"github.com/jackc/pgx/v5/pgxpool"
+	"github.com/panadolextra91/myiu-lite/backend/internal/shared/authz"
 	"github.com/panadolextra91/myiu-lite/backend/internal/shared/cloudinary"
 	"github.com/panadolextra91/myiu-lite/backend/internal/shared/config"
 	"github.com/panadolextra91/myiu-lite/backend/internal/shared/db"
@@ -82,8 +84,15 @@ func (h *Handler) ListAssignments(c *gin.Context) {
 		return
 	}
 
-	assignments, err := h.service.ListCourseAssignments(c.Request.Context(), courseID)
+	userID := c.GetInt64("user_id")
+	role := c.GetString("role")
+
+	assignments, err := h.service.ListCourseAssignments(c.Request.Context(), courseID, userID, role)
 	if err != nil {
+		if errors.Is(err, authz.ErrForbidden) {
+			c.JSON(http.StatusForbidden, errorEnvelope("forbidden", "access denied"))
+			return
+		}
 		c.JSON(http.StatusInternalServerError, errorEnvelope("server_error", err.Error()))
 		return
 	}
