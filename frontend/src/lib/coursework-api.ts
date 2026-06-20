@@ -7,6 +7,8 @@ export interface AssignmentResponse {
   deadline: string;
   accept_late: boolean;
   late_threshold_days: number | null;
+  max_score: number;
+  grading_finalized_at: string | null;
   created_at: string;
 }
 
@@ -16,6 +18,7 @@ export interface CreateAssignmentRequest {
   deadline: string;
   accept_late: boolean;
   late_threshold_days?: number;
+  max_score: number;
 }
 
 export interface SubmissionResponse {
@@ -134,6 +137,10 @@ export const courseworkApi = {
   },
   gradeSubmission: async (courseId: number, assignmentId: number, submissionId: number, payload: { score: number; feedback?: string }) => {
     const res = await api.post(`/lecturer/courses/${courseId}/assignments/${assignmentId}/submissions/${submissionId}/grade`, payload);
+    return res.data;
+  },
+  finalizeAssignmentGrading: async (courseId: number, assignmentId: number) => {
+    const res = await api.post<AssignmentResponse>(`/lecturer/courses/${courseId}/assignments/${assignmentId}/finalize`);
     return res.data;
   },
   listNotifications: async () => {

@@ -13,10 +13,10 @@ import (
 
 const createAssignment = `-- name: CreateAssignment :one
 INSERT INTO assignments (
-    course_id, title, description, deadline, accept_late, late_threshold_days, created_by
+    course_id, title, description, deadline, accept_late, late_threshold_days, created_by, max_score
 ) VALUES (
-    $1, $2, $3, $4, $5, $6, $7
-) RETURNING id, course_id, title, description, deadline, accept_late, late_threshold_days, created_by, created_at, updated_at
+    $1, $2, $3, $4, $5, $6, $7, $8
+) RETURNING id, course_id, title, description, deadline, accept_late, late_threshold_days, created_by, created_at, updated_at, max_score, grading_finalized_at
 `
 
 type CreateAssignmentParams struct {
@@ -27,6 +27,7 @@ type CreateAssignmentParams struct {
 	AcceptLate        bool
 	LateThresholdDays pgtype.Int4
 	CreatedBy         int64
+	MaxScore          pgtype.Numeric
 }
 
 func (q *Queries) CreateAssignment(ctx context.Context, arg CreateAssignmentParams) (Assignment, error) {
@@ -38,6 +39,7 @@ func (q *Queries) CreateAssignment(ctx context.Context, arg CreateAssignmentPara
 		arg.AcceptLate,
 		arg.LateThresholdDays,
 		arg.CreatedBy,
+		arg.MaxScore,
 	)
 	var i Assignment
 	err := row.Scan(
@@ -51,12 +53,46 @@ func (q *Queries) CreateAssignment(ctx context.Context, arg CreateAssignmentPara
 		&i.CreatedBy,
 		&i.CreatedAt,
 		&i.UpdatedAt,
+		&i.MaxScore,
+		&i.GradingFinalizedAt,
+	)
+	return i, err
+}
+
+const finalizeAssignmentGrading = `-- name: FinalizeAssignmentGrading :one
+UPDATE assignments
+SET grading_finalized_at = now()
+WHERE id = $1 AND course_id = $2 AND grading_finalized_at IS NULL
+RETURNING id, course_id, title, description, deadline, accept_late, late_threshold_days, created_by, created_at, updated_at, max_score, grading_finalized_at
+`
+
+type FinalizeAssignmentGradingParams struct {
+	ID       int64
+	CourseID int64
+}
+
+func (q *Queries) FinalizeAssignmentGrading(ctx context.Context, arg FinalizeAssignmentGradingParams) (Assignment, error) {
+	row := q.db.QueryRow(ctx, finalizeAssignmentGrading, arg.ID, arg.CourseID)
+	var i Assignment
+	err := row.Scan(
+		&i.ID,
+		&i.CourseID,
+		&i.Title,
+		&i.Description,
+		&i.Deadline,
+		&i.AcceptLate,
+		&i.LateThresholdDays,
+		&i.CreatedBy,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+		&i.MaxScore,
+		&i.GradingFinalizedAt,
 	)
 	return i, err
 }
 
 const getAssignmentByID = `-- name: GetAssignmentByID :one
-SELECT a.id, a.course_id, a.title, a.description, a.deadline, a.accept_late, a.late_threshold_days, a.created_by, a.created_at, a.updated_at
+SELECT a.id, a.course_id, a.title, a.description, a.deadline, a.accept_late, a.late_threshold_days, a.created_by, a.created_at, a.updated_at, a.max_score, a.grading_finalized_at
 FROM assignments a
 JOIN courses c ON a.course_id = c.id
 WHERE a.id = $1 AND c.deleted_at IS NULL
@@ -76,12 +112,14 @@ func (q *Queries) GetAssignmentByID(ctx context.Context, id int64) (Assignment, 
 		&i.CreatedBy,
 		&i.CreatedAt,
 		&i.UpdatedAt,
+		&i.MaxScore,
+		&i.GradingFinalizedAt,
 	)
 	return i, err
 }
 
 const listCourseAssignments = `-- name: ListCourseAssignments :many
-SELECT a.id, a.course_id, a.title, a.description, a.deadline, a.accept_late, a.late_threshold_days, a.created_by, a.created_at, a.updated_at
+SELECT a.id, a.course_id, a.title, a.description, a.deadline, a.accept_late, a.late_threshold_days, a.created_by, a.created_at, a.updated_at, a.max_score, a.grading_finalized_at
 FROM assignments a
 JOIN courses c ON a.course_id = c.id
 WHERE a.course_id = $1 AND c.deleted_at IS NULL
@@ -108,6 +146,8 @@ func (q *Queries) ListCourseAssignments(ctx context.Context, courseID int64) ([]
 			&i.CreatedBy,
 			&i.CreatedAt,
 			&i.UpdatedAt,
+			&i.MaxScore,
+			&i.GradingFinalizedAt,
 		); err != nil {
 			return nil, err
 		}

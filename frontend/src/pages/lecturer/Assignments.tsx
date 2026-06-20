@@ -18,6 +18,7 @@ const schema = z.object({
   deadline: z.string().min(1, 'Deadline is required'),
   accept_late: z.boolean(),
   late_threshold_days: z.coerce.number().optional(),
+  max_score: z.coerce.number().min(0.01, 'Max score must be positive').default(100),
 });
 
 type FormValues = z.infer<typeof schema>;
@@ -43,7 +44,7 @@ export default function LecturerAssignments() {
   const form = useForm<FormValues>({
     
     resolver: zodResolver(schema) as any,
-    defaultValues: { accept_late: false, title: '', description: '', deadline: '' },
+    defaultValues: { accept_late: false, title: '', description: '', deadline: '', max_score: 100 },
   });
 
   const [gradeAssignmentId, setGradeAssignmentId] = useState<number | null>(null);
@@ -89,6 +90,18 @@ export default function LecturerAssignments() {
     onError: (err: unknown) => {
       const error = err as { response?: { data?: { error?: { message?: string } } } };
       toast.error(error.response?.data?.error?.message || 'Failed to create assignment');
+    },
+  });
+
+  const finalizeMutation = useMutation({
+    mutationFn: (assignmentId: number) => courseworkApi.finalizeAssignmentGrading(courseId, assignmentId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['assignments', courseId] });
+      toast.success('Grading finalized');
+    },
+    onError: (err: unknown) => {
+      const error = err as { response?: { data?: { error?: { message?: string } } } };
+      toast.error(error.response?.data?.error?.message || 'Failed to finalize grading');
     },
   });
 
@@ -201,6 +214,20 @@ export default function LecturerAssignments() {
                       </FormItem>
                     )}
                   />
+                  <FormField
+                    
+                    control={form.control as any}
+                    name="max_score"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Max Score</FormLabel>
+                        <FormControl>
+                          <Input type="number" step="0.01" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
                   <Button type="submit" disabled={mutation.isPending}>Save</Button>
                 </form>
               </Form>
@@ -215,8 +242,10 @@ export default function LecturerAssignments() {
             <TableHead>ID</TableHead>
             <TableHead>Title</TableHead>
             <TableHead>Deadline</TableHead>
+            <TableHead>Max Score</TableHead>
             <TableHead>Accept Late</TableHead>
-            <TableHead className="w-[100px]">Actions</TableHead>
+            <TableHead>Finalized</TableHead>
+            <TableHead className="w-[180px]">Actions</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
@@ -225,17 +254,24 @@ export default function LecturerAssignments() {
               <TableCell>{a.id}</TableCell>
               <TableCell>{a.title}</TableCell>
               <TableCell>{new Date(a.deadline).toLocaleString()}</TableCell>
+              <TableCell>{a.max_score}</TableCell>
               <TableCell>{a.accept_late ? `Yes (${a.late_threshold_days || 'unlimited'} days)` : 'No'}</TableCell>
-              <TableCell>
+              <TableCell>{a.grading_finalized_at ? '✅ ' + new Date(a.grading_finalized_at).toLocaleDateString() : '—'}</TableCell>
+              <TableCell className="space-x-1">
                 <Button variant="outline" size="sm" onClick={() => setGradeAssignmentId(a.id)}>
                   Grade
                 </Button>
+                {!a.grading_finalized_at && (
+                  <Button variant="outline" size="sm" onClick={() => finalizeMutation.mutate(a.id)} disabled={finalizeMutation.isPending}>
+                    Finalize
+                  </Button>
+                )}
               </TableCell>
             </TableRow>
           ))}
           {assignments?.length === 0 && (
             <TableRow>
-              <TableCell colSpan={5} className="text-center text-muted-foreground">No assignments found</TableCell>
+              <TableCell colSpan={7} className="text-center text-muted-foreground">No assignments found</TableCell>
             </TableRow>
           )}
         </TableBody>

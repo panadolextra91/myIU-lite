@@ -54,17 +54,35 @@ func (ns NullUserRole) Value() (driver.Value, error) {
 	return string(ns.UserRole), nil
 }
 
+type Announcement struct {
+	ID           int64
+	CourseID     int64
+	AuthorID     int64
+	Title        string
+	Body         string
+	AudienceType string
+	CreatedAt    pgtype.Timestamptz
+}
+
+type AnnouncementRecipient struct {
+	ID             int64
+	AnnouncementID int64
+	StudentID      int64
+}
+
 type Assignment struct {
-	ID                int64
-	CourseID          int64
-	Title             string
-	Description       pgtype.Text
-	Deadline          pgtype.Timestamptz
-	AcceptLate        bool
-	LateThresholdDays pgtype.Int4
-	CreatedBy         int64
-	CreatedAt         pgtype.Timestamptz
-	UpdatedAt         pgtype.Timestamptz
+	ID                 int64
+	CourseID           int64
+	Title              string
+	Description        pgtype.Text
+	Deadline           pgtype.Timestamptz
+	AcceptLate         bool
+	LateThresholdDays  pgtype.Int4
+	CreatedBy          int64
+	CreatedAt          pgtype.Timestamptz
+	UpdatedAt          pgtype.Timestamptz
+	MaxScore           pgtype.Numeric
+	GradingFinalizedAt pgtype.Timestamptz
 }
 
 type AuditLog struct {
@@ -97,6 +115,40 @@ type CourseLecturer struct {
 	CourseID   int64
 	LecturerID int64
 	CreatedAt  pgtype.Timestamptz
+}
+
+type GradeComponent struct {
+	ID         int64
+	SchemeID   int64
+	ParentID   pgtype.Int8
+	Name       string
+	Weight     pgtype.Numeric
+	SourceType pgtype.Text
+	AutoKind   pgtype.Text
+	CreatedAt  pgtype.Timestamptz
+}
+
+type GradePublication struct {
+	ID          int64
+	ComponentID int64
+	StudentID   int64
+	Value       pgtype.Numeric
+	PublishedAt pgtype.Timestamptz
+}
+
+type GradeScheme struct {
+	ID        int64
+	CourseID  int64
+	CreatedBy int64
+	CreatedAt pgtype.Timestamptz
+}
+
+type GradeScore struct {
+	ID          int64
+	ComponentID int64
+	StudentID   int64
+	Score       pgtype.Numeric
+	UpdatedAt   pgtype.Timestamptz
 }
 
 type Notification struct {
@@ -160,6 +212,20 @@ type QuizQuestionOption struct {
 	Text       pgtype.Text
 	IsCorrect  bool
 	CreatedAt  pgtype.Timestamptz
+}
+
+type Request struct {
+	ID                 int64
+	CourseID           int64
+	StudentID          int64
+	TargetedLecturerID int64
+	Type               string
+	Title              string
+	Body               string
+	Status             string
+	ReplyNote          pgtype.Text
+	RepliedAt          pgtype.Timestamptz
+	CreatedAt          pgtype.Timestamptz
 }
 
 type StudentEnrollment struct {
