@@ -1,0 +1,9 @@
+package courses
+
+import "errors"
+
+var (
+	ErrCourseNotFound  = errors.New("course not found or deleted")
+	ErrInvalidDates    = errors.New("end date must be on or after start date")
+	ErrRequiredFields  = errors.New("code, name, and term are required")
+)
