@@ -10,6 +10,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/jackc/pgx/v5/pgxpool"
+	"github.com/panadolextra91/myiu-lite/backend/internal/shared/authz"
 	"github.com/panadolextra91/myiu-lite/backend/internal/shared/config"
 	"github.com/panadolextra91/myiu-lite/backend/internal/shared/db"
 	"github.com/panadolextra91/myiu-lite/backend/internal/shared/middleware"
@@ -85,6 +86,14 @@ func (h *Handler) ListQuizzes(c *gin.Context) {
 		return
 	}
 
+	userID := c.GetInt64("user_id")
+	role := c.GetString("role")
+
+	if err := authz.AssertCourseMember(c.Request.Context(), h.svc.pool, courseID, userID, db.UserRole(role)); err != nil {
+		c.JSON(http.StatusForbidden, errorEnvelope("FORBIDDEN", "access denied"))
+		return
+	}
+
 	quizzes, err := h.svc.repo.ListCourseQuizzes(c.Request.Context(), courseID)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, errorEnvelope("SERVER_ERROR", err.Error()))
@@ -116,7 +125,7 @@ func (h *Handler) ListQuizzes(c *gin.Context) {
 		}
 	}
 
-	c.JSON(http.StatusOK, gin.H{"status": "ok"})
+	c.JSON(http.StatusOK, gin.H{"data": res})
 }
 
 func (h *Handler) startAttempt(c *gin.Context) {
