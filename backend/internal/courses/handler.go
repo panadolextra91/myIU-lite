@@ -207,7 +207,7 @@ func (h *Handler) ListStudents(c *gin.Context) {
 		}
 	}
 
-	c.JSON(http.StatusOK, res)
+	c.JSON(http.StatusOK, gin.H{"data": res})
 }
 
 func (h *Handler) ListLecturers(c *gin.Context) {
@@ -236,5 +236,5 @@ func (h *Handler) ListLecturers(c *gin.Context) {
 		}
 	}
 
-	c.JSON(http.StatusOK, res)
+	c.JSON(http.StatusOK, gin.H{"data": res})
 }
