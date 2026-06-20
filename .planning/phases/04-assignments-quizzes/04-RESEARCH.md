@@ -416,17 +416,19 @@ UPDATE notifications SET read_at = now() WHERE id = $1 AND recipient_id = $2 AND
 
 **Audit-OFF confirmation (A3):** Research found **no reason to flip audit-logging ON** for Phase 4 lecturer actions. The append-only `audit_log` is scoped to admin mutations (ADMIN-08, `000005`), and lecturer create-assignment/create-quiz/grade are course-scoped academic actions, not account/course-provisioning mutations. Keep the discretion default **OFF**. The notification primitive (D-53) already provides the student-facing record of grading events.
 
-## Open Questions
+## Open Questions (RESOLVED)
 
 1. **Cloudinary `PrivateDownloadURL` for raw authenticated assets — confirm in a live spike.**
    - What we know: method exists in cloudinary-go/v2, takes `PublicID/Format/DeliveryType/ExpiresAt`, returns a time-limited URL.
    - What's unclear: whether raw `authenticated` assets deliver correctly through this exact method vs needing AuthToken-signed URLs (most docs examples are images).
    - Recommendation: Wave 1 first task = a 20-line integration spike that uploads a tiny PDF as raw/authenticated and round-trips a download through `PrivateDownloadURL`. Resolve A1 before building the submission flow on it.
+   - **RESOLVED:** retired by the Wave-1 spike in 04-01 Task 1 (env-gated `spike_test.go` round-trips a raw/authenticated PDF through `PrivateDownloadURL`); the plan documents the AuthToken fallback to switch to if `PrivateDownloadURL` fails for raw authenticated assets.
 
 2. **`late_duration` format & storage — computed vs stored.**
    - What we know: D-45 wants a human string ("6 days 12 hours").
    - What's unclear: store the rendered string vs compute on read from `submitted_at − deadline`.
    - Recommendation: store `is_late BOOL` + `submitted_at`; compute `late_duration` on read (single source of truth). Planner's call.
+   - **RESOLVED:** resolved to compute-on-read in 04-01 (migration 000006 stores `is_late BOOL` + `submitted_at` only; `late_duration` is computed on read from `submitted_at − deadline` as the single source of truth — no rendered string is persisted).
 
 ## Environment Availability
 
