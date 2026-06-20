@@ -123,7 +123,24 @@ Decimal phases appear between their surrounding integers in numeric order.
   4. A lecturer can create an MCQ quiz (CSV or UI questions; configurable max questions, max grade, shuffle, retake count); the take-quiz API never exposes which option is correct, and shuffle preserves the correct-answer mapping by stable option ID.
   5. The system auto-grades a quiz on submit (idempotent per attempt), records the score, and enforces the configured retake limit with attempts tracked distinctly.
 
-**Plans**: TBD
+**Plans**: 4 plans
+
+**Wave 1**
+
+- [ ] 04-01-PLAN.md — Cloudinary client + Wave-1 spike (retires A1) + migration 000006 (all 8 tables) + assignment create/submit (magic-byte, 10MB, late policy, versioned, authenticated) + signed-URL download (ASMT-01/02/03/04/05; D-44/45)
+
+**Wave 2** *(blocked on Wave 1)*
+
+- [ ] 04-02-PLAN.md — Assignment grade + notification primitive: same-transaction grade+notify, one-row-per-recipient notifications, NotificationBell + list page (ASMT-06, NOTIF-01/02; D-46/53/54/55)
+
+**Wave 3** *(blocked on Wave 1; sequenced after Wave 2 — shared wiring files)*
+
+- [ ] 04-03-PLAN.md — Quiz authoring: config (pool/max/shuffle/retake/window) + CSV + UI questions, stable option IDs, StudentOptionView DTO boundary (QUIZ-01/02/04; D-47/48/49)
+
+**Wave 4** *(blocked on Wave 3)*
+
+- [ ] 04-04-PLAN.md — Quiz take/attempt state machine: consume-on-start/resume, M-of-N shuffle, idempotent auto-grade, window-bound reveal, lazy AUTO_SUBMITTED, retake limit, MAX score (QUIZ-03/04/05/06; D-50/51/52)
+
 **UI hint**: yes
 
 ### Phase 5: Gradebook, Announcements & Requests
