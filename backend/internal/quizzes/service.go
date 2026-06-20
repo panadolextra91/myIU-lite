@@ -9,6 +9,7 @@ import (
 
 	"github.com/jackc/pgx/v5/pgtype"
 	"github.com/jackc/pgx/v5/pgxpool"
+	"github.com/panadolextra91/myiu-lite/backend/internal/shared/authz"
 	"github.com/panadolextra91/myiu-lite/backend/internal/shared/db"
 )
 
@@ -83,6 +84,10 @@ func (s *Service) ImportQuestionsCSV(ctx context.Context, courseID, quizID int64
 	}
 	if !ok {
 		return ErrForbidden
+	}
+
+	if _, err := authz.AssertQuizInCourse(ctx, s.pool, quizID, courseID); err != nil {
+		return err
 	}
 
 	csvReader := csv.NewReader(r)
@@ -160,6 +165,10 @@ func (s *Service) AddUIQuestion(ctx context.Context, courseID, quizID int64, req
 		return ErrForbidden
 	}
 
+	if _, err := authz.AssertQuizInCourse(ctx, s.pool, quizID, courseID); err != nil {
+		return err
+	}
+
 	correctCount := 0
 	for _, opt := range req.Options {
 		if opt.IsCorrect {
@@ -167,6 +176,9 @@ func (s *Service) AddUIQuestion(ctx context.Context, courseID, quizID int64, req
 		}
 	}
 
+	if req.QuestionType != "single" && req.QuestionType != "multi" {
+		return fmt.Errorf("%w: single choice must have exactly 1 correct option", ErrInvalidQuestion)
+	}
 	if req.QuestionType == "single" && correctCount != 1 {
 		return fmt.Errorf("%w: single choice must have exactly 1 correct option", ErrInvalidQuestion)
 	}
