@@ -26,6 +26,7 @@ WHERE student_id = $1
 ORDER BY created_at DESC;
 
 -- name: GetRequestByID :one
-SELECT *
-FROM requests
-WHERE id = $1;
+SELECT r.*
+FROM requests r
+JOIN courses c ON r.course_id = c.id
+WHERE r.id = $1 AND c.deleted_at IS NULL;

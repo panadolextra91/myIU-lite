@@ -32,7 +32,7 @@ func (s *Service) CreateScheme(ctx context.Context, courseID, lecturerID int64, 
 		return SchemeResponse{}, ErrSchemeExists
 	}
 
-	if err := s.validateWeights(components); err != nil {
+	if err := s.validateScheme(components); err != nil {
 		return SchemeResponse{}, fmt.Errorf("%w: %v", ErrValidation, err)
 	}
 
@@ -123,15 +123,51 @@ func (s *Service) CreateScheme(ctx context.Context, courseID, lecturerID int64, 
 	return s.mapSchemeResponse(scheme, savedComponents), nil
 }
 
-func (s *Service) validateWeights(components []ComponentInput) error {
+func (s *Service) validateScheme(components []ComponentInput) error {
 	sums := map[int]float64{} // keyed by parent index, -1 for root
+	hasChild := map[int]bool{}
+
 	for _, c := range components {
 		k := -1
 		if c.ParentIndex != nil {
 			k = *c.ParentIndex
+			if k < 0 || k >= len(components) {
+				return fmt.Errorf("invalid parent index %d for component %s", k, c.Name)
+			}
+			if components[k].ParentIndex != nil {
+				return fmt.Errorf("depth exceeds 2: component %s has parent %s which is also a child", c.Name, components[k].Name)
+			}
+			hasChild[k] = true
 		}
 		sums[k] += c.Weight
 	}
+
+	for i, c := range components {
+		if hasChild[i] {
+			// It's a composite
+			if c.SourceType != nil && *c.SourceType != "" {
+				return fmt.Errorf("composite component %s must not have a source_type", c.Name)
+			}
+		} else {
+			// It's a leaf
+			if c.SourceType == nil || *c.SourceType == "" {
+				return fmt.Errorf("leaf component %s must have a source_type", c.Name)
+			}
+			st := *c.SourceType
+			if st == "AUTO" {
+				if c.AutoKind == nil || *c.AutoKind == "" {
+					return fmt.Errorf("AUTO component %s must have auto_kind", c.Name)
+				}
+			} else if st == "MANUAL" {
+				if c.AutoKind != nil && *c.AutoKind != "" {
+					return fmt.Errorf("MANUAL component %s must not have auto_kind", c.Name)
+				}
+			} else {
+				return fmt.Errorf("invalid source_type %s for component %s", st, c.Name)
+			}
+		}
+	}
+
 	for parent, total := range sums {
 		if math.Abs(total-100) > 0.001 {
 			if parent == -1 {

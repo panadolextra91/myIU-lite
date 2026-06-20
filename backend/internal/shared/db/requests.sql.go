@@ -12,9 +12,10 @@ import (
 )
 
 const getRequestByID = `-- name: GetRequestByID :one
-SELECT id, course_id, student_id, targeted_lecturer_id, type, title, body, status, reply_note, replied_at, created_at
-FROM requests
-WHERE id = $1
+SELECT r.id, r.course_id, r.student_id, r.targeted_lecturer_id, r.type, r.title, r.body, r.status, r.reply_note, r.replied_at, r.created_at
+FROM requests r
+JOIN courses c ON r.course_id = c.id
+WHERE r.id = $1 AND c.deleted_at IS NULL
 `
 
 func (q *Queries) GetRequestByID(ctx context.Context, id int64) (Request, error) {

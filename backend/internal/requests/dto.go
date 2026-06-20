@@ -8,14 +8,14 @@ import (
 
 type CreateRequestRequest struct {
 	Type               string `json:"type" binding:"required,oneof=LEAVE_EARLY ABSENCE CUSTOM"`
-	Title              string `json:"title" binding:"required"`
-	Body               string `json:"body" binding:"required"`
+	Title              string `json:"title" binding:"required,max=200"`
+	Body               string `json:"body" binding:"required,max=5000"`
 	TargetedLecturerID int64  `json:"targeted_lecturer_id" binding:"required"`
 }
 
 type ReplyRequestRequest struct {
 	Decision string `json:"decision" binding:"required,oneof=APPROVED DENIED"`
-	Note     string `json:"note"`
+	Note     string `json:"note" binding:"max=5000"`
 }
 
 type RequestResponse struct {

@@ -1,5 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { useState } from 'react';
+import { useParams } from 'react-router';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useForm, useFieldArray } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -29,7 +30,8 @@ const schemeSchema = z.object({
 type FormValues = z.infer<typeof schemeSchema>;
 
 export default function LecturerGradebook() {
-  const [courseId, setCourseId] = useState<number>(1); // hardcoded for demo or extracted from useParams
+  const { id } = useParams();
+  const courseId = Number(id);
   const [open, setOpen] = useState(false);
   const queryClient = useQueryClient();
 
@@ -129,13 +131,6 @@ export default function LecturerGradebook() {
       <div className="flex justify-between items-center">
         <h1 className="text-3xl font-bold">Gradebook</h1>
         <div className="flex gap-4">
-          <Input 
-            type="number" 
-            value={courseId} 
-            onChange={(e) => setCourseId(parseInt(e.target.value) || 1)} 
-            className="w-24"
-            placeholder="Course ID"
-          />
           {scheme && (
             <Button variant="destructive" onClick={() => deleteMutation.mutate()}>
               Delete Scheme
@@ -264,12 +259,12 @@ export default function LecturerGradebook() {
                     <TableCell>
                       <div className="flex items-center gap-2">
                         {c.source_type === 'MANUAL' && (
-                          <input 
-                            type="file" 
-                            accept=".csv" 
-                            className="text-sm w-48"
-                            onChange={(e) => handleFileUpload(e, c.id)}
-                          />
+                          <Input
+                          type="file"
+                          accept=".csv"
+                          onChange={(e) => handleFileUpload(e, c.id)}
+                          disabled={uploadMutation.isPending}
+                        />
                         )}
                         {!c.parent_id && (
                           <Button 

@@ -3,8 +3,8 @@ package announcements
 import "time"
 
 type CreateAnnouncementRequest struct {
-	Title        string  `json:"title" binding:"required"`
-	Body         string  `json:"body" binding:"required"`
+	Title        string  `json:"title" binding:"required,max=200"`
+	Body         string  `json:"body" binding:"required,max=5000"`
 	AudienceType string  `json:"audience_type" binding:"required,oneof=ALL_STUDENTS SPECIFIC_STUDENTS"`
 	StudentIDs   []int64 `json:"student_ids"` // Required if SPECIFIC_STUDENTS
 }

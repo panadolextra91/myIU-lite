@@ -24,6 +24,7 @@ WITH eligible AS (
            COALESCE(
              (SELECT s.score FROM submissions s
               WHERE s.assignment_id = e.id AND s.student_id = $2
+                AND s.score IS NOT NULL
               ORDER BY s.version DESC LIMIT 1),
              0) / e.max_score * 100 AS normalized
     FROM eligible e

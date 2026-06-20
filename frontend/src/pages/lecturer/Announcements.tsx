@@ -14,6 +14,7 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Skeleton } from '@/components/ui/skeleton';
+import { Textarea } from '@/components/ui/textarea';
 
 const formSchema = z.object({
   title: z.string().min(1, 'Title is required'),
@@ -116,9 +117,9 @@ export default function LecturerAnnouncements() {
                   <FormItem>
                     <FormLabel>Body</FormLabel>
                     <FormControl>
-                      <textarea 
-                        className="flex min-h-[120px] w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-                        placeholder="Write your announcement here..."
+                      <Textarea 
+                        className="flex min-h-[120px] w-full"
+                        placeholder="Type your announcement here..."
                         {...field} 
                       />
                     </FormControl>

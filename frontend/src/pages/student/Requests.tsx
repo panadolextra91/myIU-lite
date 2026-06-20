@@ -14,6 +14,7 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Badge } from '@/components/ui/badge';
+import { Textarea } from '@/components/ui/textarea';
 
 const formSchema = z.object({
   type: z.enum(['LEAVE_EARLY', 'ABSENCE', 'CUSTOM']),
@@ -168,8 +169,8 @@ export default function StudentRequests() {
                   <FormItem>
                     <FormLabel>Details</FormLabel>
                     <FormControl>
-                      <textarea 
-                        className="flex min-h-[120px] w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                      <Textarea 
+                        className="flex min-h-[120px] w-full"
                         placeholder="Please provide details for your request..."
                         {...field} 
                       />

@@ -14,6 +14,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Skeleton } from '@/components/ui/skeleton';
 import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Textarea } from '@/components/ui/textarea';
 
 const replySchema = z.object({
   decision: z.enum(['APPROVED', 'DENIED']),
@@ -179,8 +180,8 @@ function ReplyForm({ req, onSuccess }: { req: ReqModel; onSuccess: () => void })
             <FormItem>
               <FormLabel>Note (Optional)</FormLabel>
               <FormControl>
-                <textarea 
-                  className="flex min-h-[100px] w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                <Textarea 
+                  className="flex min-h-[100px] w-full"
                   placeholder="Explain your decision..."
                   {...field} 
                 />
