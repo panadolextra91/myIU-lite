@@ -17,30 +17,30 @@ Students and lecturers can run a course end-to-end (assignments, quizzes, grades
 ### Active
 
 **Student**
-- [ ] Change password
-- [ ] Forgot/reset password
-- [ ] Submit assignment via file upload — PDF and ZIP only, max 10MB
-- [ ] Take multiple-choice quizzes; system auto-grades on submit and records the grade
+- [x] Change password
+- [x] Forgot/reset password
+- [x] Submit assignment via file upload — PDF and ZIP only, max 10MB
+- [x] Take multiple-choice quizzes; system auto-grades on submit and records the grade
 - [ ] Receive announcements from the course's lecturer
 - [ ] Receive grades from the course's lecturer
 - [ ] Send requests to the lecturer: leave-early, absence, and custom (title + plain-text body)
 
 **Lecturer**
-- [ ] Change password
-- [ ] Forgot/reset password
-- [ ] Grade assignments; grade is sent to the student automatically when done
-- [ ] Create quizzes with auto-shuffle and max-questions-per-quiz settings
+- [x] Change password
+- [x] Forgot/reset password
+- [x] Grade assignments; grade is sent to the student automatically when done
+- [x] Create quizzes with auto-shuffle and max-questions-per-quiz settings
 - [ ] Send announcements to all students, or to specific student(s) enrolled in their course
 - [ ] Reply yes/no to a student request; reply is sent to the student automatically
 
 **Admin**
-- [ ] Create student/lecturer accounts manually or from a CSV list
-- [ ] Default credentials: username = student ID / lecturer ID; password = birthday in `DDMMYYYY`; force password change on first login
-- [ ] Assign students and lecturers to a course from a CSV list
-- [ ] CRUD courses with start date and end date
-- [ ] Auto soft-delete (sweep) courses 1 month after their end date passes
-- [ ] Support password changes for lecturers/students
-- [ ] Audit log recording all admin actions
+- [x] Create student/lecturer accounts manually or from a CSV list
+- [x] Default credentials: username = student ID / lecturer ID; password = birthday in `DDMMYYYY`; force password change on first login
+- [x] Assign students and lecturers to a course from a CSV list
+- [x] CRUD courses with start date and end date
+- [x] Auto soft-delete (sweep) courses 1 month after their end date passes
+- [x] Support password changes for lecturers/students
+- [x] Audit log recording all admin actions
 
 ### Out of Scope
 
@@ -106,4 +106,4 @@ This document evolves at phase transitions and milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-06-20 after Phase 2 completion*
+*Last updated: 2026-06-20 after Phase 4 completion*

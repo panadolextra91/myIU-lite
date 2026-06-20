@@ -15,8 +15,8 @@ Decimal phases appear between their surrounding integers in numeric order.
 
 - [x] **Phase 1: Foundation & Data Core** - Monorepo, Docker Postgres, migrations, .env, and a CI gate proven to block un-mergeable PRs
 - [x] **Phase 2: Auth, RBAC & Forced First-Login** - Login/logout, server-enforced password change, role + ownership authorization
-- [ ] **Phase 3: Admin Provisioning & Course Lifecycle** - CSV accounts/enrollment, course CRUD, append-only audit log, auto soft-delete sweep
-- [ ] **Phase 4: Assignments & Quizzes** - File-upload submission + grading and auto-graded MCQ quizzes, on a shared notification primitive
+- [x] **Phase 3: Admin Provisioning & Course Lifecycle** - CSV accounts/enrollment, course CRUD, append-only audit log, auto soft-delete sweep
+- [x] **Phase 4: Assignments & Quizzes** - File-upload submission + grading and auto-graded MCQ quizzes, on a shared notification primitive
 - [ ] **Phase 5: Gradebook, Announcements & Requests** - Weighted grades, announcement fan-out, and student↔lecturer requests with auto-delivered replies
 
 ## Phase Details
@@ -93,19 +93,19 @@ Decimal phases appear between their surrounding integers in numeric order.
 
 **Wave 1**
 
-- [ ] 03-01-PLAN.md — Foundation slice: migrations 000004 (users cols, courses, membership tables, audit_log cols) + 000005 (append-only triggers + SYSTEM seed), writeAudit helper, read-only audit viewer, admin sidebar shell (ADMIN-08; D-33/34/35/36/38/41)
+- [x] 03-01-PLAN.md — Foundation slice: migrations 000004 (users cols, courses, membership tables, audit_log cols) + 000005 (append-only triggers + SYSTEM seed), writeAudit helper, read-only audit viewer, admin sidebar shell (ADMIN-08; D-33/34/35/36/38/41)
 
 **Wave 2** *(blocked on Wave 1 completion)*
 
-- [ ] 03-02-PLAN.md — Accounts slice: manual create + all-or-nothing CSV import (422 per-row errors) + admin reset to default DDMMYYYY, Accounts admin page (ADMIN-01/02/03/04; D-24/25/26/27)
+- [x] 03-02-PLAN.md — Accounts slice: manual create + all-or-nothing CSV import (422 per-row errors) + admin reset to default DDMMYYYY, Accounts admin page (ADMIN-01/02/03/04; D-24/25/26/27)
 
 **Wave 3** *(blocked on Wave 2 completion)*
 
-- [ ] 03-03-PLAN.md — Courses + sweep slice: course CRUD (soft-delete only), read-only roster page (Overview/Students/Lecturers), in-process daily+startup sweep audit-logged under SYSTEM (ADMIN-05/07; D-28/29/37/39/40/42)
+- [x] 03-03-PLAN.md — Courses + sweep slice: course CRUD (soft-delete only), read-only roster page (Overview/Students/Lecturers), in-process daily+startup sweep audit-logged under SYSTEM (ADMIN-05/07; D-28/29/37/39/40/42)
 
 **Wave 4** *(blocked on Wave 3 completion)*
 
-- [ ] 03-04-PLAN.md — Enrollment & assignment slice: idempotent all-or-nothing per-course student/lecturer CSV import + UI-only individual removal from roster (ADMIN-06; D-30/31/32/43)
+- [x] 03-04-PLAN.md — Enrollment & assignment slice: idempotent all-or-nothing per-course student/lecturer CSV import + UI-only individual removal from roster (ADMIN-06; D-30/31/32/43)
 
 **UI hint**: yes
 
@@ -127,19 +127,19 @@ Decimal phases appear between their surrounding integers in numeric order.
 
 **Wave 1**
 
-- [ ] 04-01-PLAN.md — Cloudinary client + Wave-1 spike (retires A1) + migration 000006 (all 8 tables) + assignment create/submit (magic-byte, 10MB, late policy, versioned, authenticated) + signed-URL download (ASMT-01/02/03/04/05; D-44/45)
+- [x] 04-01-PLAN.md — Cloudinary client + Wave-1 spike (retires A1) + migration 000006 (all 8 tables) + assignment create/submit (magic-byte, 10MB, late policy, versioned, authenticated) + signed-URL download (ASMT-01/02/03/04/05; D-44/45)
 
 **Wave 2** *(blocked on Wave 1)*
 
-- [ ] 04-02-PLAN.md — Assignment grade + notification primitive: same-transaction grade+notify, one-row-per-recipient notifications, NotificationBell + list page (ASMT-06, NOTIF-01/02; D-46/53/54/55)
+- [x] 04-02-PLAN.md — Assignment grade + notification primitive: same-transaction grade+notify, one-row-per-recipient notifications, NotificationBell + list page (ASMT-06, NOTIF-01/02; D-46/53/54/55)
 
 **Wave 3** *(blocked on Wave 1; sequenced after Wave 2 — shared wiring files)*
 
-- [ ] 04-03-PLAN.md — Quiz authoring: config (pool/max/shuffle/retake/window) + CSV + UI questions, stable option IDs, StudentOptionView DTO boundary (QUIZ-01/02/04; D-47/48/49)
+- [x] 04-03-PLAN.md — Quiz authoring: config (pool/max/shuffle/retake/window) + CSV + UI questions, stable option IDs, StudentOptionView DTO boundary (QUIZ-01/02/04; D-47/48/49)
 
 **Wave 4** *(blocked on Wave 3)*
 
-- [ ] 04-04-PLAN.md — Quiz take/attempt state machine: consume-on-start/resume, M-of-N shuffle, idempotent auto-grade, window-bound reveal, lazy AUTO_SUBMITTED, retake limit, MAX score (QUIZ-03/04/05/06; D-50/51/52)
+- [x] 04-04-PLAN.md — Quiz take/attempt state machine: consume-on-start/resume, M-of-N shuffle, idempotent auto-grade, window-bound reveal, lazy AUTO_SUBMITTED, retake limit, MAX score (QUIZ-03/04/05/06; D-50/51/52)
 
 **UI hint**: yes
 
@@ -168,6 +168,6 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5
 |-------|----------------|--------|-----------|
 | 1. Foundation & Data Core | 3/3 | Completed | 2026-06-20 |
 | 2. Auth, RBAC & Forced First-Login | 3/3 | Completed | 2026-06-20 |
-| 3. Admin Provisioning & Course Lifecycle | 0/4 | Not started | - |
-| 4. Assignments & Quizzes | 0/TBD | Not started | - |
+| 3. Admin Provisioning & Course Lifecycle | 4/4 | Completed | 2026-06-20 |
+| 4. Assignments & Quizzes | 4/4 | Completed | 2026-06-20 |
 | 5. Gradebook, Announcements & Requests | 0/TBD | Not started | - |
