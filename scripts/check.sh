@@ -59,7 +59,23 @@ step "backend: go vet"    bash -c "cd backend && go vet ./..."
 #   export DATABASE_URL=postgres://myiu:myiu@localhost:5432/myiu_dev?sslmode=disable
 DB_TESTS_SKIPPED=""
 if [ -n "${DATABASE_URL:-}" ]; then
-  step "backend: go test" bash -c "cd backend && go test ./..."
+  # DB schema sync — CI applies migrations before testing; do the same so a new migration
+  # that isn't applied to your local DB can't let the gate pass while CI (current schema)
+  # fails. `migrate up` is idempotent (exit 0 + "no change" when already current) and
+  # NON-destructive — it never drops data, so it's safe on any DATABASE_URL. (A full
+  # empty-DB reset isn't needed: the suite is residue-tolerant — verified green on both a
+  # fresh and a populated DB — and `migrate drop` can't remove ENUM types anyway.)
+  MIGRATE="$(command -v migrate || true)"
+  [ -z "$MIGRATE" ] && [ -x "$(go env GOPATH)/bin/migrate" ] && MIGRATE="$(go env GOPATH)/bin/migrate"
+  if [ -z "$MIGRATE" ]; then
+    printf '\n\033[33m⚠ migrate CLI not found — skipping schema sync; local schema may drift from CI.\033[0m\n'
+    printf '   Install: go install -tags postgres github.com/golang-migrate/migrate/v4/cmd/migrate@latest\n'
+  else
+    step "backend: migrate up" bash -c "'$MIGRATE' -path backend/db/migrations -database '$DATABASE_URL' up"
+  fi
+  # -count=1 disables Go's test cache so the gate ALWAYS re-runs against the live DB; a
+  # cached 'ok' can mask a real DB-state failure, and CI never caches.
+  step "backend: go test" bash -c "cd backend && go test -count=1 ./..."
 elif [ "${SKIP_DB_TESTS:-}" = "1" ]; then
   DB_TESTS_SKIPPED=1
   printf '\n\033[33m⚠ backend: go test SKIPPED via SKIP_DB_TESTS=1 — CI will run it on Postgres.\033[0m\n'
