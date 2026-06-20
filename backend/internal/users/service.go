@@ -35,7 +35,7 @@ func (s *Service) CreateAccount(ctx context.Context, role db.UserRole, username,
 	if err != nil {
 		return 0, err
 	}
-	defer tx.Rollback(ctx)
+	defer func() { _ = tx.Rollback(ctx) }()
 
 	qtx := s.q.WithTx(tx)
 
@@ -137,7 +137,7 @@ func (s *Service) ImportAccounts(ctx context.Context, role db.UserRole, file io.
 	if err != nil {
 		return 0, nil, err
 	}
-	defer tx.Rollback(ctx)
+	defer func() { _ = tx.Rollback(ctx) }()
 
 	qtx := s.repo.WithTx(tx)
 	count := 0
@@ -199,7 +199,7 @@ func (s *Service) ResetPassword(ctx context.Context, userID, actorID int64) erro
 	if err != nil {
 		return err
 	}
-	defer tx.Rollback(ctx)
+	defer func() { _ = tx.Rollback(ctx) }()
 
 	qtx := s.q.WithTx(tx)
 

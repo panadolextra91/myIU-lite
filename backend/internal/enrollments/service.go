@@ -71,7 +71,7 @@ func (s *Service) ImportMembers(ctx context.Context, courseID int64, role string
 	if err != nil {
 		return 0, nil, err
 	}
-	defer tx.Rollback(ctx)
+	defer func() { _ = tx.Rollback(ctx) }()
 
 	qtx := s.q.WithTx(tx)
 	repoTx := NewRepository(qtx)
@@ -124,7 +124,7 @@ func (s *Service) RemoveStudent(ctx context.Context, courseID int64, studentID i
 	if err != nil {
 		return err
 	}
-	defer tx.Rollback(ctx)
+	defer func() { _ = tx.Rollback(ctx) }()
 
 	qtx := s.q.WithTx(tx)
 
@@ -151,7 +151,7 @@ func (s *Service) UnassignLecturer(ctx context.Context, courseID int64, lecturer
 	if err != nil {
 		return err
 	}
-	defer tx.Rollback(ctx)
+	defer func() { _ = tx.Rollback(ctx) }()
 
 	qtx := s.q.WithTx(tx)
 

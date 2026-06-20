@@ -60,7 +60,7 @@ func (s *Service) CreateCourse(ctx context.Context, code, name, term, startDateS
 	if err != nil {
 		return db.Course{}, err
 	}
-	defer tx.Rollback(ctx)
+	defer func() { _ = tx.Rollback(ctx) }()
 
 	qtx := s.q.WithTx(tx)
 
@@ -146,7 +146,7 @@ func (s *Service) UpdateCourse(ctx context.Context, id int64, code, name, term, 
 	if err != nil {
 		return db.Course{}, err
 	}
-	defer tx.Rollback(ctx)
+	defer func() { _ = tx.Rollback(ctx) }()
 
 	qtx := s.q.WithTx(tx)
 
@@ -181,7 +181,7 @@ func (s *Service) SoftDeleteCourse(ctx context.Context, id int64, actorID int64)
 	if err != nil {
 		return err
 	}
-	defer tx.Rollback(ctx)
+	defer func() { _ = tx.Rollback(ctx) }()
 
 	qtx := s.q.WithTx(tx)
 

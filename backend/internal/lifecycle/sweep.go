@@ -47,7 +47,7 @@ func runSweep(ctx context.Context, pool *pgxpool.Pool, q *db.Queries, systemID i
 	if err != nil {
 		return 0, err
 	}
-	defer tx.Rollback(ctx)
+	defer func() { _ = tx.Rollback(ctx) }()
 
 	cmdTag, err := tx.Exec(ctx, `
 		UPDATE courses 

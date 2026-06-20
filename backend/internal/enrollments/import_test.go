@@ -31,7 +31,7 @@ func TestEnrollIdempotent(t *testing.T) {
 	var courseID int64
 	err = pool.QueryRow(ctx, `INSERT INTO courses (code, name, term, start_date, end_date) VALUES ('IDEM101', 'Idempotent', 'Fall', now(), now() + interval '1 month') RETURNING id`).Scan(&courseID)
 	require.NoError(t, err)
-	defer pool.Exec(ctx, `DELETE FROM courses WHERE id = $1`, courseID)
+	defer func() { _, _ = pool.Exec(ctx, `DELETE FROM courses WHERE id = $1`, courseID) }()
 
 	// Create 3 students
 	var sA, sB, sC int64
@@ -42,8 +42,8 @@ func TestEnrollIdempotent(t *testing.T) {
 	err = pool.QueryRow(ctx, `INSERT INTO users (username, password_hash, role, full_name) VALUES ('studentC', 'hash', 'student', 'C') RETURNING id`).Scan(&sC)
 	require.NoError(t, err)
 
-	defer pool.Exec(ctx, `DELETE FROM users WHERE id IN ($1, $2, $3)`, sA, sB, sC)
-	defer pool.Exec(ctx, `DELETE FROM student_enrollments WHERE course_id = $1`, courseID)
+	defer func() { _, _ = pool.Exec(ctx, `DELETE FROM users WHERE id IN ($1, $2, $3)`, sA, sB, sC) }()
+	defer func() { _, _ = pool.Exec(ctx, `DELETE FROM student_enrollments WHERE course_id = $1`, courseID) }()
 
 	csv1 := "student_id\nstudentA\nstudentB"
 	added, errs, err := svc.ImportMembers(ctx, courseID, "student", strings.NewReader(csv1), 1)
@@ -58,6 +58,6 @@ func TestEnrollIdempotent(t *testing.T) {
 	assert.Equal(t, int64(1), added2)
 
 	var count int
-	pool.QueryRow(ctx, `SELECT COUNT(*) FROM student_enrollments WHERE course_id = $1`, courseID).Scan(&count)
+	require.NoError(t, pool.QueryRow(ctx, `SELECT COUNT(*) FROM student_enrollments WHERE course_id = $1`, courseID).Scan(&count))
 	assert.Equal(t, 3, count)
 }
