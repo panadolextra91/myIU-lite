@@ -120,7 +120,15 @@ func (s *Service) ImportMembers(ctx context.Context, courseID int64, role string
 }
 
 func (s *Service) RemoveStudent(ctx context.Context, courseID int64, studentID int64, actorID int64) error {
-	n, err := s.repo.RemoveStudent(ctx, db.RemoveStudentParams{
+	tx, err := s.pool.Begin(ctx)
+	if err != nil {
+		return err
+	}
+	defer tx.Rollback(ctx)
+
+	qtx := s.q.WithTx(tx)
+
+	n, err := qtx.RemoveStudent(ctx, db.RemoveStudentParams{
 		CourseID:  courseID,
 		StudentID: studentID,
 	})
@@ -131,11 +139,23 @@ func (s *Service) RemoveStudent(ctx context.Context, courseID int64, studentID i
 		return ErrNotEnrolled
 	}
 
-	return auditlogs.WriteAudit(ctx, s.q, actorID, auditlogs.STUDENT_REMOVED_FROM_COURSE, auditlogs.TargetTypeCourse, &courseID, nil, nil)
+	if err := auditlogs.WriteAudit(ctx, qtx, actorID, auditlogs.STUDENT_REMOVED_FROM_COURSE, auditlogs.TargetTypeCourse, &courseID, nil, nil); err != nil {
+		return err
+	}
+
+	return tx.Commit(ctx)
 }
 
 func (s *Service) UnassignLecturer(ctx context.Context, courseID int64, lecturerID int64, actorID int64) error {
-	n, err := s.repo.UnassignLecturer(ctx, db.UnassignLecturerParams{
+	tx, err := s.pool.Begin(ctx)
+	if err != nil {
+		return err
+	}
+	defer tx.Rollback(ctx)
+
+	qtx := s.q.WithTx(tx)
+
+	n, err := qtx.UnassignLecturer(ctx, db.UnassignLecturerParams{
 		CourseID:   courseID,
 		LecturerID: lecturerID,
 	})
@@ -146,5 +166,9 @@ func (s *Service) UnassignLecturer(ctx context.Context, courseID int64, lecturer
 		return ErrNotEnrolled
 	}
 
-	return auditlogs.WriteAudit(ctx, s.q, actorID, auditlogs.LECTURER_UNASSIGNED_FROM_COURSE, auditlogs.TargetTypeCourse, &courseID, nil, nil)
+	if err := auditlogs.WriteAudit(ctx, qtx, actorID, auditlogs.LECTURER_UNASSIGNED_FROM_COURSE, auditlogs.TargetTypeCourse, &courseID, nil, nil); err != nil {
+		return err
+	}
+
+	return tx.Commit(ctx)
 }

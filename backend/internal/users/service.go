@@ -4,8 +4,10 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"io"
 
+	"github.com/jackc/pgx/v5/pgconn"
 	"github.com/jackc/pgx/v5/pgtype"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"golang.org/x/crypto/bcrypt"
@@ -29,7 +31,15 @@ func (s *Service) CreateAccount(ctx context.Context, role db.UserRole, username,
 		return 0, err
 	}
 
-	id, err := s.repo.CreateUser(ctx, db.CreateUserParams{
+	tx, err := s.pool.Begin(ctx)
+	if err != nil {
+		return 0, err
+	}
+	defer tx.Rollback(ctx)
+
+	qtx := s.q.WithTx(tx)
+
+	id, err := qtx.CreateUser(ctx, db.CreateUserParams{
 		Username:           username,
 		PasswordHash:       hash,
 		Role:               role,
@@ -38,12 +48,21 @@ func (s *Service) CreateAccount(ctx context.Context, role db.UserRole, username,
 		MustChangePassword: true,
 	})
 	if err != nil {
-		// if duplicate username, handle it
-		return 0, ErrDuplicateUser // mapping simplified for now
+		var pgErr *pgconn.PgError
+		if errors.As(err, &pgErr) && pgErr.Code == "23505" {
+			return 0, ErrDuplicateUser
+		}
+		return 0, err
 	}
 
 	meta, _ := json.Marshal(map[string]string{"username": username, "role": string(role)})
-	_ = auditlogs.WriteAudit(ctx, s.q, actorID, auditlogs.ACCOUNT_CREATE, auditlogs.TargetTypeUser, &id, nil, meta)
+	if err := auditlogs.WriteAudit(ctx, qtx, actorID, auditlogs.ACCOUNT_CREATE, auditlogs.TargetTypeUser, &id, nil, meta); err != nil {
+		return 0, err
+	}
+
+	if err := tx.Commit(ctx); err != nil {
+		return 0, err
+	}
 
 	return id, nil
 }
@@ -81,7 +100,7 @@ func (s *Service) ImportAccounts(ctx context.Context, role db.UserRole, file io.
 		}
 
 		if prev, ok := seen[p.ID]; ok {
-			rowErrs = append(rowErrs, RowError{Row: p.RowIndex, Field: "id", Message: "duplicate ID in file (matches row " + string(rune(prev+'0')) + ")"}) // simple int to string for MVP
+			rowErrs = append(rowErrs, RowError{Row: p.RowIndex, Field: "id", Message: fmt.Sprintf("duplicate ID in file (matches row %d)", prev)})
 		} else {
 			seen[p.ID] = p.RowIndex
 			ids = append(ids, p.ID)
@@ -162,6 +181,10 @@ func (s *Service) ResetPassword(ctx context.Context, userID, actorID int64) erro
 		return ErrUserNotFound
 	}
 
+	if user.IsSystem {
+		return ErrUserNotFound
+	}
+
 	if !user.DateOfBirth.Valid {
 		return errors.New("user has no date of birth")
 	}
@@ -172,7 +195,15 @@ func (s *Service) ResetPassword(ctx context.Context, userID, actorID int64) erro
 		return err
 	}
 
-	err = s.repo.ResetUserPassword(ctx, db.ResetUserPasswordParams{
+	tx, err := s.pool.Begin(ctx)
+	if err != nil {
+		return err
+	}
+	defer tx.Rollback(ctx)
+
+	qtx := s.q.WithTx(tx)
+
+	err = qtx.ResetUserPassword(ctx, db.ResetUserPasswordParams{
 		ID:           userID,
 		PasswordHash: string(hash),
 	})
@@ -180,8 +211,11 @@ func (s *Service) ResetPassword(ctx context.Context, userID, actorID int64) erro
 		return err
 	}
 
-	_ = auditlogs.WriteAudit(ctx, s.q, actorID, auditlogs.PASSWORD_RESET, auditlogs.TargetTypeUser, &userID, nil, nil)
-	return nil
+	if err := auditlogs.WriteAudit(ctx, qtx, actorID, auditlogs.PASSWORD_RESET, auditlogs.TargetTypeUser, &userID, nil, nil); err != nil {
+		return err
+	}
+
+	return tx.Commit(ctx)
 }
 
 func (s *Service) ListUsers(ctx context.Context, role *db.UserRole, search *string, limit, offset int32) ([]db.User, int64, error) {

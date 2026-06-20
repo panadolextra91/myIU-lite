@@ -2,9 +2,11 @@ package courses
 
 import (
 	"context"
+	"errors"
 	"strings"
 	"time"
 
+	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgtype"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/panadolextra91/myiu-lite/backend/internal/auditlogs"
@@ -54,7 +56,15 @@ func (s *Service) CreateCourse(ctx context.Context, code, name, term, startDateS
 		return db.Course{}, ErrInvalidDates
 	}
 
-	course, err := s.repo.CreateCourse(ctx, db.CreateCourseParams{
+	tx, err := s.pool.Begin(ctx)
+	if err != nil {
+		return db.Course{}, err
+	}
+	defer tx.Rollback(ctx)
+
+	qtx := s.q.WithTx(tx)
+
+	course, err := qtx.CreateCourse(ctx, db.CreateCourseParams{
 		Code:      code,
 		Name:      name,
 		Term:      term,
@@ -65,7 +75,14 @@ func (s *Service) CreateCourse(ctx context.Context, code, name, term, startDateS
 		return db.Course{}, err
 	}
 
-	_ = auditlogs.WriteAudit(ctx, s.q, actorID, auditlogs.COURSE_CREATE, auditlogs.TargetTypeCourse, &course.ID, nil, nil)
+	if err := auditlogs.WriteAudit(ctx, qtx, actorID, auditlogs.COURSE_CREATE, auditlogs.TargetTypeCourse, &course.ID, nil, nil); err != nil {
+		return db.Course{}, err
+	}
+
+	if err := tx.Commit(ctx); err != nil {
+		return db.Course{}, err
+	}
+
 	return course, nil
 }
 
@@ -125,7 +142,15 @@ func (s *Service) UpdateCourse(ctx context.Context, id int64, code, name, term, 
 		return db.Course{}, ErrInvalidDates
 	}
 
-	course, err := s.repo.UpdateCourse(ctx, db.UpdateCourseParams{
+	tx, err := s.pool.Begin(ctx)
+	if err != nil {
+		return db.Course{}, err
+	}
+	defer tx.Rollback(ctx)
+
+	qtx := s.q.WithTx(tx)
+
+	course, err := qtx.UpdateCourse(ctx, db.UpdateCourseParams{
 		ID:        id,
 		Code:      code,
 		Name:      name,
@@ -134,26 +159,47 @@ func (s *Service) UpdateCourse(ctx context.Context, id int64, code, name, term, 
 		EndDate:   pgtype.Date{Time: endDate, Valid: true},
 	})
 	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return db.Course{}, ErrCourseNotFound
+		}
 		return db.Course{}, err
 	}
 
-	_ = auditlogs.WriteAudit(ctx, s.q, actorID, auditlogs.COURSE_UPDATE, auditlogs.TargetTypeCourse, &id, nil, nil)
+	if err := auditlogs.WriteAudit(ctx, qtx, actorID, auditlogs.COURSE_UPDATE, auditlogs.TargetTypeCourse, &id, nil, nil); err != nil {
+		return db.Course{}, err
+	}
+
+	if err := tx.Commit(ctx); err != nil {
+		return db.Course{}, err
+	}
+
 	return course, nil
 }
 
 func (s *Service) SoftDeleteCourse(ctx context.Context, id int64, actorID int64) error {
-	_, err := s.repo.GetCourseByID(ctx, id)
+	tx, err := s.pool.Begin(ctx)
+	if err != nil {
+		return err
+	}
+	defer tx.Rollback(ctx)
+
+	qtx := s.q.WithTx(tx)
+
+	_, err = qtx.GetCourseByID(ctx, id)
 	if err != nil {
 		return ErrCourseNotFound
 	}
 
-	err = s.repo.SoftDeleteCourse(ctx, id)
+	err = qtx.SoftDeleteCourse(ctx, id)
 	if err != nil {
 		return err
 	}
 
-	_ = auditlogs.WriteAudit(ctx, s.q, actorID, auditlogs.COURSE_DELETE, auditlogs.TargetTypeCourse, &id, nil, nil)
-	return nil
+	if err := auditlogs.WriteAudit(ctx, qtx, actorID, auditlogs.COURSE_DELETE, auditlogs.TargetTypeCourse, &id, nil, nil); err != nil {
+		return err
+	}
+
+	return tx.Commit(ctx)
 }
 
 func (s *Service) ListCourseStudents(ctx context.Context, id int64) ([]db.ListCourseStudentsRow, error) {
