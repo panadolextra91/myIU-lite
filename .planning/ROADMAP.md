@@ -156,7 +156,28 @@ Decimal phases appear between their surrounding integers in numeric order.
   3. A lecturer can send an announcement to all enrolled students or to specific ones, and the targeted students see it persisted on next login (no email).
   4. A student can send a leave-early / absence / custom request to their course's lecturer, and the lecturer's yes/no reply is auto-delivered back to that student.
 
-**Plans**: TBD
+**Plans**: 5 plans
+
+**Wave 1**
+
+- [ ] 05-01-PLAN.md — Schema foundation: migration 000008 (all 7 Phase-5 tables) + Phase-4 assignments touch (max_score + grading_finalized_at + finalize action) (GRADE-01/04; D-57/58/64)
+
+**Wave 2** *(blocked on Wave 1)*
+
+- [ ] 05-02-PLAN.md — Gradebook engine: immutable hierarchical scheme + sum-to-100 validation + MANUAL entry/CSV + live normalize→aggregate compute (GRADE-01/02/03/04; D-56/57/58/64/65/67)
+
+**Wave 3** *(blocked on Wave 2 — shares grades.sql/grades service)*
+
+- [ ] 05-03-PLAN.md — Grade publish + snapshot + student view: same-tx fan-out notify, frozen snapshot vs live, conditional overall (GRADE-04/05; D-59/66)
+
+**Wave 4** *(blocked on Wave 3 — shares main.go/router.tsx)*
+
+- [ ] 05-04-PLAN.md — Announcements: ALL/SPECIFIC fan-out same-tx notify, immutable entities, lecturer composer + student browse (ANNC-01/02/03; D-60/61)
+
+**Wave 5** *(blocked on Wave 4 — shares main.go/router.tsx)*
+
+- [ ] 05-05-PLAN.md — Requests: directed routing, single-reply, both-direction same-tx notify, student compose + lecturer inbox (REQ-01/02/03; D-62/63)
+
 **UI hint**: yes
 
 ## Progress
@@ -170,4 +191,4 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5
 | 2. Auth, RBAC & Forced First-Login | 3/3 | Completed | 2026-06-20 |
 | 3. Admin Provisioning & Course Lifecycle | 4/4 | Completed | 2026-06-20 |
 | 4. Assignments & Quizzes | 4/4 | Completed | 2026-06-20 |
-| 5. Gradebook, Announcements & Requests | 0/TBD | Not started | - |
+| 5. Gradebook, Announcements & Requests | 0/5 | Not started | - |
