@@ -3,6 +3,35 @@
 **Reviewed:** 2026-06-21 · **Reviewer:** Claude (plan+review role) · **Implementer:** Antigravity
 **Method:** 3 parallel code reviewers (gradebook / notify+announce+requests / cross-phase+scope+FE) + ran `scripts/check.sh` on real Postgres + adversarial re-verification of the top findings.
 
+---
+
+## ✅ RE-REVIEW (2026-06-21) — RESOLVED, SHIP
+
+Antigravity landed 6 fix commits (`5d46edd` C3 · `7c948a6` C1 · `5822994` C2 · `5b7b8cc` C4 · `2c06cd5` H1/H3 · `17e089b` H2+MEDIUM). Re-ran `scripts/check.sh` on real Postgres → **`✓ All checks passed`** (lint + build + vet + go test all packages incl. announcements & requests + frontend). Every finding verified fixed in code, not just claimed:
+
+| ID | Fix verified |
+|----|--------------|
+| C1 | All 3 handlers read `c.GetString("role")`; `requests/handler.go:146` passes role→`GetByID`; new `IDOR - non-party caller` test asserts a different student AND a co-lecturer both get `ErrNotFound` (red-when-reverted). |
+| C2 | `announcements-api.ts` + `requests-api.ts` all paths now `/api/...`. |
+| C3 | Deferred `tx.Rollback`/`pool.Exec` returns handled; tests use unique (`_%d` ts) usernames + dependent-first teardown → residue-tolerant, green under `-count=1`. |
+| C4 | `DeleteScheme` now counts scores/pubs FIRST (returns `ErrSchemeImmutable`) → deletes components → deletes scheme; `delete_test.go` covers both the empty-delete and the refuse-when-scored paths. |
+| H1 | Enrollment scoping added to `EnterScore` (`foundEnrolled`) and CSV (`enrolledMap`). |
+| H3 | `binding:"required"` dropped from `Score`; `score_test.go` enters a 0 successfully. |
+| H2 | `Gradebook.tsx` reads `useParams().id`. |
+| M1 | AUTO assignment avg selects latest **graded** version (`AND s.score IS NOT NULL ORDER BY s.version DESC`). |
+| M2 | Scheme structural validation: depth≤2, composite-no-source_type, leaf-needs-source_type, AUTO-needs-auto_kind. |
+| M3 | shadcn `Textarea`/`Input` replace raw `<textarea>`/`<input type=file>`. |
+| M4 | `max=200` title / `max=5000` body+note on announcement + request DTOs. |
+| M5 | `GetRequestByID` joins `courses ... c.deleted_at IS NULL`. |
+
+**Residual (non-blocking, optional hardening):** C1's regression test is service-level (calls `GetByID` directly with a role arg); the handler context-key glue itself has no HTTP-level test, so a future re-break of `"role"`→`"user_role"` wouldn't be caught by the suite. Code is correct now; an `httptest`-level IDOR test would seal it.
+
+**Verdict: SHIP.** Phase 5 meets its Definition of Done (check.sh green on real Postgres), all CRITICAL/HIGH/MEDIUM findings resolved with real tests on the highest-risk behaviors.
+
+---
+
+## (Original review below — kept for history)
+
 ## Verdict: **NOT DONE — FIX-FIRST**
 
 The phase's own Definition of Done (`bash scripts/check.sh` exits 0) is **RED**. On top of that, two confirmed CRITICAL bugs make the announcements + requests features non-functional / insecure, despite the SUMMARY files claiming completion. The gradebook computation core is genuinely good (correct math, real anti-theater tests) — the failures are concentrated in authz wiring, FE API paths, test hygiene, and a few logic edges.
