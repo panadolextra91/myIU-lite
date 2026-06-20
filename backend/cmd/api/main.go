@@ -7,18 +7,19 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/jackc/pgx/v5/pgxpool"
-	"github.com/panadolextra91/myiu-lite/backend/internal/shared/config"
-	"github.com/panadolextra91/myiu-lite/backend/internal/shared/health"
 	"github.com/panadolextra91/myiu-lite/backend/internal/assignments"
 	"github.com/panadolextra91/myiu-lite/backend/internal/auditlogs"
 	"github.com/panadolextra91/myiu-lite/backend/internal/auth"
 	"github.com/panadolextra91/myiu-lite/backend/internal/courses"
 	"github.com/panadolextra91/myiu-lite/backend/internal/enrollments"
+	"github.com/panadolextra91/myiu-lite/backend/internal/grades"
 	"github.com/panadolextra91/myiu-lite/backend/internal/lifecycle"
 	"github.com/panadolextra91/myiu-lite/backend/internal/notifications"
 	"github.com/panadolextra91/myiu-lite/backend/internal/quizzes"
 	"github.com/panadolextra91/myiu-lite/backend/internal/shared/cloudinary"
+	"github.com/panadolextra91/myiu-lite/backend/internal/shared/config"
 	"github.com/panadolextra91/myiu-lite/backend/internal/shared/db"
+	"github.com/panadolextra91/myiu-lite/backend/internal/shared/health"
 	"github.com/panadolextra91/myiu-lite/backend/internal/shared/middleware"
 	"github.com/panadolextra91/myiu-lite/backend/internal/users"
 )
@@ -56,6 +57,7 @@ func main() {
 	assignments.RegisterRoutes(router, pool, cfg, cld)
 	notifications.RegisterRoutes(router, pool, cfg)
 	quizzes.RegisterRoutes(router, pool, cfg)
+	grades.RegisterRoutes(router, pool, cfg)
 
 	sysID, err := db.New(pool).GetSystemUserID(ctx)
 	if err == nil {
