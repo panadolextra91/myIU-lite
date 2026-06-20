@@ -76,6 +76,37 @@ export interface UIQuestionRequest {
   options: UIOptionRequest[];
 }
 
+export interface StudentOptionView {
+  id: number;
+  text: string;
+}
+
+export interface StudentQuestionView {
+  id: number;
+  prompt: string;
+  question_type: 'single' | 'multi';
+  options: StudentOptionView[];
+}
+
+export interface StudentQuizAttemptView {
+  id: number;
+  quiz_id: number;
+  attempt_number: number;
+  status: 'IN_PROGRESS' | 'SUBMITTED' | 'AUTO_SUBMITTED';
+  score: number | null;
+  started_at: string;
+  submitted_at: string | null;
+  questions: StudentQuestionView[];
+  selected_options: Record<number, number[]>;
+  correct_options?: Record<number, number[]>;
+}
+
+export interface SubmitAttemptResponse {
+  score: number;
+  official_score: number;
+  status: string;
+}
+
 export const courseworkApi = {
   listAssignments: async (courseId: number, role: 'student' | 'lecturer') => {
     const res = await api.get<{ data: AssignmentResponse[] }>(`/${role}/courses/${courseId}/assignments`);
@@ -134,5 +165,21 @@ export const courseworkApi = {
   addUIQuestion: async (courseId: number, quizId: number, req: UIQuestionRequest) => {
     const res = await api.post<{ status: string }>(`/lecturer/courses/${courseId}/quizzes/${quizId}/questions`, req);
     return res.data;
+  },
+  listStudentQuizzes: async (courseId: number) => {
+    const res = await api.get<{ data: QuizResponse[] }>(`/student/courses/${courseId}/quizzes`);
+    return res.data.data;
+  },
+  startAttempt: async (courseId: number, quizId: number) => {
+    const res = await api.post<{ data: StudentQuizAttemptView }>(`/student/courses/${courseId}/quizzes/${quizId}/attempts`);
+    return res.data.data;
+  },
+  getAttempt: async (courseId: number, quizId: number, attemptId: number) => {
+    const res = await api.get<{ data: StudentQuizAttemptView }>(`/student/courses/${courseId}/quizzes/${quizId}/attempts/${attemptId}`);
+    return res.data.data;
+  },
+  submitAttempt: async (courseId: number, quizId: number, attemptId: number, answers: Record<number, number[]>) => {
+    const res = await api.post<{ data: SubmitAttemptResponse }>(`/student/courses/${courseId}/quizzes/${quizId}/attempts/${attemptId}/submit`, { answers });
+    return res.data.data;
   },
 };

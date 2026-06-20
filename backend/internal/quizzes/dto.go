@@ -47,3 +47,36 @@ type StudentOptionView struct {
 	ID   int64  `json:"id"`
 	Text string `json:"text"`
 }
+
+type StudentQuestionView struct {
+	ID           int64               `json:"id"`
+	Prompt       string              `json:"prompt"`
+	QuestionType string              `json:"question_type"`
+	Options      []StudentOptionView `json:"options"`
+}
+
+type StudentQuizAttemptView struct {
+	ID            int64                 `json:"id"`
+	QuizID        int64                 `json:"quiz_id"`
+	AttemptNumber int32                 `json:"attempt_number"`
+	Status        string                `json:"status"`
+	Score         *float64              `json:"score"`
+	StartedAt     time.Time             `json:"started_at"`
+	SubmittedAt   *time.Time            `json:"submitted_at"`
+	Questions     []StudentQuestionView `json:"questions"`
+	// Selected option IDs keyed by question ID
+	SelectedOptions map[int64][]int64 `json:"selected_options"`
+	// Review mode fields (only populated if window is closed and attempt is terminal)
+	// Correct option IDs keyed by question ID
+	CorrectOptions map[int64][]int64 `json:"correct_options,omitempty"`
+}
+
+type SubmitAttemptRequest struct {
+	Answers map[int64][]int64 `json:"answers"`
+}
+
+type SubmitAttemptResponse struct {
+	Score         float64 `json:"score"`
+	OfficialScore float64 `json:"official_score"`
+	Status        string  `json:"status"`
+}

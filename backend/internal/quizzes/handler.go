@@ -35,6 +35,15 @@ func RegisterRoutes(r *gin.Engine, pool *pgxpool.Pool, cfg config.Config) {
 		lecturer.POST("/courses/:id/quizzes/:qid/questions/import", h.ImportCSV)
 		lecturer.POST("/courses/:id/quizzes/:qid/questions", h.AddUIQuestion)
 	}
+
+	student := api.Group("/student")
+	student.Use(middleware.RequireRole(db.UserRoleStudent))
+	{
+		student.GET("/courses/:id/quizzes", h.ListQuizzes)
+		student.POST("/courses/:id/quizzes/:qid/attempts", h.startAttempt)
+		student.GET("/courses/:id/quizzes/:qid/attempts/:aid", h.getAttempt)
+		student.POST("/courses/:id/quizzes/:qid/attempts/:aid/submit", h.submitAttempt)
+	}
 }
 
 func (h *Handler) CreateQuiz(c *gin.Context) {
@@ -105,6 +114,87 @@ func (h *Handler) ListQuizzes(c *gin.Context) {
 			CloseAt:      closeAt,
 			CreatedAt:    q.CreatedAt.Time,
 		}
+	}
+
+	c.JSON(http.StatusOK, gin.H{"status": "ok"})
+}
+
+func (h *Handler) startAttempt(c *gin.Context) {
+	courseID, err := strconv.ParseInt(c.Param("id"), 10, 64)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": gin.H{"message": "Invalid course ID"}})
+		return
+	}
+	quizID, err := strconv.ParseInt(c.Param("qid"), 10, 64)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": gin.H{"message": "Invalid quiz ID"}})
+		return
+	}
+
+	studentID := c.GetInt64("user_id")
+
+	attempt, err := h.svc.StartAttempt(c.Request.Context(), courseID, quizID, studentID)
+	if err != nil {
+		if err.Error() == "quiz is not open yet" || err.Error() == "quiz is closed" {
+			c.JSON(http.StatusUnprocessableEntity, gin.H{"error": gin.H{"message": err.Error()}})
+			return
+		}
+		if err.Error() == "retake limit reached" {
+			c.JSON(http.StatusConflict, gin.H{"error": gin.H{"message": err.Error()}})
+			return
+		}
+		c.JSON(http.StatusInternalServerError, gin.H{"error": gin.H{"message": err.Error()}})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"data": attempt})
+}
+
+func (h *Handler) getAttempt(c *gin.Context) {
+	attemptID, err := strconv.ParseInt(c.Param("aid"), 10, 64)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": gin.H{"message": "Invalid attempt ID"}})
+		return
+	}
+
+	studentID := c.GetInt64("user_id")
+
+	attempt, err := h.svc.GetAttempt(c.Request.Context(), attemptID, studentID)
+	if err != nil {
+		if err.Error() == "forbidden" {
+			c.JSON(http.StatusForbidden, gin.H{"error": gin.H{"message": "Forbidden"}})
+			return
+		}
+		c.JSON(http.StatusInternalServerError, gin.H{"error": gin.H{"message": err.Error()}})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"data": attempt})
+}
+
+func (h *Handler) submitAttempt(c *gin.Context) {
+	attemptID, err := strconv.ParseInt(c.Param("aid"), 10, 64)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": gin.H{"message": "Invalid attempt ID"}})
+		return
+	}
+
+	studentID := c.GetInt64("user_id")
+
+	var req SubmitAttemptRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": gin.H{"message": "Invalid request body"}})
+		return
+	}
+
+	res, err := h.svc.SubmitAttempt(c.Request.Context(), attemptID, studentID, req)
+	if err != nil {
+		if err.Error() == "forbidden" {
+			c.JSON(http.StatusForbidden, gin.H{"error": gin.H{"message": "Forbidden"}})
+			return
+		}
+		c.JSON(http.StatusInternalServerError, gin.H{"error": gin.H{"message": err.Error()}})
+		return
 	}
 
 	c.JSON(http.StatusOK, gin.H{"data": res})

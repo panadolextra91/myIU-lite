@@ -13,6 +13,7 @@ import AuditLogs from '@/pages/admin/AuditLogs';
 import LecturerAssignments from '@/pages/lecturer/Assignments';
 import LecturerQuizzes from '@/pages/lecturer/Quizzes';
 import StudentAssignments from '@/pages/student/Assignments';
+import StudentQuizzes from '@/pages/student/Quizzes';
 import Notifications from '@/pages/Notifications';
 
 import ProtectedRoute from '@/routes/ProtectedRoute';
@@ -54,6 +55,7 @@ export const router = createBrowserRouter([
             children: [
               { index: true, element: <StudentIndex /> },
               { path: 'assignments', element: <StudentAssignments /> },
+              { path: 'quizzes', element: <StudentQuizzes /> },
             ],
           },
           {
