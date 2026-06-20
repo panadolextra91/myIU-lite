@@ -7,6 +7,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/jackc/pgx/v5/pgxpool"
+	"github.com/panadolextra91/myiu-lite/backend/internal/announcements"
 	"github.com/panadolextra91/myiu-lite/backend/internal/assignments"
 	"github.com/panadolextra91/myiu-lite/backend/internal/auditlogs"
 	"github.com/panadolextra91/myiu-lite/backend/internal/auth"
@@ -58,6 +59,7 @@ func main() {
 	notifications.RegisterRoutes(router, pool, cfg)
 	quizzes.RegisterRoutes(router, pool, cfg)
 	grades.RegisterRoutes(router, pool, cfg)
+	announcements.RegisterRoutes(router, pool, cfg)
 
 	sysID, err := db.New(pool).GetSystemUserID(ctx)
 	if err == nil {
