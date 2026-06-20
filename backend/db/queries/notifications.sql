@@ -15,7 +15,7 @@ LIMIT $2 OFFSET $3;
 SELECT count(*) FROM notifications
 WHERE recipient_id = $1 AND read_at IS NULL;
 
--- name: MarkRead :exec
+-- name: MarkRead :execrows
 UPDATE notifications
 SET read_at = now()
 WHERE id = $1 AND recipient_id = $2 AND read_at IS NULL;

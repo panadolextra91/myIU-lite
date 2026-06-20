@@ -2,9 +2,7 @@ package notifications
 
 import (
 	"context"
-	"errors"
 
-	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/panadolextra91/myiu-lite/backend/internal/shared/db"
 )
@@ -32,15 +30,15 @@ func (s *Service) UnreadCount(ctx context.Context, userID int64) (int64, error) 
 }
 
 func (s *Service) MarkRead(ctx context.Context, notificationID int64, userID int64) error {
-	err := s.repo.MarkRead(ctx, db.MarkReadParams{
+	rows, err := s.repo.MarkRead(ctx, db.MarkReadParams{
 		ID:          notificationID,
 		RecipientID: userID,
 	})
 	if err != nil {
-		if errors.Is(err, pgx.ErrNoRows) {
-			return ErrNotificationNotFound
-		}
 		return err
+	}
+	if rows == 0 {
+		return ErrNotificationNotFound
 	}
 	return nil
 }

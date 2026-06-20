@@ -26,6 +26,6 @@ func (r *Repository) CountUnread(ctx context.Context, recipientID int64) (int64,
 	return r.q.CountUnread(ctx, recipientID)
 }
 
-func (r *Repository) MarkRead(ctx context.Context, arg db.MarkReadParams) error {
+func (r *Repository) MarkRead(ctx context.Context, arg db.MarkReadParams) (int64, error) {
 	return r.q.MarkRead(ctx, arg)
 }

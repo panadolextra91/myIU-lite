@@ -111,7 +111,7 @@ func (q *Queries) ListNotifications(ctx context.Context, arg ListNotificationsPa
 	return items, nil
 }
 
-const markRead = `-- name: MarkRead :exec
+const markRead = `-- name: MarkRead :execrows
 UPDATE notifications
 SET read_at = now()
 WHERE id = $1 AND recipient_id = $2 AND read_at IS NULL
@@ -122,7 +122,10 @@ type MarkReadParams struct {
 	RecipientID int64
 }
 
-func (q *Queries) MarkRead(ctx context.Context, arg MarkReadParams) error {
-	_, err := q.db.Exec(ctx, markRead, arg.ID, arg.RecipientID)
-	return err
+func (q *Queries) MarkRead(ctx context.Context, arg MarkReadParams) (int64, error) {
+	result, err := q.db.Exec(ctx, markRead, arg.ID, arg.RecipientID)
+	if err != nil {
+		return 0, err
+	}
+	return result.RowsAffected(), nil
 }
