@@ -18,6 +18,8 @@ import LecturerGradebook from '@/pages/lecturer/Gradebook';
 import StudentGrades from '@/pages/student/Grades';
 import LecturerAnnouncements from '@/pages/lecturer/Announcements';
 import StudentAnnouncements from '@/pages/student/Announcements';
+import StudentRequests from '@/pages/student/Requests';
+import LecturerRequestInbox from '@/pages/lecturer/RequestInbox';
 import Notifications from '@/pages/Notifications';
 
 import ProtectedRoute from '@/routes/ProtectedRoute';
@@ -63,6 +65,7 @@ export const router = createBrowserRouter([
               { path: 'courses/:id/grades', element: <StudentGrades /> },
               { path: 'courses/:id/announcements', element: <StudentAnnouncements /> },
               { path: 'courses/:id/announcements/:announcementId', element: <StudentAnnouncements /> },
+              { path: 'courses/:id/requests', element: <StudentRequests /> },
             ],
           },
           {
@@ -74,6 +77,7 @@ export const router = createBrowserRouter([
               { path: 'courses/:id/quizzes', element: <LecturerQuizzes /> },
               { path: 'courses/:id/gradebook', element: <LecturerGradebook /> },
               { path: 'courses/:id/announcements', element: <LecturerAnnouncements /> },
+              { path: 'requests', element: <LecturerRequestInbox /> },
             ],
           },
           {

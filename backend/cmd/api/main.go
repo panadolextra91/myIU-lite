@@ -17,6 +17,7 @@ import (
 	"github.com/panadolextra91/myiu-lite/backend/internal/lifecycle"
 	"github.com/panadolextra91/myiu-lite/backend/internal/notifications"
 	"github.com/panadolextra91/myiu-lite/backend/internal/quizzes"
+	"github.com/panadolextra91/myiu-lite/backend/internal/requests"
 	"github.com/panadolextra91/myiu-lite/backend/internal/shared/cloudinary"
 	"github.com/panadolextra91/myiu-lite/backend/internal/shared/config"
 	"github.com/panadolextra91/myiu-lite/backend/internal/shared/db"
@@ -60,6 +61,7 @@ func main() {
 	quizzes.RegisterRoutes(router, pool, cfg)
 	grades.RegisterRoutes(router, pool, cfg)
 	announcements.RegisterRoutes(router, pool, cfg)
+	requests.RegisterRoutes(router, pool, cfg)
 
 	sysID, err := db.New(pool).GetSystemUserID(ctx)
 	if err == nil {
