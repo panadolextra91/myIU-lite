@@ -11,8 +11,10 @@ import (
 )
 
 func StartSweeper(ctx context.Context, pool *pgxpool.Pool, systemID int64) {
+	q := db.New(pool)
+	
 	// Catch-up run on startup
-	if _, err := runSweep(ctx, pool, systemID); err != nil {
+	if _, err := runSweep(ctx, pool, q, systemID); err != nil {
 		log.Printf("Startup sweep failed: %v", err)
 	}
 
@@ -25,15 +27,22 @@ func StartSweeper(ctx context.Context, pool *pgxpool.Pool, systemID int64) {
 			case <-ctx.Done():
 				return
 			case <-ticker.C:
-				if _, err := runSweep(ctx, pool, systemID); err != nil {
-					log.Printf("Daily sweep failed: %v", err)
-				}
+				func() {
+					defer func() {
+						if r := recover(); r != nil {
+							log.Printf("sweep panic: %v", r)
+						}
+					}()
+					if _, err := runSweep(ctx, pool, q, systemID); err != nil {
+						log.Printf("Daily sweep failed: %v", err)
+					}
+				}()
 			}
 		}
 	}()
 }
 
-func runSweep(ctx context.Context, pool *pgxpool.Pool, systemID int64) (int64, error) {
+func runSweep(ctx context.Context, pool *pgxpool.Pool, q *db.Queries, systemID int64) (int64, error) {
 	tx, err := pool.Begin(ctx)
 	if err != nil {
 		return 0, err
@@ -51,7 +60,7 @@ func runSweep(ctx context.Context, pool *pgxpool.Pool, systemID int64) (int64, e
 
 	n := cmdTag.RowsAffected()
 	if n > 0 {
-		qtx := db.New(pool).WithTx(tx)
+		qtx := q.WithTx(tx)
 		err = auditlogs.WriteAudit(ctx, qtx, systemID, auditlogs.COURSE_SWEEP, auditlogs.TargetTypeCourse, nil, &n, nil)
 		if err != nil {
 			return 0, err

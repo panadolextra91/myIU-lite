@@ -30,7 +30,7 @@ func parseDate(d string) (time.Time, error) {
 	if t, err := time.Parse("02/01/2006", d); err == nil {
 		return t, nil
 	}
-	return time.Time{}, ErrInvalidDates
+	return time.Time{}, ErrInvalidDateFormat
 }
 
 func (s *Service) CreateCourse(ctx context.Context, code, name, term, startDateStr, endDateStr string, actorID int64) (db.Course, error) {
@@ -44,12 +44,12 @@ func (s *Service) CreateCourse(ctx context.Context, code, name, term, startDateS
 
 	startDate, err := parseDate(startDateStr)
 	if err != nil {
-		return db.Course{}, ErrInvalidDates
+		return db.Course{}, err
 	}
 
 	endDate, err := parseDate(endDateStr)
 	if err != nil {
-		return db.Course{}, ErrInvalidDates
+		return db.Course{}, err
 	}
 
 	if endDate.Before(startDate) {
@@ -130,12 +130,12 @@ func (s *Service) UpdateCourse(ctx context.Context, id int64, code, name, term, 
 
 	startDate, err := parseDate(startDateStr)
 	if err != nil {
-		return db.Course{}, ErrInvalidDates
+		return db.Course{}, err
 	}
 
 	endDate, err := parseDate(endDateStr)
 	if err != nil {
-		return db.Course{}, ErrInvalidDates
+		return db.Course{}, err
 	}
 
 	if endDate.Before(startDate) {

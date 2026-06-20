@@ -38,13 +38,13 @@ func TestSweep(t *testing.T) {
 	_, err = pool.Exec(ctx, `INSERT INTO courses (code, name, term, start_date, end_date) VALUES ('RECENT101', 'Recent Course', 'Spring 2026', now() - interval '2 months', now() - interval '1 day')`)
 	require.NoError(t, err)
 
-	n, err := runSweep(ctx, pool, sysID)
+	n, err := runSweep(ctx, pool, db.New(pool), sysID)
 	require.NoError(t, err)
 
 	assert.GreaterOrEqual(t, n, int64(1))
 
 	// Ensure idempotent
-	n2, err := runSweep(ctx, pool, sysID)
+	n2, err := runSweep(ctx, pool, db.New(pool), sysID)
 	require.NoError(t, err)
 	assert.Equal(t, int64(0), n2)
 
@@ -71,9 +71,9 @@ func TestSweepNoOp(t *testing.T) {
 	}
 
 	// Run sweep multiple times to ensure no-op is 0
-	_, _ = runSweep(ctx, pool, sysID)
+	_, _ = runSweep(ctx, pool, db.New(pool), sysID)
 
-	n, err := runSweep(ctx, pool, sysID)
+	n, err := runSweep(ctx, pool, db.New(pool), sysID)
 	require.NoError(t, err)
 	assert.Equal(t, int64(0), n)
 }
