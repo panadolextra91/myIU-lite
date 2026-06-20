@@ -6,6 +6,7 @@ import (
 	"math/rand/v2"
 	"time"
 
+	"github.com/jackc/pgx/v5/pgconn"
 	"github.com/jackc/pgx/v5/pgtype"
 	"github.com/panadolextra91/myiu-lite/backend/internal/shared/authz"
 	"github.com/panadolextra91/myiu-lite/backend/internal/shared/db"
@@ -60,6 +61,16 @@ func (s *Service) StartAttempt(ctx context.Context, courseID, quizID, studentID 
 		AttemptNumber: pgtype.Int4{Int32: int32(count) + 1, Valid: true},
 	})
 	if err != nil {
+		var pgErr *pgconn.PgError
+		if errors.As(err, &pgErr) && pgErr.Code == "23505" {
+			attempt, err = s.q.GetInProgressAttempt(ctx, db.GetInProgressAttemptParams{
+				QuizID:    quizID,
+				StudentID: studentID,
+			})
+			if err == nil {
+				return s.buildAttemptView(ctx, attempt, q)
+			}
+		}
 		return nil, err
 	}
 
