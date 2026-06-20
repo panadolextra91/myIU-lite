@@ -62,7 +62,7 @@ func (s *Service) CreateAnnouncement(ctx context.Context, courseID, authorID int
 	if err != nil {
 		return db.Announcement{}, fmt.Errorf("begin tx: %w", err)
 	}
-	defer tx.Rollback(ctx)
+	defer func() { _ = tx.Rollback(ctx) }()
 
 	qtx := q.WithTx(tx)
 

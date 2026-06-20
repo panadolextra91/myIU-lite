@@ -48,7 +48,7 @@ func (s *Service) CreateRequest(ctx context.Context, courseID, studentID int64, 
 	if err != nil {
 		return db.Request{}, fmt.Errorf("begin tx: %w", err)
 	}
-	defer tx.Rollback(ctx)
+	defer func() { _ = tx.Rollback(ctx) }()
 
 	qtx := q.WithTx(tx)
 
@@ -109,7 +109,7 @@ func (s *Service) ReplyRequest(ctx context.Context, requestID, lecturerID int64,
 	if err != nil {
 		return db.Request{}, fmt.Errorf("begin tx: %w", err)
 	}
-	defer tx.Rollback(ctx)
+	defer func() { _ = tx.Rollback(ctx) }()
 
 	qtx := q.WithTx(tx)
 

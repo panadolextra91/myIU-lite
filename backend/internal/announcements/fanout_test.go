@@ -9,6 +9,8 @@ import (
 	"github.com/panadolextra91/myiu-lite/backend/internal/announcements"
 	"github.com/panadolextra91/myiu-lite/backend/internal/shared/db"
 	"github.com/stretchr/testify/require"
+	"fmt"
+	"time"
 )
 
 func setupTestDB(t *testing.T) (*pgxpool.Pool, *announcements.Service, *db.Queries) {
@@ -35,28 +37,38 @@ func TestAnnouncementFanout(t *testing.T) {
 	ctx := context.Background()
 
 	// Create course
+	ts := time.Now().UnixNano()
 	var courseID int64
-	err := pool.QueryRow(ctx, `INSERT INTO courses (code, name, term, start_date, end_date) VALUES ('ANNC101', 'Annc', 'Fall', now(), now() + interval '1 month') RETURNING id`).Scan(&courseID)
+	err := pool.QueryRow(ctx, fmt.Sprintf(`INSERT INTO courses (code, name, term, start_date, end_date) VALUES ('ANNC_%d', 'Annc', 'Fall', now(), now() + interval '1 month') RETURNING id`, ts)).Scan(&courseID)
 	require.NoError(t, err)
-	defer pool.Exec(ctx, `DELETE FROM courses WHERE id = $1`, courseID)
 
 	// Create users
 	var lecturerID, st1, st2, st3 int64
-	err = pool.QueryRow(ctx, `INSERT INTO users (username, password_hash, role) VALUES ('lect_annc', 'hash', 'lecturer') RETURNING id`).Scan(&lecturerID)
+	lName := fmt.Sprintf("lect_%d", ts)
+	err = pool.QueryRow(ctx, `INSERT INTO users (username, password_hash, role) VALUES ($1, 'hash', 'lecturer') RETURNING id`, lName).Scan(&lecturerID)
 	require.NoError(t, err)
-	defer pool.Exec(ctx, `DELETE FROM users WHERE id = $1`, lecturerID)
 
-	err = pool.QueryRow(ctx, `INSERT INTO users (username, password_hash, role) VALUES ('st1_annc', 'hash', 'student') RETURNING id`).Scan(&st1)
+	s1Name := fmt.Sprintf("st1_%d", ts)
+	err = pool.QueryRow(ctx, `INSERT INTO users (username, password_hash, role) VALUES ($1, 'hash', 'student') RETURNING id`, s1Name).Scan(&st1)
 	require.NoError(t, err)
-	defer pool.Exec(ctx, `DELETE FROM users WHERE id = $1`, st1)
 
-	err = pool.QueryRow(ctx, `INSERT INTO users (username, password_hash, role) VALUES ('st2_annc', 'hash', 'student') RETURNING id`).Scan(&st2)
+	s2Name := fmt.Sprintf("st2_%d", ts)
+	err = pool.QueryRow(ctx, `INSERT INTO users (username, password_hash, role) VALUES ($1, 'hash', 'student') RETURNING id`, s2Name).Scan(&st2)
 	require.NoError(t, err)
-	defer pool.Exec(ctx, `DELETE FROM users WHERE id = $1`, st2)
 
-	err = pool.QueryRow(ctx, `INSERT INTO users (username, password_hash, role) VALUES ('st3_annc', 'hash', 'student') RETURNING id`).Scan(&st3)
+	s3Name := fmt.Sprintf("st3_%d", ts)
+	err = pool.QueryRow(ctx, `INSERT INTO users (username, password_hash, role) VALUES ($1, 'hash', 'student') RETURNING id`, s3Name).Scan(&st3)
 	require.NoError(t, err)
-	defer pool.Exec(ctx, `DELETE FROM users WHERE id = $1`, st3)
+
+	t.Cleanup(func() {
+		_, _ = pool.Exec(ctx, `DELETE FROM notifications WHERE recipient_id IN ($1, $2, $3, $4)`, lecturerID, st1, st2, st3)
+		_, _ = pool.Exec(ctx, `DELETE FROM announcement_recipients WHERE student_id IN ($1, $2, $3)`, st1, st2, st3)
+		_, _ = pool.Exec(ctx, `DELETE FROM announcements WHERE course_id = $1`, courseID)
+		_, _ = pool.Exec(ctx, `DELETE FROM student_enrollments WHERE course_id = $1`, courseID)
+		_, _ = pool.Exec(ctx, `DELETE FROM course_lecturers WHERE course_id = $1`, courseID)
+		_, _ = pool.Exec(ctx, `DELETE FROM courses WHERE id = $1`, courseID)
+		_, _ = pool.Exec(ctx, `DELETE FROM users WHERE id IN ($1, $2, $3, $4)`, lecturerID, st1, st2, st3)
+	})
 
 	// Enroll users
 	_, err = pool.Exec(ctx, `INSERT INTO course_lecturers (course_id, lecturer_id) VALUES ($1, $2)`, courseID, lecturerID)
