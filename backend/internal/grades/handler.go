@@ -77,7 +77,7 @@ func (h *Handler) handleGetScheme(c *gin.Context) {
 	}
 
 	userID := c.GetInt64("user_id")
-	role := c.GetString("user_role")
+	role := c.GetString("role")
 
 	resp, err := h.svc.GetScheme(c.Request.Context(), courseID, userID, role)
 	if err != nil {

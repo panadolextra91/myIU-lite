@@ -203,4 +203,34 @@ func TestAnnouncementFanout(t *testing.T) {
 			}
 		}
 	})
+
+	t.Run("IDOR - specific student visibility", func(t *testing.T) {
+		req := announcements.CreateAnnouncementRequest{
+			Title:        "Specific IDOR title",
+			Body:         "Specific IDOR body",
+			AudienceType: "SPECIFIC_STUDENTS",
+			StudentIDs:   []int64{st1},
+		}
+		ann, err := svc.CreateAnnouncement(ctx, courseID, lecturerID, req)
+		require.NoError(t, err)
+
+		// st1 can GetByID
+		_, err = svc.GetByID(ctx, courseID, ann.ID, st1, db.UserRoleStudent)
+		require.NoError(t, err)
+
+		// st2 cannot GetByID
+		_, err = svc.GetByID(ctx, courseID, ann.ID, st2, db.UserRoleStudent)
+		require.ErrorIs(t, err, announcements.ErrNotFound)
+
+		// un-enrolled user cannot GetByID
+		var stOther int64
+		stOtherName := fmt.Sprintf("st_other_%d", ts)
+		err = pool.QueryRow(ctx, `INSERT INTO users (username, password_hash, role) VALUES ($1, 'hash', 'student') RETURNING id`, stOtherName).Scan(&stOther)
+		require.NoError(t, err)
+
+		_, err = svc.GetByID(ctx, courseID, ann.ID, stOther, db.UserRoleStudent)
+		require.Error(t, err)
+
+		_, _ = pool.Exec(ctx, `DELETE FROM users WHERE id = $1`, stOther)
+	})
 }

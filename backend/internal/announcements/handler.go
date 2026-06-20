@@ -155,9 +155,9 @@ func (h *Handler) GetAnnouncement(c *gin.Context) {
 	}
 
 	userID := c.GetInt64("user_id")
-	roleStr := c.GetString("user_role")
+	role := db.UserRole(c.GetString("role"))
 
-	ann, err := h.svc.GetByID(c.Request.Context(), courseID, announcementID, userID, db.UserRole(roleStr))
+	ann, err := h.svc.GetByID(c.Request.Context(), courseID, announcementID, userID, role)
 	if err != nil {
 		if errors.Is(err, ErrForbidden) {
 			c.JSON(http.StatusForbidden, errorEnvelope("forbidden", "forbidden"))

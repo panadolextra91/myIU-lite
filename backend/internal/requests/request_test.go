@@ -146,4 +146,21 @@ func TestRequestsIntegration(t *testing.T) {
 		})
 		require.ErrorIs(t, err, requests.ErrAlreadyClosed)
 	})
+
+	t.Run("IDOR - non-party caller", func(t *testing.T) {
+		// student who didn't create it
+		var stOther int64
+		stOtherName := fmt.Sprintf("st_other_%d", ts)
+		err = pool.QueryRow(ctx, `INSERT INTO users (username, password_hash, role) VALUES ($1, 'hash', 'student') RETURNING id`, stOtherName).Scan(&stOther)
+		require.NoError(t, err)
+
+		_, err = svc.GetByID(ctx, reqID, stOther, db.UserRoleStudent)
+		require.ErrorIs(t, err, requests.ErrNotFound)
+
+		// lecturer who wasn't targeted
+		_, err = svc.GetByID(ctx, reqID, l2, db.UserRoleLecturer)
+		require.ErrorIs(t, err, requests.ErrNotFound)
+
+		_, _ = pool.Exec(ctx, `DELETE FROM users WHERE id = $1`, stOther)
+	})
 }

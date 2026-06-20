@@ -141,7 +141,7 @@ func (h *Handler) GetRequest(c *gin.Context) {
 	}
 
 	userID := c.GetInt64("user_id")
-	role := db.UserRole(c.GetString("user_role"))
+	role := db.UserRole(c.GetString("role"))
 
 	r, err := h.svc.GetByID(c.Request.Context(), requestID, userID, role)
 	if err != nil {
