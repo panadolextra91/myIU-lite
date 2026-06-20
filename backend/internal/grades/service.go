@@ -200,6 +200,21 @@ func (s *Service) EnterScore(ctx context.Context, courseID, componentID, student
 		return fmt.Errorf("%w: score must be between 0 and 100", ErrValidation)
 	}
 
+	enrolled, err := s.q.ListCourseStudents(ctx, courseID)
+	if err != nil {
+		return err
+	}
+	foundEnrolled := false
+	for _, e := range enrolled {
+		if e.StudentID == studentID {
+			foundEnrolled = true
+			break
+		}
+	}
+	if !foundEnrolled {
+		return ErrNotFound
+	}
+
 	// Ensure component exists and belongs to the course
 	comps, err := s.repo.ListSchemeComponents(ctx, courseID)
 	if err != nil {
@@ -414,21 +429,18 @@ func (s *Service) ImportScoresCSV(ctx context.Context, courseID, componentID, le
 		usernames[i] = p.Username
 	}
 
-	validUsers, err := s.q.GetUserIDsByRole(ctx, db.GetUserIDsByRoleParams{
-		Column1: usernames,
-		Role:    db.UserRoleStudent,
-	})
+	enrolled, err := s.q.ListCourseStudents(ctx, courseID)
 	if err != nil {
 		return nil, err
 	}
 
-	validMap := make(map[string]int64)
-	for _, u := range validUsers {
-		validMap[u.Username] = u.ID
+	enrolledMap := make(map[string]int64)
+	for _, e := range enrolled {
+		enrolledMap[e.Username] = e.StudentID
 	}
 
 	for _, p := range parsed {
-		if _, ok := validMap[p.Username]; !ok {
+		if _, ok := enrolledMap[p.Username]; !ok {
 			rowErrs = append(rowErrs, RowError{
 				Row:     p.RowIndex,
 				Field:   "student_id",
@@ -450,7 +462,7 @@ func (s *Service) ImportScoresCSV(ctx context.Context, courseID, componentID, le
 	qtx := s.q.WithTx(tx)
 
 	for _, p := range parsed {
-		uid := validMap[p.Username]
+		uid := enrolledMap[p.Username]
 		var num pgtype.Numeric
 		_ = num.Scan(fmt.Sprintf("%f", p.Score))
 		

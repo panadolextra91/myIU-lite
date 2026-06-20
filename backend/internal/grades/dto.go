@@ -29,7 +29,7 @@ type SchemeResponse struct {
 
 type ScoreEntryRequest struct {
 	StudentID int64   `json:"student_id" binding:"required"`
-	Score     float64 `json:"score" binding:"required"`
+	Score     float64 `json:"score"`
 }
 
 type ComputedComponent struct {
