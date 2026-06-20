@@ -281,12 +281,27 @@ func (s *Service) SubmitAttempt(ctx context.Context, courseID, quizID, attemptID
 		}, nil
 	}
 
+	answers, err := s.q.ListAttemptAnswers(ctx, attempt.ID)
+	if err != nil {
+		return nil, err
+	}
+	validQIDs := make(map[int64]bool)
+	for _, a := range answers {
+		validQIDs[a.QuestionID] = true
+	}
+
 	for qID, opts := range req.Answers {
-		_ = s.q.UpdateAttemptAnswer(ctx, db.UpdateAttemptAnswerParams{
+		if !validQIDs[qID] {
+			return nil, errors.New("invalid question ID submitted for this attempt")
+		}
+		err = s.q.UpdateAttemptAnswer(ctx, db.UpdateAttemptAnswerParams{
 			AttemptID:         attempt.ID,
 			QuestionID:        qID,
 			SelectedOptionIds: opts,
 		})
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	now := time.Now()
