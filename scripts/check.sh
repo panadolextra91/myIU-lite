@@ -10,6 +10,12 @@
 set -uo pipefail
 cd "$(git rev-parse --show-toplevel)" || exit 1
 
+# Local dev convenience (gitignored, absent in CI): load scripts/check.env so the
+# pre-push gate picks up DATABASE_URL without re-exporting in every shell. The file
+# only sets DATABASE_URL if you haven't already set one, so an explicit shell export
+# still wins. See scripts/check.env.example.
+[ -f scripts/check.env ] && . scripts/check.env
+
 FAILED=()
 step() { # step "Label" cmd...
   local label="$1"; shift
