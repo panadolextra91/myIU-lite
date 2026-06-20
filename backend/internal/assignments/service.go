@@ -113,15 +113,6 @@ func (s *Service) Submit(ctx context.Context, courseID, assignmentID, studentID 
 		isLate = true
 	}
 
-	maxVer, err := s.repo.GetMaxSubmissionVersion(ctx, db.GetMaxSubmissionVersionParams{
-		AssignmentID: assignmentID,
-		StudentID:    studentID,
-	})
-	if err != nil {
-		maxVer = 0
-	}
-	nextVer := maxVer + 1
-
 	folder := fmt.Sprintf("course_%d_assignment_%d", courseID, assignmentID)
 	publicID, format, err := s.cld.Upload(ctx, fileReader, folder)
 	if err != nil {
@@ -131,7 +122,6 @@ func (s *Service) Submit(ctx context.Context, courseID, assignmentID, studentID 
 	arg := db.InsertSubmissionVersionParams{
 		AssignmentID:       assignmentID,
 		StudentID:          studentID,
-		Version:            nextVer,
 		CloudinaryPublicID: publicID,
 		CloudinaryFormat:   format,
 		OriginalFilename:   filename,

@@ -138,14 +138,15 @@ INSERT INTO submissions (
     assignment_id, student_id, version, cloudinary_public_id, cloudinary_format,
     original_filename, is_late
 ) VALUES (
-    $1, $2, $3, $4, $5, $6, $7
+    $1, $2, 
+    (COALESCE((SELECT MAX(version) FROM submissions WHERE assignment_id=$1 AND student_id=$2), 0) + 1), 
+    $3, $4, $5, $6
 ) RETURNING id, assignment_id, student_id, version, cloudinary_public_id, cloudinary_format, original_filename, is_late, submitted_at, score, feedback, graded_at, graded_by
 `
 
 type InsertSubmissionVersionParams struct {
 	AssignmentID       int64
 	StudentID          int64
-	Version            int32
 	CloudinaryPublicID string
 	CloudinaryFormat   string
 	OriginalFilename   string
@@ -156,7 +157,6 @@ func (q *Queries) InsertSubmissionVersion(ctx context.Context, arg InsertSubmiss
 	row := q.db.QueryRow(ctx, insertSubmissionVersion,
 		arg.AssignmentID,
 		arg.StudentID,
-		arg.Version,
 		arg.CloudinaryPublicID,
 		arg.CloudinaryFormat,
 		arg.OriginalFilename,
