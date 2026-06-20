@@ -41,6 +41,41 @@ export interface NotificationResponse {
   read_at: string | null;
 }
 
+export interface QuizResponse {
+  id: number;
+  title: string;
+  pool_size: number;
+  max_questions: number;
+  max_grade: number;
+  shuffle: boolean;
+  retake_count: number;
+  open_at: string | null;
+  close_at: string | null;
+  created_at: string;
+}
+
+export interface CreateQuizRequest {
+  title: string;
+  pool_size: number;
+  max_questions: number;
+  max_grade: number;
+  shuffle: boolean;
+  retake_count: number;
+  open_at?: string;
+  close_at?: string;
+}
+
+export interface UIOptionRequest {
+  text: string;
+  is_correct: boolean;
+}
+
+export interface UIQuestionRequest {
+  prompt: string;
+  question_type: 'single' | 'multi';
+  options: UIOptionRequest[];
+}
+
 export const courseworkApi = {
   listAssignments: async (courseId: number, role: 'student' | 'lecturer') => {
     const res = await api.get<{ data: AssignmentResponse[] }>(`/${role}/courses/${courseId}/assignments`);
@@ -74,8 +109,30 @@ export const courseworkApi = {
     const res = await api.get<{ count: number }>('/notifications/unread-count');
     return res.data.count;
   },
-  markRead: async (id: number) => {
-    const res = await api.post(`/notifications/${id}/read`);
+  markRead: async (notificationId: number) => {
+    const res = await api.post<{ status: string }>(`/notifications/${notificationId}/read`);
+    return res.data;
+  },
+  listQuizzes: async (courseId: number) => {
+    const res = await api.get<{ data: QuizResponse[] }>(`/lecturer/courses/${courseId}/quizzes`);
+    return res.data.data;
+  },
+  createQuiz: async (courseId: number, req: CreateQuizRequest) => {
+    const res = await api.post<{ data: QuizResponse }>(`/lecturer/courses/${courseId}/quizzes`, req);
+    return res.data.data;
+  },
+  importQuizCSV: async (courseId: number, quizId: number, file: File) => {
+    const formData = new FormData();
+    formData.append('file', file);
+    const res = await api.post<{ status: string }>(
+      `/lecturer/courses/${courseId}/quizzes/${quizId}/questions/import`,
+      formData,
+      { headers: { 'Content-Type': 'multipart/form-data' } }
+    );
+    return res.data;
+  },
+  addUIQuestion: async (courseId: number, quizId: number, req: UIQuestionRequest) => {
+    const res = await api.post<{ status: string }>(`/lecturer/courses/${courseId}/quizzes/${quizId}/questions`, req);
     return res.data;
   },
 };
