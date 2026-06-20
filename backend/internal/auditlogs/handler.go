@@ -37,6 +37,9 @@ func (h *Handler) ListAuditLogs(c *gin.Context) {
 	if l := c.Query("limit"); l != "" {
 		if parsed, err := strconv.ParseInt(l, 10, 32); err == nil && parsed > 0 {
 			limit = int32(parsed)
+			if limit > 200 {
+				limit = 200
+			}
 		}
 	}
 	if o := c.Query("offset"); o != "" {

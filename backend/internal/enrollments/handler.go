@@ -3,7 +3,9 @@ package enrollments
 import (
 	"errors"
 	"net/http"
+	"path/filepath"
 	"strconv"
+	"strings"
 
 	"github.com/gin-gonic/gin"
 	"github.com/jackc/pgx/v5/pgxpool"
@@ -49,12 +51,19 @@ func (h *Handler) handleImport(c *gin.Context, role string) {
 
 	c.Request.Body = http.MaxBytesReader(c.Writer, c.Request.Body, 5<<20)
 
-	file, _, err := c.Request.FormFile("file")
+	file, header, err := c.Request.FormFile("file")
 	if err != nil {
 		c.JSON(http.StatusBadRequest, errorEnvelope("INVALID_FILE", "A CSV file is required"))
 		return
 	}
 	defer file.Close()
+
+	ext := strings.ToLower(filepath.Ext(header.Filename))
+	contentType := header.Header.Get("Content-Type")
+	if ext != ".csv" && contentType != "text/csv" && contentType != "application/vnd.ms-excel" {
+		c.JSON(http.StatusBadRequest, errorEnvelope("INVALID_FILE", "File must be a CSV"))
+		return
+	}
 
 	actorID := c.GetInt64("user_id")
 

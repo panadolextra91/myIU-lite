@@ -57,7 +57,7 @@ func (h *Handler) CreateCourse(c *gin.Context) {
 	actorID := c.GetInt64("user_id")
 	course, err := h.svc.CreateCourse(c.Request.Context(), req.Code, req.Name, req.Term, req.StartDate, req.EndDate, actorID)
 	if err != nil {
-		if errors.Is(err, ErrInvalidDates) || errors.Is(err, ErrRequiredFields) {
+		if errors.Is(err, ErrInvalidDates) || errors.Is(err, ErrInvalidDateFormat) || errors.Is(err, ErrRequiredFields) {
 			c.JSON(http.StatusBadRequest, errorEnvelope("INVALID_DATA", err.Error()))
 			return
 		}
@@ -75,6 +75,9 @@ func (h *Handler) ListCourses(c *gin.Context) {
 	if l := c.Query("limit"); l != "" {
 		if parsed, err := strconv.ParseInt(l, 10, 32); err == nil && parsed > 0 {
 			limit = int32(parsed)
+			if limit > 200 {
+				limit = 200
+			}
 		}
 	}
 	if o := c.Query("offset"); o != "" {
@@ -146,7 +149,7 @@ func (h *Handler) UpdateCourse(c *gin.Context) {
 	actorID := c.GetInt64("user_id")
 	course, err := h.svc.UpdateCourse(c.Request.Context(), id, req.Code, req.Name, req.Term, req.StartDate, req.EndDate, actorID)
 	if err != nil {
-		if errors.Is(err, ErrInvalidDates) || errors.Is(err, ErrRequiredFields) {
+		if errors.Is(err, ErrInvalidDates) || errors.Is(err, ErrInvalidDateFormat) || errors.Is(err, ErrRequiredFields) {
 			c.JSON(http.StatusBadRequest, errorEnvelope("INVALID_DATA", err.Error()))
 			return
 		}

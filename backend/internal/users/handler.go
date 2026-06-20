@@ -3,7 +3,9 @@ package users
 import (
 	"errors"
 	"net/http"
+	"path/filepath"
 	"strconv"
+	"strings"
 
 	"github.com/gin-gonic/gin"
 	"github.com/jackc/pgx/v5/pgxpool"
@@ -74,12 +76,19 @@ func (h *Handler) ImportLecturers(c *gin.Context) {
 
 func (h *Handler) handleImport(c *gin.Context, role db.UserRole) {
 	c.Request.Body = http.MaxBytesReader(c.Writer, c.Request.Body, 5<<20) // 5MB cap
-	file, _, err := c.Request.FormFile("file")
+	file, header, err := c.Request.FormFile("file")
 	if err != nil {
 		c.JSON(http.StatusBadRequest, errorEnvelope("INVALID_FILE", "Upload a valid CSV file"))
 		return
 	}
 	defer file.Close()
+
+	ext := strings.ToLower(filepath.Ext(header.Filename))
+	contentType := header.Header.Get("Content-Type")
+	if ext != ".csv" && contentType != "text/csv" && contentType != "application/vnd.ms-excel" {
+		c.JSON(http.StatusBadRequest, errorEnvelope("INVALID_FILE", "File must be a CSV"))
+		return
+	}
 
 	actorID := c.GetInt64("user_id")
 	count, rowErrs, err := h.svc.ImportAccounts(c.Request.Context(), role, file, actorID)
@@ -125,6 +134,9 @@ func (h *Handler) ListUsers(c *gin.Context) {
 	if l := c.Query("limit"); l != "" {
 		if parsed, err := strconv.ParseInt(l, 10, 32); err == nil && parsed > 0 {
 			limit = int32(parsed)
+			if limit > 200 {
+				limit = 200
+			}
 		}
 	}
 	if o := c.Query("offset"); o != "" {
