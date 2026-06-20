@@ -463,18 +463,23 @@ return tx.Commit(ctx)
 | A5 | One grade scheme per course (`UNIQUE(course_id)`) | Pattern 1 | If multi-scheme/versioning ever needed (deferred), drop the constraint |
 | A6 | Notification `type` enum strings (`GRADE_PUBLISHED`, `ANNOUNCEMENT`, `REQUEST_CREATED`, `REQUEST_REPLIED`) | Code Examples | Planner's discretion per D-53/D-54; names are illustrative |
 
-## Open Questions
+## Open Questions (RESOLVED)
+
+> All three resolved during planning — the resolutions are locked in 05-CONTEXT.md (prohibitions/decisions) and implemented by the Phase 5 plans (05-01/05-02). Marked RESOLVED here for record honesty.
 
 1. **What exactly makes an assignment "finalized" (D-64)?**
    - What we know: Phase 4 has only per-submission `graded_at`/`graded_by`, no per-assignment marker.
    - What's unclear: explicit lecturer "finalize" button vs derived "all active submissions graded".
    - Recommendation: **explicit `grading_finalized_at` set by a lecturer action** — leaner, deterministic, matches D-64 wording ("when the lecturer finalizes grading"), and avoids a fragile "all submissions" definition (what about students who never submitted?). [A3]
+   - **RESOLVED: explicit `grading_finalized_at` set by a lecturer finalize action** (05-01 Task 1/2; 05-02 compute reads it).
 
 2. **Backfill value for `assignments.max_score` on existing rows.**
    - What we know: column is new; existing rows need a value.
    - Recommendation: `NOT NULL DEFAULT 100`; confirm no already-graded assignments would be mis-normalized. [A2]
+   - **RESOLVED: `NOT NULL DEFAULT 100`** (05-01 Task 2 ALTER on `assignments`).
 
 3. **D-65 typo recovery scope.** See Pitfall 6 / A1 — recommend allowing whole-scheme delete+recreate only before any score/publication exists. Surface for user confirmation.
+   - **RESOLVED: whole-scheme delete+recreate allowed ONLY before any score/publication exists** (05-02 `DeleteSchemeIfEmpty`, counts==0 guard); scheme otherwise immutable per D-65.
 
 ## Environment Availability
 
