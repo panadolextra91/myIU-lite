@@ -23,3 +23,15 @@ WHERE username = ANY($1::text[])
   AND role = $2
   AND is_system = FALSE
   AND deleted_at IS NULL;
+
+-- name: IsStudentEnrolled :one
+SELECT EXISTS(
+    SELECT 1 FROM student_enrollments
+    WHERE course_id = $1 AND student_id = $2
+);
+
+-- name: IsLecturerAssigned :one
+SELECT EXISTS(
+    SELECT 1 FROM course_lecturers
+    WHERE course_id = $1 AND lecturer_id = $2
+);

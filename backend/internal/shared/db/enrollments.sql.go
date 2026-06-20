@@ -86,6 +86,44 @@ func (q *Queries) GetUserIDsByRole(ctx context.Context, arg GetUserIDsByRolePara
 	return items, nil
 }
 
+const isLecturerAssigned = `-- name: IsLecturerAssigned :one
+SELECT EXISTS(
+    SELECT 1 FROM course_lecturers
+    WHERE course_id = $1 AND lecturer_id = $2
+)
+`
+
+type IsLecturerAssignedParams struct {
+	CourseID   int64
+	LecturerID int64
+}
+
+func (q *Queries) IsLecturerAssigned(ctx context.Context, arg IsLecturerAssignedParams) (bool, error) {
+	row := q.db.QueryRow(ctx, isLecturerAssigned, arg.CourseID, arg.LecturerID)
+	var exists bool
+	err := row.Scan(&exists)
+	return exists, err
+}
+
+const isStudentEnrolled = `-- name: IsStudentEnrolled :one
+SELECT EXISTS(
+    SELECT 1 FROM student_enrollments
+    WHERE course_id = $1 AND student_id = $2
+)
+`
+
+type IsStudentEnrolledParams struct {
+	CourseID  int64
+	StudentID int64
+}
+
+func (q *Queries) IsStudentEnrolled(ctx context.Context, arg IsStudentEnrolledParams) (bool, error) {
+	row := q.db.QueryRow(ctx, isStudentEnrolled, arg.CourseID, arg.StudentID)
+	var exists bool
+	err := row.Scan(&exists)
+	return exists, err
+}
+
 const removeStudent = `-- name: RemoveStudent :execrows
 DELETE FROM student_enrollments
 WHERE course_id = $1 AND student_id = $2

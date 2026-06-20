@@ -1,0 +1,9 @@
+DROP INDEX IF EXISTS notifications_recipient_read_idx;
+DROP TABLE IF EXISTS notifications;
+DROP TABLE IF EXISTS quiz_attempt_answers;
+DROP TABLE IF EXISTS quiz_attempts;
+DROP TABLE IF EXISTS quiz_question_options;
+DROP TABLE IF EXISTS quiz_questions;
+DROP TABLE IF EXISTS quizzes;
+DROP TABLE IF EXISTS submissions;
+DROP TABLE IF EXISTS assignments;

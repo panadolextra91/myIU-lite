@@ -11,6 +11,8 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/panadolextra91/myiu-lite/backend/internal/shared/db"
+	"fmt"
+	"time"
 )
 
 func TestImportAllOrNothing(t *testing.T) {
@@ -28,14 +30,14 @@ func TestImportAllOrNothing(t *testing.T) {
 	repo := NewRepository(q)
 	svc := NewService(pool, repo)
 
-	// Count users before
-	countBefore, err := repo.CountUsers(ctx, db.CountUsersParams{})
-	require.NoError(t, err)
+	// (removed countBefore to avoid flaky concurrent scope issue)
 
-	// Provide a CSV with 1 valid row and 1 invalid row
-	csvData := `student_id,full_name,dob
-S12345,John Doe,01/01/2000
-S12346,Jane Doe,invalid-date`
+	// Provide a CSV with 1 valid row and 1 invalid row, using very unique IDs to avoid flake
+	uniqueID1 := fmt.Sprintf("S%d-1", time.Now().UnixNano())
+	uniqueID2 := fmt.Sprintf("S%d-2", time.Now().UnixNano())
+	csvData := fmt.Sprintf(`student_id,full_name,dob
+%s,John Doe,01/01/2000
+%s,Jane Doe,invalid-date`, uniqueID1, uniqueID2)
 
 	actorID := int64(1) // Assuming SYSTEM or similar exists
 
@@ -46,8 +48,9 @@ S12346,Jane Doe,invalid-date`
 	assert.Equal(t, 3, rowErrs[0].Row)
 	assert.Equal(t, "dob", rowErrs[0].Field)
 
-	// Count users after, should be exactly the same
-	countAfter, err := repo.CountUsers(ctx, db.CountUsersParams{})
+	// Instead of comparing countBefore == countAfter, we explicitly assert that the valid user was NOT inserted (rollback)
+	// We can check GetActiveUsernames
+	activeUsernames, err := repo.q.GetActiveUsernames(ctx, []string{uniqueID1})
 	require.NoError(t, err)
-	assert.Equal(t, countBefore, countAfter)
+	assert.Len(t, activeUsernames, 0, "No users should have been inserted due to rollback")
 }

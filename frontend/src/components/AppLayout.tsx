@@ -2,6 +2,7 @@ import { Outlet } from 'react-router';
 import { useAuthStore } from '@/stores/auth';
 import { Button } from '@/components/ui/button';
 import { LogOut } from 'lucide-react';
+import { NotificationBell } from '@/components/NotificationBell';
 import { api } from '@/lib/api';
 import { SidebarProvider, SidebarTrigger } from '@/components/ui/sidebar';
 import { AdminSidebar } from '@/components/admin/AdminSidebar';
@@ -32,6 +33,7 @@ export default function AppLayout() {
               <span className="text-sm text-muted-foreground hidden sm:inline-block">
                 {user.username} ({user.role})
               </span>
+              <NotificationBell />
               <Button variant="ghost" size="sm" onClick={handleLogout}>
                 <LogOut className="w-4 h-4 mr-2" />
                 Logout

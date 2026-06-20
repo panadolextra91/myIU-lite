@@ -51,7 +51,10 @@ jobs:
         uses: golangci/golangci-lint-action@v6
         with:
           working-directory: backend
-          version: latest
+          # Pinned to match the local pin (.claude/CLAUDE.md / scripts/check.sh).
+          # `latest` here silently drifts ahead of local and flags issues a passing
+          # pre-push never saw. Bump both together.
+          version: v1.64.8
           args: --timeout=5m
 
       - name: Run Go Tests
