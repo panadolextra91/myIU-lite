@@ -50,9 +50,11 @@ func SetupQuizzesFixture(t *testing.T, ctx context.Context, pool *pgxpool.Pool) 
 
 	// Create course
 	course, err := q.CreateCourse(ctx, db.CreateCourseParams{
-		Code: "C" + uniqueStr,
-		Name: "Course " + uniqueStr,
-		Term: "Fall 2026",
+		Code:      "C" + uniqueStr,
+		Name:      "Course " + uniqueStr,
+		Term:      "Fall 2026",
+		StartDate: pgtype.Date{Valid: true, Time: time.Now()},
+		EndDate:   pgtype.Date{Valid: true, Time: time.Now().Add(90 * 24 * time.Hour)},
 	})
 	require.NoError(t, err)
 
@@ -104,13 +106,13 @@ func SetupQuizzesFixture(t *testing.T, ctx context.Context, pool *pgxpool.Pool) 
 
 	t.Cleanup(func() {
 		// Clean up
-		pool.Exec(ctx, "DELETE FROM quiz_question_options WHERE question_id IN ($1, $2)", q1.ID, q2.ID)
-		pool.Exec(ctx, "DELETE FROM quiz_questions WHERE quiz_id = $1", quiz.ID)
-		pool.Exec(ctx, "DELETE FROM quizzes WHERE id = $1", quiz.ID)
-		pool.Exec(ctx, "DELETE FROM course_lecturers WHERE course_id = $1", course.ID)
-		pool.Exec(ctx, "DELETE FROM student_enrollments WHERE course_id = $1", course.ID)
-		pool.Exec(ctx, "DELETE FROM courses WHERE id = $1", course.ID)
-		pool.Exec(ctx, "DELETE FROM users WHERE id IN ($1, $2)", lecturer, student)
+		_, _ = pool.Exec(ctx, "DELETE FROM quiz_question_options WHERE question_id IN ($1, $2)", q1.ID, q2.ID)
+		_, _ = pool.Exec(ctx, "DELETE FROM quiz_questions WHERE quiz_id = $1", quiz.ID)
+		_, _ = pool.Exec(ctx, "DELETE FROM quizzes WHERE id = $1", quiz.ID)
+		_, _ = pool.Exec(ctx, "DELETE FROM course_lecturers WHERE course_id = $1", course.ID)
+		_, _ = pool.Exec(ctx, "DELETE FROM student_enrollments WHERE course_id = $1", course.ID)
+		_, _ = pool.Exec(ctx, "DELETE FROM courses WHERE id = $1", course.ID)
+		_, _ = pool.Exec(ctx, "DELETE FROM users WHERE id IN ($1, $2)", lecturer, student)
 	})
 
 	return Fixture{

@@ -2,8 +2,10 @@ package assignments_test
 
 import (
 	"context"
+	"fmt"
 	"os"
 	"testing"
+	"time"
 
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/panadolextra91/myiu-lite/backend/internal/assignments"
@@ -35,15 +37,16 @@ func TestSecurity_Assignments(t *testing.T) {
 		// Create an assignment
 		q := db.New(pool)
 		assignment, err := q.CreateAssignment(ctx, db.CreateAssignmentParams{
-			CourseID: f.CourseID,
-			Title: "Test Assign",
+			CourseID:  f.CourseID,
+			Title:     "Test Assign",
+			Deadline:  pgtype.Timestamptz{Valid: true, Time: time.Now().Add(24 * time.Hour)},
 			CreatedBy: f.LecturerID,
 		})
 		require.NoError(t, err)
 
 		// Create a submission directly
 		var subID int64
-		err = pool.QueryRow(ctx, "INSERT INTO submissions (assignment_id, student_id, version, original_filename, file_url) VALUES ($1, $2, 1, 'test.pdf', 'url') RETURNING id", assignment.ID, f.StudentID).Scan(&subID)
+		err = pool.QueryRow(ctx, "INSERT INTO submissions (assignment_id, student_id, version, cloudinary_public_id, cloudinary_format, original_filename, is_late) VALUES ($1, $2, 1, 'pid', 'pdf', 'test.pdf', false) RETURNING id", assignment.ID, f.StudentID).Scan(&subID)
 		require.NoError(t, err)
 
 		// Simulate grading failure
@@ -53,14 +56,14 @@ func TestSecurity_Assignments(t *testing.T) {
 		// Actually, to truly test rollback, let's drop notifications table momentarily (in a transaction) so grading fails at the notification step.
 		tx, _ := pool.Begin(ctx)
 		_, _ = tx.Exec(ctx, "ALTER TABLE notifications RENAME TO notifications_hidden")
-		tx.Commit(ctx)
+		_ = tx.Commit(ctx)
 
 		err = service.GradeSubmission(ctx, f.CourseID, assignment.ID, subID, 100, "Good", f.LecturerID)
 		assert.Error(t, err)
 		
 		tx2, _ := pool.Begin(ctx)
 		_, _ = tx2.Exec(ctx, "ALTER TABLE notifications_hidden RENAME TO notifications")
-		tx2.Commit(ctx)
+		_ = tx2.Commit(ctx)
 
 		// GradedAt should be null for the real submission because it was rolled back
 		var gradedAt pgtype.Timestamptz
@@ -73,7 +76,7 @@ func TestSecurity_Assignments(t *testing.T) {
 		f := testutil.SetupQuizzesFixture(t, ctx, pool)
 		
 		// Create another lecturer not in the course
-		uniqueStr := "other"
+		uniqueStr := fmt.Sprintf("other-%d", time.Now().UnixNano())
 		otherLecturer, err := db.New(pool).CreateUser(ctx, db.CreateUserParams{
 			Username: "L2" + uniqueStr,
 			Role: db.UserRoleLecturer,

@@ -147,8 +147,7 @@ func TestSecurity_Quizzes(t *testing.T) {
 		require.NoError(t, err)
 		
 		jsonClosedStr := string(bClosed)
-		// Now it should contain correct options
-		assert.Contains(t, jsonClosedStr, `"is_correct"`)
+		// After close_at, correct answers are revealed via correct_options (the DTO never emits is_correct)
 		assert.Contains(t, jsonClosedStr, `"correct_options"`)
 	})
 }
