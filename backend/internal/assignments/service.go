@@ -52,6 +52,12 @@ func (s *Service) CreateAssignment(ctx context.Context, courseID int64, req Crea
 		threshold = pgtype.Int4{Int32: *req.LateThresholdDays, Valid: true}
 	}
 
+	if req.AcceptLate {
+		if req.LateThresholdDays == nil || *req.LateThresholdDays < 0 {
+			return db.Assignment{}, errors.New("late threshold days must be provided and non-negative when accepting late submissions")
+		}
+	}
+
 	arg := db.CreateAssignmentParams{
 		CourseID:          courseID,
 		Title:             req.Title,
