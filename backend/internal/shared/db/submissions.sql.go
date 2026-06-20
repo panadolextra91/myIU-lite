@@ -7,24 +7,45 @@ package db
 
 import (
 	"context"
+
+	"github.com/jackc/pgx/v5/pgtype"
 )
 
 const getActiveSubmission = `-- name: GetActiveSubmission :one
-SELECT id, assignment_id, student_id, version, cloudinary_public_id, cloudinary_format, original_filename, is_late, submitted_at, score, feedback, graded_at, graded_by
-FROM submissions
-WHERE assignment_id = $1 AND student_id = $2
-ORDER BY version DESC
+SELECT s.id, s.assignment_id, s.student_id, s.version, s.cloudinary_public_id, s.cloudinary_format, s.original_filename, s.is_late, s.submitted_at, s.score, s.feedback, s.graded_at, s.graded_by, a.title as assignment_title, a.course_id
+FROM submissions s
+JOIN assignments a ON s.assignment_id = a.id
+WHERE a.id = $1 AND s.student_id = $2
+ORDER BY s.version DESC
 LIMIT 1
 `
 
 type GetActiveSubmissionParams struct {
-	AssignmentID int64
-	StudentID    int64
+	ID        int64
+	StudentID int64
 }
 
-func (q *Queries) GetActiveSubmission(ctx context.Context, arg GetActiveSubmissionParams) (Submission, error) {
-	row := q.db.QueryRow(ctx, getActiveSubmission, arg.AssignmentID, arg.StudentID)
-	var i Submission
+type GetActiveSubmissionRow struct {
+	ID                 int64
+	AssignmentID       int64
+	StudentID          int64
+	Version            int32
+	CloudinaryPublicID string
+	CloudinaryFormat   string
+	OriginalFilename   string
+	IsLate             bool
+	SubmittedAt        pgtype.Timestamptz
+	Score              pgtype.Numeric
+	Feedback           pgtype.Text
+	GradedAt           pgtype.Timestamptz
+	GradedBy           pgtype.Int8
+	AssignmentTitle    string
+	CourseID           int64
+}
+
+func (q *Queries) GetActiveSubmission(ctx context.Context, arg GetActiveSubmissionParams) (GetActiveSubmissionRow, error) {
+	row := q.db.QueryRow(ctx, getActiveSubmission, arg.ID, arg.StudentID)
+	var i GetActiveSubmissionRow
 	err := row.Scan(
 		&i.ID,
 		&i.AssignmentID,
@@ -39,6 +60,8 @@ func (q *Queries) GetActiveSubmission(ctx context.Context, arg GetActiveSubmissi
 		&i.Feedback,
 		&i.GradedAt,
 		&i.GradedBy,
+		&i.AssignmentTitle,
+		&i.CourseID,
 	)
 	return i, err
 }
@@ -62,16 +85,34 @@ func (q *Queries) GetMaxSubmissionVersion(ctx context.Context, arg GetMaxSubmiss
 }
 
 const getSubmissionByID = `-- name: GetSubmissionByID :one
-SELECT s.id, s.assignment_id, s.student_id, s.version, s.cloudinary_public_id, s.cloudinary_format, s.original_filename, s.is_late, s.submitted_at, s.score, s.feedback, s.graded_at, s.graded_by
+SELECT s.id, s.assignment_id, s.student_id, s.version, s.cloudinary_public_id, s.cloudinary_format, s.original_filename, s.is_late, s.submitted_at, s.score, s.feedback, s.graded_at, s.graded_by, a.title as assignment_title, a.course_id
 FROM submissions s
 JOIN assignments a ON s.assignment_id = a.id
 JOIN courses c ON a.course_id = c.id
 WHERE s.id = $1 AND c.deleted_at IS NULL
 `
 
-func (q *Queries) GetSubmissionByID(ctx context.Context, id int64) (Submission, error) {
+type GetSubmissionByIDRow struct {
+	ID                 int64
+	AssignmentID       int64
+	StudentID          int64
+	Version            int32
+	CloudinaryPublicID string
+	CloudinaryFormat   string
+	OriginalFilename   string
+	IsLate             bool
+	SubmittedAt        pgtype.Timestamptz
+	Score              pgtype.Numeric
+	Feedback           pgtype.Text
+	GradedAt           pgtype.Timestamptz
+	GradedBy           pgtype.Int8
+	AssignmentTitle    string
+	CourseID           int64
+}
+
+func (q *Queries) GetSubmissionByID(ctx context.Context, id int64) (GetSubmissionByIDRow, error) {
 	row := q.db.QueryRow(ctx, getSubmissionByID, id)
-	var i Submission
+	var i GetSubmissionByIDRow
 	err := row.Scan(
 		&i.ID,
 		&i.AssignmentID,
@@ -86,6 +127,8 @@ func (q *Queries) GetSubmissionByID(ctx context.Context, id int64) (Submission, 
 		&i.Feedback,
 		&i.GradedAt,
 		&i.GradedBy,
+		&i.AssignmentTitle,
+		&i.CourseID,
 	)
 	return i, err
 }
@@ -182,4 +225,27 @@ func (q *Queries) ListSubmissionVersions(ctx context.Context, arg ListSubmission
 		return nil, err
 	}
 	return items, nil
+}
+
+const upsertSubmissionGrade = `-- name: UpsertSubmissionGrade :exec
+UPDATE submissions
+SET score = $2, feedback = $3, graded_at = now(), graded_by = $4
+WHERE id = $1
+`
+
+type UpsertSubmissionGradeParams struct {
+	ID       int64
+	Score    pgtype.Numeric
+	Feedback pgtype.Text
+	GradedBy pgtype.Int8
+}
+
+func (q *Queries) UpsertSubmissionGrade(ctx context.Context, arg UpsertSubmissionGradeParams) error {
+	_, err := q.db.Exec(ctx, upsertSubmissionGrade,
+		arg.ID,
+		arg.Score,
+		arg.Feedback,
+		arg.GradedBy,
+	)
+	return err
 }

@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useForm } from 'react-hook-form';
@@ -21,6 +22,14 @@ const schema = z.object({
 
 type FormValues = z.infer<typeof schema>;
 
+const gradeSchema = z.object({
+  submission_id: z.coerce.number().min(1, 'Submission ID required'),
+  score: z.coerce.number().min(0).max(100),
+  feedback: z.string().optional(),
+});
+
+type GradeValues = z.infer<typeof gradeSchema>;
+
 export default function LecturerAssignments() {
   const [courseId, setCourseId] = useState<number>(1);
   const [open, setOpen] = useState(false);
@@ -32,9 +41,35 @@ export default function LecturerAssignments() {
   });
 
   const form = useForm<FormValues>({
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    
     resolver: zodResolver(schema) as any,
     defaultValues: { accept_late: false, title: '', description: '', deadline: '' },
+  });
+
+  const [gradeAssignmentId, setGradeAssignmentId] = useState<number | null>(null);
+  const gradeForm = useForm<GradeValues>({
+    
+    resolver: zodResolver(gradeSchema) as any,
+    defaultValues: { score: 0, feedback: '' },
+  });
+
+  const gradeMutation = useMutation({
+    mutationFn: (values: GradeValues) => {
+      if (!gradeAssignmentId) throw new Error('No assignment selected');
+      return courseworkApi.gradeSubmission(courseId, gradeAssignmentId, values.submission_id, {
+        score: values.score,
+        feedback: values.feedback,
+      });
+    },
+    onSuccess: () => {
+      toast.success('Grade submitted');
+      setGradeAssignmentId(null);
+      gradeForm.reset();
+    },
+    onError: (err: unknown) => {
+      const error = err as { response?: { data?: { error?: { message?: string } } } };
+      toast.error(error.response?.data?.error?.message || 'Failed to grade submission');
+    },
   });
 
   const mutation = useMutation({
@@ -94,8 +129,8 @@ export default function LecturerAssignments() {
               <Form {...form}>
                 <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
                   <FormField
-                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                    
+                    
                     control={form.control as any}
                     name="title"
                     render={({ field }) => (
@@ -109,8 +144,8 @@ export default function LecturerAssignments() {
                     )}
                   />
                   <FormField
-                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                    
+                    
                     control={form.control as any}
                     name="description"
                     render={({ field }) => (
@@ -124,8 +159,8 @@ export default function LecturerAssignments() {
                     )}
                   />
                   <FormField
-                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                    
+                    
                     control={form.control as any}
                     name="deadline"
                     render={({ field }) => (
@@ -139,8 +174,8 @@ export default function LecturerAssignments() {
                     )}
                   />
                   <FormField
-                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                    
+                    
                     control={form.control as any}
                     name="accept_late"
                     render={({ field }) => (
@@ -153,7 +188,7 @@ export default function LecturerAssignments() {
                     )}
                   />
                   <FormField
-                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                    
                     control={form.control as any}
                     name="late_threshold_days"
                     render={({ field }) => (
@@ -181,6 +216,7 @@ export default function LecturerAssignments() {
             <TableHead>Title</TableHead>
             <TableHead>Deadline</TableHead>
             <TableHead>Accept Late</TableHead>
+            <TableHead className="w-[100px]">Actions</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
@@ -194,15 +230,75 @@ export default function LecturerAssignments() {
               <TableCell>{a.title}</TableCell>
               <TableCell>{new Date(a.deadline).toLocaleString()}</TableCell>
               <TableCell>{a.accept_late ? `Yes (${a.late_threshold_days || 'unlimited'} days)` : 'No'}</TableCell>
+              <TableCell>
+                <Button variant="outline" size="sm" onClick={() => setGradeAssignmentId(a.id)}>
+                  Grade
+                </Button>
+              </TableCell>
             </TableRow>
           ))}
           {assignments?.length === 0 && (
             <TableRow>
-              <TableCell colSpan={4} className="text-center text-muted-foreground">No assignments found</TableCell>
+              <TableCell colSpan={5} className="text-center text-muted-foreground">No assignments found</TableCell>
             </TableRow>
           )}
         </TableBody>
       </Table>
+
+      <Dialog open={gradeAssignmentId !== null} onOpenChange={(open) => !open && setGradeAssignmentId(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Grade Submission</DialogTitle>
+          </DialogHeader>
+          <Form {...gradeForm}>
+            <form onSubmit={gradeForm.handleSubmit((v) => gradeMutation.mutate(v))} className="space-y-4">
+              <FormField
+                
+                control={gradeForm.control}
+                name="submission_id"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Submission ID</FormLabel>
+                    <FormControl>
+                      <Input type="number" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                
+                control={gradeForm.control}
+                name="score"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Score (0-100)</FormLabel>
+                    <FormControl>
+                      <Input type="number" step="0.01" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                
+                control={gradeForm.control}
+                name="feedback"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Feedback</FormLabel>
+                    <FormControl>
+                      <Input {...field} value={field.value || ''} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <Button type="submit" disabled={gradeMutation.isPending}>Submit Grade</Button>
+            </form>
+          </Form>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

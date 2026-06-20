@@ -15,6 +15,7 @@ import (
 	"github.com/panadolextra91/myiu-lite/backend/internal/courses"
 	"github.com/panadolextra91/myiu-lite/backend/internal/enrollments"
 	"github.com/panadolextra91/myiu-lite/backend/internal/lifecycle"
+	"github.com/panadolextra91/myiu-lite/backend/internal/notifications"
 	"github.com/panadolextra91/myiu-lite/backend/internal/shared/cloudinary"
 	"github.com/panadolextra91/myiu-lite/backend/internal/shared/db"
 	"github.com/panadolextra91/myiu-lite/backend/internal/shared/middleware"
@@ -52,6 +53,7 @@ func main() {
 	courses.RegisterRoutes(router, pool, cfg)
 	enrollments.RegisterRoutes(router, pool, cfg)
 	assignments.RegisterRoutes(router, pool, cfg, cld)
+	notifications.RegisterRoutes(router, pool, cfg)
 
 	sysID, err := db.New(pool).GetSystemUserID(ctx)
 	if err == nil {

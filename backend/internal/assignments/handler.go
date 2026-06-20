@@ -32,6 +32,7 @@ func RegisterRoutes(r *gin.Engine, pool *pgxpool.Pool, cfg config.Config, cld *c
 		lecturer.POST("/courses/:id/assignments", handler.CreateAssignment)
 		lecturer.GET("/courses/:id/assignments", handler.ListAssignments)
 		lecturer.GET("/courses/:id/assignments/:aid/submissions/:sid/download-url", handler.GetDownloadURL)
+		lecturer.POST("/courses/:id/assignments/:aid/submissions/:sid/grade", handler.GradeSubmission)
 	}
 
 	student := api.Group("/student")
@@ -205,6 +206,55 @@ func (h *Handler) GetDownloadURL(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, gin.H{"url": url})
+}
+
+type GradeRequest struct {
+	Score    *float64 `json:"score" binding:"required"`
+	Feedback string   `json:"feedback"`
+}
+
+func (h *Handler) GradeSubmission(c *gin.Context) {
+	courseID, err := strconv.ParseInt(c.Param("id"), 10, 64)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, errorEnvelope("invalid_id", "invalid course id"))
+		return
+	}
+
+	assignmentID, err := strconv.ParseInt(c.Param("aid"), 10, 64)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, errorEnvelope("invalid_id", "invalid assignment id"))
+		return
+	}
+
+	submissionID, err := strconv.ParseInt(c.Param("sid"), 10, 64)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, errorEnvelope("invalid_id", "invalid submission id"))
+		return
+	}
+
+	var req GradeRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, errorEnvelope("invalid_request", err.Error()))
+		return
+	}
+
+	lecturerID := c.GetInt64("user_id")
+
+	err = h.service.GradeSubmission(c.Request.Context(), courseID, assignmentID, submissionID, *req.Score, req.Feedback, lecturerID)
+	if err != nil {
+		if err == ErrForbidden {
+			c.JSON(http.StatusForbidden, errorEnvelope("forbidden", "access denied"))
+			return
+		}
+		if err == ErrNotFound {
+			c.JSON(http.StatusNotFound, errorEnvelope("not_found", "submission not found"))
+			return
+		}
+		c.JSON(http.StatusInternalServerError, errorEnvelope("server_error", err.Error()))
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"status": "success"})
 }
 
 func mapAssignment(a db.Assignment) AssignmentResponse {

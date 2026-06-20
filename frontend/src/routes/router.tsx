@@ -12,6 +12,7 @@ import LecturerAssignment from '@/pages/admin/LecturerAssignment';
 import AuditLogs from '@/pages/admin/AuditLogs';
 import LecturerAssignments from '@/pages/lecturer/Assignments';
 import StudentAssignments from '@/pages/student/Assignments';
+import Notifications from '@/pages/Notifications';
 
 import ProtectedRoute from '@/routes/ProtectedRoute';
 import RoleGuard from '@/routes/RoleGuard';
@@ -42,6 +43,10 @@ export const router = createBrowserRouter([
       {
         element: <AppLayout />,
         children: [
+          {
+            path: '/notifications',
+            element: <Notifications />,
+          },
           {
             path: '/student',
             element: <RoleGuard allowedRoles={['student']} />,

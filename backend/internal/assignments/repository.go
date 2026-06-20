@@ -34,7 +34,7 @@ func (r *Repository) GetMaxSubmissionVersion(ctx context.Context, arg db.GetMaxS
 	return r.q.GetMaxSubmissionVersion(ctx, arg)
 }
 
-func (r *Repository) GetActiveSubmission(ctx context.Context, arg db.GetActiveSubmissionParams) (db.Submission, error) {
+func (r *Repository) GetActiveSubmission(ctx context.Context, arg db.GetActiveSubmissionParams) (db.GetActiveSubmissionRow, error) {
 	return r.q.GetActiveSubmission(ctx, arg)
 }
 
@@ -42,6 +42,6 @@ func (r *Repository) ListSubmissionVersions(ctx context.Context, arg db.ListSubm
 	return r.q.ListSubmissionVersions(ctx, arg)
 }
 
-func (r *Repository) GetSubmissionByID(ctx context.Context, id int64) (db.Submission, error) {
+func (r *Repository) GetSubmissionByID(ctx context.Context, id int64) (db.GetSubmissionByIDRow, error) {
 	return r.q.GetSubmissionByID(ctx, id)
 }

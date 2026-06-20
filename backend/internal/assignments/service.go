@@ -174,3 +174,75 @@ func (s *Service) DownloadURL(ctx context.Context, courseID, assignmentID, submi
 
 	return s.cld.SignedDownloadURL(sub.CloudinaryPublicID, sub.CloudinaryFormat)
 }
+
+func (s *Service) GradeSubmission(ctx context.Context, courseID, assignmentID, submissionID int64, score float64, feedback string, lecturerID int64) error {
+	lecturers, err := s.q.ListCourseLecturers(ctx, courseID)
+	if err != nil {
+		return err
+	}
+	isLecturer := false
+	for _, l := range lecturers {
+		if l.LecturerID == lecturerID {
+			isLecturer = true
+			break
+		}
+	}
+	if !isLecturer {
+		return ErrForbidden
+	}
+
+	sub, err := s.repo.GetSubmissionByID(ctx, submissionID)
+	if err != nil {
+		return err
+	}
+
+	if sub.CourseID != courseID || sub.AssignmentID != assignmentID {
+		return ErrNotFound
+	}
+
+	tx, err := s.pool.Begin(ctx)
+	if err != nil {
+		return err
+	}
+	defer func() { _ = tx.Rollback(ctx) }()
+
+	qtx := s.q.WithTx(tx)
+
+	var fdbk pgtype.Text
+	if feedback != "" {
+		fdbk = pgtype.Text{String: feedback, Valid: true}
+	}
+	var num pgtype.Numeric
+	_ = num.Scan(fmt.Sprintf("%f", score))
+	
+	err = qtx.UpsertSubmissionGrade(ctx, db.UpsertSubmissionGradeParams{
+		ID:       submissionID,
+		Score:    num,
+		Feedback: fdbk,
+		GradedBy: pgtype.Int8{Int64: lecturerID, Valid: true},
+	})
+	if err != nil {
+		return err
+	}
+
+	scoreStr := fmt.Sprintf("%.2f", score)
+	title := "Assignment Graded"
+	body := fmt.Sprintf("Your assignment %q has been graded. Score: %s.", sub.AssignmentTitle, scoreStr)
+	link := fmt.Sprintf("/courses/%d/assignments/%d", courseID, assignmentID)
+
+	_, err = qtx.InsertNotification(ctx, db.InsertNotificationParams{
+		RecipientID:  sub.StudentID,
+		Type:         "ASSIGNMENT_GRADED",
+		Title:        title,
+		Body:         body,
+		ResourceType: pgtype.Text{String: "assignment", Valid: true},
+		ResourceID:   pgtype.Int8{Int64: assignmentID, Valid: true},
+		Link:         pgtype.Text{String: link, Valid: true},
+	})
+	if err != nil {
+		return err
+	}
+
+	return tx.Commit(ctx)
+}
+

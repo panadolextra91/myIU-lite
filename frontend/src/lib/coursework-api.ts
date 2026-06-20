@@ -29,6 +29,18 @@ export interface SubmissionResponse {
   feedback: string | null;
 }
 
+export interface NotificationResponse {
+  id: number;
+  type: string;
+  title: string;
+  body: string;
+  resource_type: string;
+  resource_id: number;
+  link: string;
+  created_at: string;
+  read_at: string | null;
+}
+
 export const courseworkApi = {
   listAssignments: async (courseId: number, role: 'student' | 'lecturer') => {
     const res = await api.get<{ data: AssignmentResponse[] }>(`/${role}/courses/${courseId}/assignments`);
@@ -49,5 +61,21 @@ export const courseworkApi = {
   getDownloadUrl: async (courseId: number, assignmentId: number, submissionId: number, role: 'student' | 'lecturer') => {
     const res = await api.get<{ url: string }>(`/${role}/courses/${courseId}/assignments/${assignmentId}/submissions/${submissionId}/download-url`);
     return res.data.url;
+  },
+  gradeSubmission: async (courseId: number, assignmentId: number, submissionId: number, payload: { score: number; feedback?: string }) => {
+    const res = await api.post(`/lecturer/courses/${courseId}/assignments/${assignmentId}/submissions/${submissionId}/grade`, payload);
+    return res.data;
+  },
+  listNotifications: async () => {
+    const res = await api.get<{ data: NotificationResponse[] }>('/notifications');
+    return res.data.data;
+  },
+  unreadCount: async () => {
+    const res = await api.get<{ count: number }>('/notifications/unread-count');
+    return res.data.count;
+  },
+  markRead: async (id: number) => {
+    const res = await api.post(`/notifications/${id}/read`);
+    return res.data;
   },
 };
