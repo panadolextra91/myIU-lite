@@ -103,6 +103,16 @@ export default function LecturerGradebook() {
     },
   });
 
+  const publishMutation = useMutation({
+    mutationFn: (componentId: number) => gradesApi.publishComponent(courseId, componentId),
+    onSuccess: () => {
+      toast.success('Grades published and notifications sent!');
+    },
+    onError: (err: any) => {
+      toast.error(err.response?.data?.error?.message || 'Failed to publish grades');
+    },
+  });
+
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>, compId: number) => {
     if (e.target.files && e.target.files.length > 0) {
       uploadMutation.mutate({ componentId: compId, file: e.target.files[0] });
@@ -252,16 +262,26 @@ export default function LecturerGradebook() {
                     <TableCell>{c.weight}%</TableCell>
                     <TableCell>{c.source_type || 'Composite'} {c.auto_kind ? `(${c.auto_kind})` : ''}</TableCell>
                     <TableCell>
-                      {c.source_type === 'MANUAL' && (
-                        <div>
+                      <div className="flex items-center gap-2">
+                        {c.source_type === 'MANUAL' && (
                           <input 
                             type="file" 
                             accept=".csv" 
-                            className="text-sm"
+                            className="text-sm w-48"
                             onChange={(e) => handleFileUpload(e, c.id)}
                           />
-                        </div>
-                      )}
+                        )}
+                        {!c.parent_id && (
+                          <Button 
+                            variant="secondary" 
+                            size="sm"
+                            disabled={publishMutation.isPending}
+                            onClick={() => publishMutation.mutate(c.id)}
+                          >
+                            Publish
+                          </Button>
+                        )}
+                      </div>
                     </TableCell>
                   </TableRow>
                 ))}

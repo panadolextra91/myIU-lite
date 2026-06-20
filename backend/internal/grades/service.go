@@ -464,3 +464,140 @@ func (s *Service) ImportScoresCSV(ctx context.Context, courseID, componentID, le
 
 	return nil, nil
 }
+
+func (s *Service) PublishComponent(ctx context.Context, courseID, componentID, lecturerID int64) error {
+	if err := authz.AssertCourseMember(ctx, s.pool, courseID, lecturerID, db.UserRoleLecturer); err != nil {
+		return ErrForbidden
+	}
+
+	comps, err := s.repo.ListSchemeComponents(ctx, courseID)
+	if err != nil {
+		return err
+	}
+	var target *db.GradeComponent
+	for _, c := range comps {
+		if c.ID == componentID {
+			target = &c
+			break
+		}
+	}
+	if target == nil {
+		return ErrNotFound
+	}
+	if target.ParentID.Valid {
+		return fmt.Errorf("%w: component is not top-level", ErrValidation)
+	}
+
+	students, err := s.q.ListCourseStudents(ctx, courseID)
+	if err != nil {
+		return err
+	}
+
+	tx, err := s.pool.Begin(ctx)
+	if err != nil {
+		return err
+	}
+	defer func() { _ = tx.Rollback(ctx) }()
+	qtx := s.q.WithTx(tx)
+
+	for _, st := range students {
+		// compute live value
+		res, err := s.ComputeOverallForStudent(ctx, courseID, st.StudentID)
+		if err != nil {
+			return err
+		}
+		var val float64
+		for _, c := range res.Components {
+			if c.ComponentID == componentID {
+				val = c.Score
+				break
+			}
+		}
+
+		var num pgtype.Numeric
+		_ = num.Scan(fmt.Sprintf("%f", val))
+
+		err = qtx.UpsertGradePublication(ctx, db.UpsertGradePublicationParams{
+			ComponentID: componentID,
+			StudentID:   st.StudentID,
+			Value:       num,
+		})
+		if err != nil {
+			return err
+		}
+
+		_, err = qtx.InsertNotification(ctx, db.InsertNotificationParams{
+			RecipientID:  st.StudentID,
+			Type:         "GRADE_PUBLISHED",
+			Title:        "Grades available",
+			Body:         fmt.Sprintf("Your %s grade is available.", target.Name),
+			ResourceType: pgtype.Text{String: "course", Valid: true},
+			ResourceID:   pgtype.Int8{Int64: courseID, Valid: true},
+			Link:         pgtype.Text{String: fmt.Sprintf("/courses/%d/grades", courseID), Valid: true},
+		})
+		if err != nil {
+			return err
+		}
+	}
+
+	return tx.Commit(ctx)
+}
+
+func (s *Service) GetStudentGrades(ctx context.Context, courseID, studentID int64) (StudentGradesResponse, error) {
+	if err := authz.AssertCourseMember(ctx, s.pool, courseID, studentID, db.UserRoleStudent); err != nil {
+		return StudentGradesResponse{}, ErrForbidden
+	}
+
+	totalTop, err := s.q.CountTopLevelComponents(ctx, courseID)
+	if err != nil {
+		return StudentGradesResponse{}, err
+	}
+
+	pubs, err := s.q.ListPublicationsForStudent(ctx, db.ListPublicationsForStudentParams{
+		CourseID:  courseID,
+		StudentID: studentID,
+	})
+	if err != nil {
+		return StudentGradesResponse{}, err
+	}
+
+	comps, err := s.repo.ListSchemeComponents(ctx, courseID)
+	if err != nil {
+		return StudentGradesResponse{}, err
+	}
+	
+	weightMap := make(map[int64]float64)
+	for _, c := range comps {
+		if !c.ParentID.Valid {
+			w, _ := c.Weight.Float64Value()
+			weightMap[c.ID] = w.Float64
+		}
+	}
+
+	var componentsResp []ComputedComponent
+	overall := 0.0
+
+	for _, p := range pubs {
+		v, _ := p.Value.Float64Value()
+		componentsResp = append(componentsResp, ComputedComponent{
+			ComponentID: p.ComponentID,
+			Score:       v.Float64,
+		})
+		if w, ok := weightMap[p.ComponentID]; ok {
+			overall += v.Float64 * (w / 100.0)
+		}
+	}
+
+	overall = math.Round(overall*100) / 100
+
+	var ovr *float64
+	if totalTop > 0 && int64(len(pubs)) == totalTop {
+		ovr = &overall
+	}
+
+	return StudentGradesResponse{
+		StudentID:  studentID,
+		Overall:    ovr,
+		Components: componentsResp,
+	}, nil
+}

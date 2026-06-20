@@ -22,6 +22,10 @@ func RegisterRoutes(r *gin.Engine, pool *pgxpool.Pool, cfg config.Config) {
 	svc := NewService(pool, repo)
 	h := &Handler{svc: svc, cfg: cfg}
 
+	student := r.Group("/api/student")
+	student.Use(middleware.RequireRole(db.UserRoleStudent))
+	student.GET("/courses/:id/grades", h.GetStudentGrades)
+
 	lecturer := r.Group("/api/lecturer", middleware.RequireRole(db.UserRoleLecturer))
 	{
 		lecturer.POST("/courses/:id/grade-scheme", h.handleCreateScheme)
@@ -30,6 +34,7 @@ func RegisterRoutes(r *gin.Engine, pool *pgxpool.Pool, cfg config.Config) {
 		lecturer.PUT("/courses/:id/grade-components/:componentId/scores", h.handleEnterScore)
 		lecturer.POST("/courses/:id/grade-components/:componentId/scores/import", h.handleImportScores)
 		lecturer.GET("/courses/:id/grades", h.handleGetGrades)
+		lecturer.POST("/courses/:id/grade-components/:componentId/publish", h.PublishComponent)
 	}
 }
 
@@ -157,20 +162,9 @@ func (h *Handler) handleGetGrades(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, errorEnvelope("invalid_course_id", "invalid course id format"))
 		return
 	}
-
-	// This is live overall per student, requires studentID parameter, wait, the plan says:
-	// "GET /api/lecturer/courses/:id/grades (live overall per student)"
-	// Should it list all students? Or take a studentID query param?
-	// Oh, it's for a single student? The `ComputeOverallForStudent` takes studentID.
-	// But Gradebook shows a table of all students. I'll take `student_id` query param.
-	// Actually, wait: we need to show ALL students' live grades for the Gradebook.
-	// The `ComputeOverallForStudent` takes `studentID`. To do this for all students, we should list all course students, and then compute overall for each.
-	
-	// I will just implement for a single student via query param first, or a loop over ListCourseStudents.
 	
 	studentIDStr := c.Query("student_id")
 	if studentIDStr == "" {
-		// Loop over all students in the course
 		repo := db.New(h.svc.pool)
 		students, err := repo.ListCourseStudents(c.Request.Context(), courseID)
 		if err != nil {
@@ -186,7 +180,6 @@ func (h *Handler) handleGetGrades(c *gin.Context) {
 					c.JSON(http.StatusInternalServerError, errorEnvelope("internal_error", err.Error()))
 					return
 				}
-				// If not found, it means no scheme. Return 404 once.
 				c.JSON(http.StatusNotFound, errorEnvelope("not_found", "no grade scheme"))
 				return
 			}
@@ -268,4 +261,59 @@ func (h *Handler) handleImportScores(c *gin.Context) {
 	}
 
 	c.Status(http.StatusNoContent)
+}
+
+func (h *Handler) PublishComponent(c *gin.Context) {
+	courseID, err := strconv.ParseInt(c.Param("id"), 10, 64)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, errorEnvelope("invalid_request", "invalid course id"))
+		return
+	}
+	componentID, err := strconv.ParseInt(c.Param("componentId"), 10, 64)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, errorEnvelope("invalid_request", "invalid component id"))
+		return
+	}
+	lecturerID := c.GetInt64("user_id")
+
+	err = h.svc.PublishComponent(c.Request.Context(), courseID, componentID, lecturerID)
+	if err != nil {
+		if errors.Is(err, ErrForbidden) {
+			c.JSON(http.StatusForbidden, errorEnvelope("forbidden", err.Error()))
+			return
+		}
+		if errors.Is(err, ErrNotFound) {
+			c.JSON(http.StatusNotFound, errorEnvelope("not_found", err.Error()))
+			return
+		}
+		if errors.Is(err, ErrValidation) {
+			c.JSON(http.StatusUnprocessableEntity, errorEnvelope("validation_error", err.Error()))
+			return
+		}
+		c.JSON(http.StatusInternalServerError, errorEnvelope("server_error", err.Error()))
+		return
+	}
+
+	c.Status(http.StatusNoContent)
+}
+
+func (h *Handler) GetStudentGrades(c *gin.Context) {
+	courseID, err := strconv.ParseInt(c.Param("id"), 10, 64)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, errorEnvelope("invalid_request", "invalid course id"))
+		return
+	}
+	studentID := c.GetInt64("user_id")
+
+	resp, err := h.svc.GetStudentGrades(c.Request.Context(), courseID, studentID)
+	if err != nil {
+		if errors.Is(err, ErrForbidden) {
+			c.JSON(http.StatusForbidden, errorEnvelope("forbidden", err.Error()))
+			return
+		}
+		c.JSON(http.StatusInternalServerError, errorEnvelope("server_error", err.Error()))
+		return
+	}
+
+	c.JSON(http.StatusOK, resp)
 }

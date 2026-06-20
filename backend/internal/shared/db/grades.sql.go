@@ -117,6 +117,20 @@ func (q *Queries) CountSchemeScores(ctx context.Context, schemeID int64) (int64,
 	return count, err
 }
 
+const countTopLevelComponents = `-- name: CountTopLevelComponents :one
+SELECT COUNT(*)
+FROM grade_components c
+JOIN grade_schemes s ON c.scheme_id = s.id
+WHERE s.course_id = $1 AND c.parent_id IS NULL
+`
+
+func (q *Queries) CountTopLevelComponents(ctx context.Context, courseID int64) (int64, error) {
+	row := q.db.QueryRow(ctx, countTopLevelComponents, courseID)
+	var count int64
+	err := row.Scan(&count)
+	return count, err
+}
+
 const createGradeScheme = `-- name: CreateGradeScheme :one
 INSERT INTO grade_schemes (course_id, created_by)
 VALUES ($1, $2)
@@ -234,6 +248,45 @@ func (q *Queries) InsertGradeComponent(ctx context.Context, arg InsertGradeCompo
 	return i, err
 }
 
+const listPublicationsForStudent = `-- name: ListPublicationsForStudent :many
+SELECT p.id, p.component_id, p.student_id, p.value, p.published_at
+FROM grade_publications p
+JOIN grade_components c ON p.component_id = c.id
+JOIN grade_schemes s ON c.scheme_id = s.id
+WHERE s.course_id = $1 AND p.student_id = $2 AND c.parent_id IS NULL
+`
+
+type ListPublicationsForStudentParams struct {
+	CourseID  int64
+	StudentID int64
+}
+
+func (q *Queries) ListPublicationsForStudent(ctx context.Context, arg ListPublicationsForStudentParams) ([]GradePublication, error) {
+	rows, err := q.db.Query(ctx, listPublicationsForStudent, arg.CourseID, arg.StudentID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []GradePublication
+	for rows.Next() {
+		var i GradePublication
+		if err := rows.Scan(
+			&i.ID,
+			&i.ComponentID,
+			&i.StudentID,
+			&i.Value,
+			&i.PublishedAt,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const listSchemeComponents = `-- name: ListSchemeComponents :many
 SELECT gc.id, gc.scheme_id, gc.parent_id, gc.name, gc.weight, gc.source_type, gc.auto_kind, gc.created_at
 FROM grade_components gc
@@ -308,6 +361,24 @@ func (q *Queries) ListScoresForStudent(ctx context.Context, arg ListScoresForStu
 		return nil, err
 	}
 	return items, nil
+}
+
+const upsertGradePublication = `-- name: UpsertGradePublication :exec
+INSERT INTO grade_publications (component_id, student_id, value, published_at)
+VALUES ($1, $2, $3, now())
+ON CONFLICT (component_id, student_id)
+DO UPDATE SET value = EXCLUDED.value, published_at = now()
+`
+
+type UpsertGradePublicationParams struct {
+	ComponentID int64
+	StudentID   int64
+	Value       pgtype.Numeric
+}
+
+func (q *Queries) UpsertGradePublication(ctx context.Context, arg UpsertGradePublicationParams) error {
+	_, err := q.db.Exec(ctx, upsertGradePublication, arg.ComponentID, arg.StudentID, arg.Value)
+	return err
 }
 
 const upsertGradeScore = `-- name: UpsertGradeScore :exec

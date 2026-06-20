@@ -43,6 +43,12 @@ export interface OverallResponse {
   components: ComputedComponent[];
 }
 
+export interface StudentGradesResponse {
+  student_id: number;
+  overall: number | null;
+  components: ComputedComponent[];
+}
+
 export const gradesApi = {
   createScheme: async (courseId: number, data: SchemeRequest): Promise<SchemeResponse> => {
     const res = await api.post(`/api/lecturer/courses/${courseId}/grade-scheme`, data);
@@ -74,6 +80,15 @@ export const gradesApi = {
 
   getCourseGrades: async (courseId: number): Promise<OverallResponse[]> => {
     const res = await api.get(`/api/lecturer/courses/${courseId}/grades`);
+    return res.data;
+  },
+
+  publishComponent: async (courseId: number, componentId: number): Promise<void> => {
+    await api.post(`/api/lecturer/courses/${courseId}/grade-components/${componentId}/publish`);
+  },
+
+  getStudentGrades: async (courseId: number): Promise<StudentGradesResponse> => {
+    const res = await api.get(`/api/student/courses/${courseId}/grades`);
     return res.data;
   },
 };

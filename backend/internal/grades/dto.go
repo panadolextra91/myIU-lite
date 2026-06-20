@@ -43,6 +43,12 @@ type OverallResponse struct {
 	Components []ComputedComponent `json:"components"`
 }
 
+type StudentGradesResponse struct {
+	StudentID  int64               `json:"student_id"`
+	Overall    *float64            `json:"overall"`
+	Components []ComputedComponent `json:"components"`
+}
+
 func errorEnvelope(code, message string) map[string]interface{} {
 	return map[string]interface{}{
 		"error": map[string]interface{}{"code": code, "message": message},

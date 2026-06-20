@@ -15,6 +15,7 @@ import LecturerQuizzes from '@/pages/lecturer/Quizzes';
 import StudentAssignments from '@/pages/student/Assignments';
 import StudentQuizzes from '@/pages/student/Quizzes';
 import LecturerGradebook from '@/pages/lecturer/Gradebook';
+import StudentGrades from '@/pages/student/Grades';
 import Notifications from '@/pages/Notifications';
 
 import ProtectedRoute from '@/routes/ProtectedRoute';
@@ -57,6 +58,7 @@ export const router = createBrowserRouter([
               { index: true, element: <StudentIndex /> },
               { path: 'assignments', element: <StudentAssignments /> },
               { path: 'quizzes', element: <StudentQuizzes /> },
+              { path: 'courses/:id/grades', element: <StudentGrades /> },
             ],
           },
           {

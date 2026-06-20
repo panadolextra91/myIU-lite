@@ -153,3 +153,104 @@ func TestComputeOverallForStudent(t *testing.T) {
 	require.NoError(t, err)
 	assert.Equal(t, 64.5, res2.Overall)
 }
+
+func TestPublishComponent(t *testing.T) {
+	pool, svc := setupTestDB(t)
+	defer pool.Close()
+	ctx := context.Background()
+
+	// 1. Create a course and user
+	var courseID int64
+	err := pool.QueryRow(ctx, `INSERT INTO courses (code, name, term, start_date, end_date) VALUES ('GRADE202', 'Grades 2', 'Fall', now(), now() + interval '1 month') RETURNING id`).Scan(&courseID)
+	require.NoError(t, err)
+
+	var lecturerID, studentID int64
+	err = pool.QueryRow(ctx, `INSERT INTO users (username, password_hash, role, full_name) VALUES ('pub_lec', 'hash', 'lecturer', 'Lec') RETURNING id`).Scan(&lecturerID)
+	require.NoError(t, err)
+	err = pool.QueryRow(ctx, `INSERT INTO users (username, password_hash, role, full_name) VALUES ('pub_stu', 'hash', 'student', 'Stu') RETURNING id`).Scan(&studentID)
+	require.NoError(t, err)
+
+	_, err = pool.Exec(ctx, `INSERT INTO course_lecturers (course_id, lecturer_id) VALUES ($1, $2)`, courseID, lecturerID)
+	require.NoError(t, err)
+	_, err = pool.Exec(ctx, `INSERT INTO student_enrollments (course_id, student_id) VALUES ($1, $2)`, courseID, studentID)
+	require.NoError(t, err)
+
+	defer func() {
+		_, _ = pool.Exec(ctx, `DELETE FROM notifications WHERE recipient_id = $1`, studentID)
+		_, _ = pool.Exec(ctx, `DELETE FROM grade_publications WHERE student_id = $1`, studentID)
+		_, _ = pool.Exec(ctx, `DELETE FROM grade_scores WHERE student_id = $1`, studentID)
+		_, _ = pool.Exec(ctx, `DELETE FROM grade_components WHERE scheme_id IN (SELECT id FROM grade_schemes WHERE course_id = $1)`, courseID)
+		_, _ = pool.Exec(ctx, `DELETE FROM grade_schemes WHERE course_id = $1`, courseID)
+		_, _ = pool.Exec(ctx, `DELETE FROM student_enrollments WHERE course_id = $1`, courseID)
+		_, _ = pool.Exec(ctx, `DELETE FROM course_lecturers WHERE course_id = $1`, courseID)
+		_, _ = pool.Exec(ctx, `DELETE FROM courses WHERE id = $1`, courseID)
+		_, _ = pool.Exec(ctx, `DELETE FROM users WHERE id IN ($1, $2)`, lecturerID, studentID)
+	}()
+
+	// 2. Create Grade Scheme
+	var mtWeight, fnWeight pgtype.Numeric
+	_ = mtWeight.Scan("50")
+	_ = fnWeight.Scan("50")
+
+	var schemeID int64
+	err = pool.QueryRow(ctx, `INSERT INTO grade_schemes (course_id, created_by) VALUES ($1, $2) RETURNING id`, courseID, lecturerID).Scan(&schemeID)
+	require.NoError(t, err)
+
+	var mtID, fnID int64
+	err = pool.QueryRow(ctx, `INSERT INTO grade_components (scheme_id, parent_id, name, weight, source_type) VALUES ($1, NULL, 'Midterm', $2, 'MANUAL') RETURNING id`, schemeID, mtWeight).Scan(&mtID)
+	require.NoError(t, err)
+	err = pool.QueryRow(ctx, `INSERT INTO grade_components (scheme_id, parent_id, name, weight, source_type) VALUES ($1, NULL, 'Final', $2, 'MANUAL') RETURNING id`, schemeID, fnWeight).Scan(&fnID)
+	require.NoError(t, err)
+
+	// Enter MANUAL scores: Midterm 90
+	err = svc.EnterScore(ctx, courseID, mtID, studentID, 90, lecturerID)
+	require.NoError(t, err)
+
+	// Publish Midterm
+	err = svc.PublishComponent(ctx, courseID, mtID, lecturerID)
+	require.NoError(t, err)
+
+	// Verify Student view
+	sGrades, err := svc.GetStudentGrades(ctx, courseID, studentID)
+	require.NoError(t, err)
+	assert.Nil(t, sGrades.Overall, "Overall should be nil since only 1/2 published")
+	assert.Len(t, sGrades.Components, 1)
+	assert.Equal(t, 90.0, sGrades.Components[0].Score)
+	assert.Equal(t, mtID, sGrades.Components[0].ComponentID)
+
+	// Change live score to 95
+	err = svc.EnterScore(ctx, courseID, mtID, studentID, 95, lecturerID)
+	require.NoError(t, err)
+
+	// Verify Student view is still 90 (frozen)
+	sGrades2, err := svc.GetStudentGrades(ctx, courseID, studentID)
+	require.NoError(t, err)
+	assert.Equal(t, 90.0, sGrades2.Components[0].Score)
+
+	// Republish
+	err = svc.PublishComponent(ctx, courseID, mtID, lecturerID)
+	require.NoError(t, err)
+
+	// Verify Student view is now 95
+	sGrades3, err := svc.GetStudentGrades(ctx, courseID, studentID)
+	require.NoError(t, err)
+	assert.Equal(t, 95.0, sGrades3.Components[0].Score)
+
+	// Enter and publish final
+	err = svc.EnterScore(ctx, courseID, fnID, studentID, 100, lecturerID)
+	require.NoError(t, err)
+	err = svc.PublishComponent(ctx, courseID, fnID, lecturerID)
+	require.NoError(t, err)
+
+	// Verify Overall is now present (95*0.5 + 100*0.5 = 97.5)
+	sGrades4, err := svc.GetStudentGrades(ctx, courseID, studentID)
+	require.NoError(t, err)
+	require.NotNil(t, sGrades4.Overall)
+	assert.Equal(t, 97.5, *sGrades4.Overall)
+
+	// Verify notifications
+	var notifCount int
+	err = pool.QueryRow(ctx, `SELECT count(*) FROM notifications WHERE recipient_id = $1 AND type = 'GRADE_PUBLISHED'`, studentID).Scan(&notifCount)
+	require.NoError(t, err)
+	assert.Equal(t, 3, notifCount) // Midterm(90), Midterm(95), Final(100)
+}

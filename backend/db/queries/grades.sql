@@ -104,3 +104,22 @@ WHERE gs.id = $1 AND gs.course_id = $2
 
 -- name: DeleteSchemeComponents :exec
 DELETE FROM grade_components WHERE scheme_id = $1;
+
+-- name: UpsertGradePublication :exec
+INSERT INTO grade_publications (component_id, student_id, value, published_at)
+VALUES ($1, $2, $3, now())
+ON CONFLICT (component_id, student_id)
+DO UPDATE SET value = EXCLUDED.value, published_at = now();
+
+-- name: ListPublicationsForStudent :many
+SELECT p.id, p.component_id, p.student_id, p.value, p.published_at
+FROM grade_publications p
+JOIN grade_components c ON p.component_id = c.id
+JOIN grade_schemes s ON c.scheme_id = s.id
+WHERE s.course_id = $1 AND p.student_id = $2 AND c.parent_id IS NULL;
+
+-- name: CountTopLevelComponents :one
+SELECT COUNT(*)
+FROM grade_components c
+JOIN grade_schemes s ON c.scheme_id = s.id
+WHERE s.course_id = $1 AND c.parent_id IS NULL;
