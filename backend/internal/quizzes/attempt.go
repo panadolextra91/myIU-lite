@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/jackc/pgx/v5/pgtype"
+	"github.com/panadolextra91/myiu-lite/backend/internal/shared/authz"
 	"github.com/panadolextra91/myiu-lite/backend/internal/shared/db"
 )
 
@@ -17,7 +18,10 @@ const (
 )
 
 func (s *Service) StartAttempt(ctx context.Context, courseID, quizID, studentID int64) (*StudentQuizAttemptView, error) {
-	q, err := s.q.GetQuizByID(ctx, quizID)
+	if err := authz.AssertCourseMember(ctx, s.pool, courseID, studentID, db.UserRoleStudent); err != nil {
+		return nil, err
+	}
+	q, err := authz.AssertQuizInCourse(ctx, s.pool, quizID, courseID)
 	if err != nil {
 		return nil, err
 	}
@@ -101,18 +105,21 @@ func (s *Service) seedAttempt(ctx context.Context, attempt db.QuizAttempt, q db.
 	return nil
 }
 
-func (s *Service) GetAttempt(ctx context.Context, attemptID, studentID int64) (*StudentQuizAttemptView, error) {
+func (s *Service) GetAttempt(ctx context.Context, courseID, quizID, attemptID, studentID int64) (*StudentQuizAttemptView, error) {
+	if err := authz.AssertCourseMember(ctx, s.pool, courseID, studentID, db.UserRoleStudent); err != nil {
+		return nil, err
+	}
+	q, err := authz.AssertQuizInCourse(ctx, s.pool, quizID, courseID)
+	if err != nil {
+		return nil, err
+	}
+
 	attempt, err := s.q.GetAttemptByID(ctx, attemptID)
 	if err != nil {
 		return nil, err
 	}
-	if attempt.StudentID != studentID {
+	if attempt.StudentID != studentID || attempt.QuizID != quizID {
 		return nil, errors.New("forbidden")
-	}
-
-	q, err := s.q.GetQuizByID(ctx, attempt.QuizID)
-	if err != nil {
-		return nil, err
 	}
 
 	now := time.Now()
@@ -233,18 +240,21 @@ func (s *Service) floatToNumeric(f float64) pgtype.Numeric {
 	return num
 }
 
-func (s *Service) SubmitAttempt(ctx context.Context, attemptID, studentID int64, req SubmitAttemptRequest) (*SubmitAttemptResponse, error) {
+func (s *Service) SubmitAttempt(ctx context.Context, courseID, quizID, attemptID, studentID int64, req SubmitAttemptRequest) (*SubmitAttemptResponse, error) {
+	if err := authz.AssertCourseMember(ctx, s.pool, courseID, studentID, db.UserRoleStudent); err != nil {
+		return nil, err
+	}
+	q, err := authz.AssertQuizInCourse(ctx, s.pool, quizID, courseID)
+	if err != nil {
+		return nil, err
+	}
+
 	attempt, err := s.q.GetAttemptByID(ctx, attemptID)
 	if err != nil {
 		return nil, err
 	}
-	if attempt.StudentID != studentID {
+	if attempt.StudentID != studentID || attempt.QuizID != quizID {
 		return nil, errors.New("forbidden")
-	}
-
-	q, err := s.q.GetQuizByID(ctx, attempt.QuizID)
-	if err != nil {
-		return nil, err
 	}
 
 	if attempt.Status != StatusInProgress {

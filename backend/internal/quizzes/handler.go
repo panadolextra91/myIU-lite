@@ -151,6 +151,16 @@ func (h *Handler) startAttempt(c *gin.Context) {
 }
 
 func (h *Handler) getAttempt(c *gin.Context) {
+	courseID, err := strconv.ParseInt(c.Param("id"), 10, 64)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": gin.H{"message": "Invalid course ID"}})
+		return
+	}
+	quizID, err := strconv.ParseInt(c.Param("qid"), 10, 64)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": gin.H{"message": "Invalid quiz ID"}})
+		return
+	}
 	attemptID, err := strconv.ParseInt(c.Param("aid"), 10, 64)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": gin.H{"message": "Invalid attempt ID"}})
@@ -159,7 +169,7 @@ func (h *Handler) getAttempt(c *gin.Context) {
 
 	studentID := c.GetInt64("user_id")
 
-	attempt, err := h.svc.GetAttempt(c.Request.Context(), attemptID, studentID)
+	attempt, err := h.svc.GetAttempt(c.Request.Context(), courseID, quizID, attemptID, studentID)
 	if err != nil {
 		if err.Error() == "forbidden" {
 			c.JSON(http.StatusForbidden, gin.H{"error": gin.H{"message": "Forbidden"}})
@@ -173,6 +183,16 @@ func (h *Handler) getAttempt(c *gin.Context) {
 }
 
 func (h *Handler) submitAttempt(c *gin.Context) {
+	courseID, err := strconv.ParseInt(c.Param("id"), 10, 64)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": gin.H{"message": "Invalid course ID"}})
+		return
+	}
+	quizID, err := strconv.ParseInt(c.Param("qid"), 10, 64)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": gin.H{"message": "Invalid quiz ID"}})
+		return
+	}
 	attemptID, err := strconv.ParseInt(c.Param("aid"), 10, 64)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": gin.H{"message": "Invalid attempt ID"}})
@@ -187,7 +207,7 @@ func (h *Handler) submitAttempt(c *gin.Context) {
 		return
 	}
 
-	res, err := h.svc.SubmitAttempt(c.Request.Context(), attemptID, studentID, req)
+	res, err := h.svc.SubmitAttempt(c.Request.Context(), courseID, quizID, attemptID, studentID, req)
 	if err != nil {
 		if err.Error() == "forbidden" {
 			c.JSON(http.StatusForbidden, gin.H{"error": gin.H{"message": "Forbidden"}})
