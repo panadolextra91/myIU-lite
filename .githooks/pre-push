@@ -1,0 +1,7 @@
+#!/usr/bin/env bash
+# .githooks/pre-push — blocks `git push` unless the local CI-parity gate passes.
+# Committed + shared via `git config core.hooksPath .githooks` (one-time per clone).
+# Catches lint/build/type/errcheck failures BEFORE they reach GitHub CI.
+#
+# Bypass in a real emergency: git push --no-verify
+exec bash "$(git rev-parse --show-toplevel)/scripts/check.sh"
