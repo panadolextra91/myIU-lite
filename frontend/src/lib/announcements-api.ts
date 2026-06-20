@@ -18,30 +18,29 @@ export interface CreateAnnouncementRequest {
 }
 
 export const announcementsApi = {
-  // Lecturer endpoints
   createAnnouncement: async (courseId: number, data: CreateAnnouncementRequest): Promise<Announcement> => {
-    const response = await api.post(`/lecturer/courses/${courseId}/announcements`, data);
+    const response = await api.post(`/api/lecturer/courses/${courseId}/announcements`, data);
     return response.data;
   },
 
   listCourseAnnouncements: async (courseId: number): Promise<Announcement[]> => {
-    const response = await api.get(`/lecturer/courses/${courseId}/announcements`);
+    const response = await api.get(`/api/lecturer/courses/${courseId}/announcements`);
     return response.data;
   },
 
   listCourseStudents: async (courseId: number) => {
-    const response = await api.get<{ data: { student_id: number; username: string; full_name: string }[] }>(`/lecturer/courses/${courseId}/students`);
+    const response = await api.get<{ data: { student_id: number; username: string; full_name: string }[] }>(`/api/lecturer/courses/${courseId}/students`);
     return response.data;
   },
 
   // Student endpoints
   listStudentAnnouncements: async (courseId: number): Promise<Announcement[]> => {
-    const response = await api.get(`/student/courses/${courseId}/announcements`);
+    const response = await api.get(`/api/student/courses/${courseId}/announcements`);
     return response.data;
   },
 
   getAnnouncement: async (announcementId: number, courseId: number): Promise<Announcement> => {
-    const response = await api.get(`/student/announcements/${announcementId}?course_id=${courseId}`);
+    const response = await api.get(`/api/student/announcements/${announcementId}?course_id=${courseId}`);
     return response.data;
   },
 };

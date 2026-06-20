@@ -29,28 +29,28 @@ export interface ReplyRequestRequest {
 export const requestsApi = {
   // Student endpoints
   listCourseLecturers: async (courseId: number) => {
-    const response = await api.get<{ data: { lecturer_id: number; username: string; full_name: string }[] }>(`/student/courses/${courseId}/lecturers`);
+    const response = await api.get<{ data: { lecturer_id: number; username: string; full_name: string }[] }>(`/api/student/courses/${courseId}/lecturers`);
     return response.data;
   },
 
   createRequest: async (courseId: number, data: CreateRequestRequest): Promise<Request> => {
-    const response = await api.post(`/student/courses/${courseId}/requests`, data);
+    const response = await api.post(`/api/student/courses/${courseId}/requests`, data);
     return response.data;
   },
 
   listStudentRequests: async (): Promise<Request[]> => {
-    const response = await api.get(`/student/requests`);
+    const response = await api.get(`/api/student/requests`);
     return response.data;
   },
 
   // Lecturer endpoints
   listLecturerRequests: async (): Promise<Request[]> => {
-    const response = await api.get(`/lecturer/requests`);
+    const response = await api.get(`/api/lecturer/requests`);
     return response.data;
   },
 
   replyRequest: async (requestId: number, data: ReplyRequestRequest): Promise<Request> => {
-    const response = await api.post(`/lecturer/requests/${requestId}/reply`, data);
+    const response = await api.post(`/api/lecturer/requests/${requestId}/reply`, data);
     return response.data;
   },
 };
