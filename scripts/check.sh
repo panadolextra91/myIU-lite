@@ -16,6 +16,14 @@ cd "$(git rev-parse --show-toplevel)" || exit 1
 # still wins. See scripts/check.env.example.
 [ -f scripts/check.env ] && . scripts/check.env
 
+# CI env parity — keep env-dependent tests behaving identically local vs CI so the
+# pre-push gate predicts CI. These are the SAME fixed test placeholders committed in
+# .github/workflows/ci.yml `env:` (public test values, not secrets). `:-` so a real
+# value already in your shell / check.env still wins. DATABASE_URL stays per-dev in
+# check.env. KEEP IN SYNC with ci.yml's env block.
+export JWT_SECRET="${JWT_SECRET:-test-secret}"
+export CLOUDINARY_URL="${CLOUDINARY_URL:-cloudinary://test:test@test}"
+
 FAILED=()
 step() { # step "Label" cmd...
   local label="$1"; shift
