@@ -109,6 +109,39 @@ func (q *Queries) ListOptionsForQuestion(ctx context.Context, questionID int64) 
 	return items, nil
 }
 
+const listOptionsForQuiz = `-- name: ListOptionsForQuiz :many
+SELECT o.id, o.question_id, o.text, o.is_correct, o.created_at FROM quiz_question_options o
+JOIN quiz_questions q ON o.question_id = q.id
+WHERE q.quiz_id = $1
+ORDER BY o.id ASC
+`
+
+func (q *Queries) ListOptionsForQuiz(ctx context.Context, quizID int64) ([]QuizQuestionOption, error) {
+	rows, err := q.db.Query(ctx, listOptionsForQuiz, quizID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []QuizQuestionOption
+	for rows.Next() {
+		var i QuizQuestionOption
+		if err := rows.Scan(
+			&i.ID,
+			&i.QuestionID,
+			&i.Text,
+			&i.IsCorrect,
+			&i.CreatedAt,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const listQuestionsForQuiz = `-- name: ListQuestionsForQuiz :many
 SELECT id, quiz_id, prompt, question_type, created_at FROM quiz_questions
 WHERE quiz_id = $1

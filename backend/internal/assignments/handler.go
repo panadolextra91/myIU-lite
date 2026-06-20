@@ -41,6 +41,7 @@ func RegisterRoutes(r *gin.Engine, pool *pgxpool.Pool, cfg config.Config, cld *c
 	student.Use(middleware.RequireRole(db.UserRoleStudent))
 	{
 		student.GET("/courses/:id/assignments", handler.ListAssignments)
+		student.GET("/courses/:id/assignments/:aid/submissions", handler.ListSubmissions)
 		student.POST("/courses/:id/assignments/:aid/submissions", handler.SubmitAssignment)
 		student.GET("/courses/:id/assignments/:aid/submissions/:sid/download-url", handler.GetDownloadURL)
 	}
@@ -100,6 +101,53 @@ func (h *Handler) ListAssignments(c *gin.Context) {
 	res := make([]AssignmentResponse, len(assignments))
 	for i, a := range assignments {
 		res[i] = mapAssignment(a)
+	}
+
+	c.JSON(http.StatusOK, gin.H{"data": res})
+}
+
+func (h *Handler) ListSubmissions(c *gin.Context) {
+	courseID, err := strconv.ParseInt(c.Param("id"), 10, 64)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, errorEnvelope("invalid_id", "invalid course id"))
+		return
+	}
+	assignmentID, err := strconv.ParseInt(c.Param("aid"), 10, 64)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, errorEnvelope("invalid_id", "invalid assignment id"))
+		return
+	}
+
+	userID := c.GetInt64("user_id")
+
+	subs, err := h.service.ListSubmissions(c.Request.Context(), courseID, assignmentID, userID)
+	if err != nil {
+		if errors.Is(err, authz.ErrForbidden) {
+			c.JSON(http.StatusForbidden, errorEnvelope("forbidden", "access denied"))
+			return
+		}
+		c.JSON(http.StatusInternalServerError, errorEnvelope("server_error", err.Error()))
+		return
+	}
+
+	res := make([]SubmissionResponse, len(subs))
+	for i, s := range subs {
+		res[i] = SubmissionResponse{
+			ID:               s.ID,
+			Version:          s.Version,
+			OriginalFilename: s.OriginalFilename,
+			IsLate:           s.IsLate,
+			SubmittedAt:      s.SubmittedAt.Time,
+		}
+		if s.Score.Valid {
+			score, _ := s.Score.Float64Value()
+			if score.Valid {
+				res[i].Score = &score.Float64
+			}
+		}
+		if s.Feedback.Valid {
+			res[i].Feedback = &s.Feedback.String
+		}
 	}
 
 	c.JSON(http.StatusOK, gin.H{"data": res})

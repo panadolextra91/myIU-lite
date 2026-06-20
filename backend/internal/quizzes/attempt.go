@@ -3,6 +3,7 @@ package quizzes
 import (
 	"context"
 	"errors"
+	"fmt"
 	"math/rand/v2"
 	"time"
 
@@ -172,16 +173,22 @@ func (s *Service) buildAttemptView(ctx context.Context, attempt db.QuizAttempt, 
 		qMap[qq.ID] = qq
 	}
 
+	allOptions, err := s.q.ListOptionsForQuiz(ctx, q.ID)
+	if err != nil {
+		return nil, err
+	}
+	optsMap := make(map[int64][]db.QuizQuestionOption)
+	for _, o := range allOptions {
+		optsMap[o.QuestionID] = append(optsMap[o.QuestionID], o)
+	}
+
 	for _, ans := range answers {
 		qq, ok := qMap[ans.QuestionID]
 		if !ok {
 			continue
 		}
 
-		opts, err := s.q.ListOptionsForQuestion(ctx, qq.ID)
-		if err != nil {
-			return nil, err
-		}
+		opts := optsMap[qq.ID]
 
 		if q.Shuffle.Valid && q.Shuffle.Bool {
 			r.Shuffle(len(opts), func(i, j int) {
@@ -229,7 +236,7 @@ func (s *Service) buildAttemptView(ctx context.Context, attempt db.QuizAttempt, 
 	if isTerminal && isClosed {
 		correctOptions := make(map[int64][]int64)
 		for _, qq := range questionsView {
-			opts, _ := s.q.ListOptionsForQuestion(ctx, qq.ID)
+			opts := optsMap[qq.ID]
 			var corrects []int64
 			for _, o := range opts {
 				if o.IsCorrect {
@@ -249,10 +256,10 @@ func (s *Service) numericToFloat(num pgtype.Numeric) float64 {
 	return f.Float64
 }
 
-func (s *Service) floatToNumeric(f float64) pgtype.Numeric {
+func (s *Service) floatToNumeric(f float64) (pgtype.Numeric, error) {
 	var num pgtype.Numeric
-	_ = num.Scan(f)
-	return num
+	err := num.Scan(fmt.Sprintf("%f", f))
+	return num, err
 }
 
 func (s *Service) SubmitAttempt(ctx context.Context, courseID, quizID, attemptID, studentID int64, req SubmitAttemptRequest) (*SubmitAttemptResponse, error) {
@@ -331,9 +338,18 @@ func (s *Service) gradeAndSubmit(ctx context.Context, attempt db.QuizAttempt, q 
 		return 0, err
 	}
 
+	allOptions, err := s.q.ListOptionsForQuiz(ctx, q.ID)
+	if err != nil {
+		return 0, err
+	}
+	optsMap := make(map[int64][]db.QuizQuestionOption)
+	for _, o := range allOptions {
+		optsMap[o.QuestionID] = append(optsMap[o.QuestionID], o)
+	}
+
 	var totalCorrect float64
 	for _, ans := range answers {
-		opts, _ := s.q.ListOptionsForQuestion(ctx, ans.QuestionID)
+		opts := optsMap[ans.QuestionID]
 
 		var correctIds []int64
 		for _, o := range opts {
@@ -352,7 +368,10 @@ func (s *Service) gradeAndSubmit(ctx context.Context, attempt db.QuizAttempt, q 
 		score = (totalCorrect / float64(len(answers))) * s.numericToFloat(q.MaxGrade)
 	}
 
-	pgScore := s.floatToNumeric(score)
+	pgScore, err := s.floatToNumeric(score)
+	if err != nil {
+		return 0, fmt.Errorf("failed to convert score: %w", err)
+	}
 
 	var rowsAffected int64
 	if isAuto {

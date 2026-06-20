@@ -17,6 +17,25 @@ export default function StudentAssignments() {
     queryFn: () => courseworkApi.listAssignments(courseId, 'student'),
   });
 
+  useQuery({
+    queryKey: ['assignments-submissions', courseId, assignments?.map(a => a.id)],
+    queryFn: async () => {
+      if (!assignments) return {};
+      const results: Record<number, SubmissionResponse> = {};
+      await Promise.all(
+        assignments.map(async (a) => {
+          const subs = await courseworkApi.listSubmissions(courseId, a.id);
+          if (subs.length > 0) {
+            results[a.id] = subs[0]; // Active submission is the first one
+          }
+        })
+      );
+      setSubmissions(results);
+      return results;
+    },
+    enabled: !!assignments && assignments.length > 0,
+  });
+
   const submitMutation = useMutation({
     mutationFn: ({ assignmentId, file }: { assignmentId: number; file: File }) =>
       courseworkApi.submitAssignment(courseId, assignmentId, file),

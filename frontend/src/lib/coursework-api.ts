@@ -116,6 +116,10 @@ export const courseworkApi = {
     const res = await api.post<AssignmentResponse>(`/lecturer/courses/${courseId}/assignments`, body);
     return res.data;
   },
+  listSubmissions: async (courseId: number, assignmentId: number) => {
+    const res = await api.get<{ data: SubmissionResponse[] }>(`/student/courses/${courseId}/assignments/${assignmentId}/submissions`);
+    return res.data.data;
+  },
   submitAssignment: async (courseId: number, assignmentId: number, file: File) => {
     const formData = new FormData();
     formData.append('file', file);

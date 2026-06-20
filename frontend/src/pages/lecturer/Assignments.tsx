@@ -222,11 +222,7 @@ export default function LecturerAssignments() {
         <TableBody>
           {assignments?.map((a) => (
             <TableRow key={a.id}>
-              <TableCell>
-                <Button variant="link" className="p-0 h-auto" onClick={() => handleDownload(a.id, 1)}>
-                  {a.id}
-                </Button>
-              </TableCell>
+              <TableCell>{a.id}</TableCell>
               <TableCell>{a.title}</TableCell>
               <TableCell>{new Date(a.deadline).toLocaleString()}</TableCell>
               <TableCell>{a.accept_late ? `Yes (${a.late_threshold_days || 'unlimited'} days)` : 'No'}</TableCell>
@@ -259,9 +255,19 @@ export default function LecturerAssignments() {
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Submission ID</FormLabel>
-                    <FormControl>
-                      <Input type="number" {...field} />
-                    </FormControl>
+                    <div className="flex space-x-2">
+                      <FormControl>
+                        <Input type="number" {...field} />
+                      </FormControl>
+                      <Button 
+                        type="button" 
+                        variant="outline" 
+                        onClick={() => field.value && handleDownload(gradeAssignmentId!, Number(field.value))}
+                        disabled={!field.value}
+                      >
+                        Download
+                      </Button>
+                    </div>
                     <FormMessage />
                   </FormItem>
                 )}

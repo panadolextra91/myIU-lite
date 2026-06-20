@@ -77,6 +77,16 @@ func (s *Service) ListCourseAssignments(ctx context.Context, courseID, userID in
 	return s.repo.ListCourseAssignments(ctx, courseID)
 }
 
+func (s *Service) ListSubmissions(ctx context.Context, courseID, assignmentID, studentID int64) ([]db.Submission, error) {
+	if err := authz.AssertCourseMember(ctx, s.pool, courseID, studentID, db.UserRoleStudent); err != nil {
+		return nil, err
+	}
+	return s.repo.ListSubmissionVersions(ctx, db.ListSubmissionVersionsParams{
+		AssignmentID: assignmentID,
+		StudentID:    studentID,
+	})
+}
+
 func (s *Service) Submit(ctx context.Context, courseID, assignmentID, studentID int64, fileReader io.Reader, filename string) (db.Submission, time.Time, error) {
 	students, err := s.q.ListCourseStudents(ctx, courseID)
 	if err != nil {
@@ -176,19 +186,8 @@ func (s *Service) DownloadURL(ctx context.Context, courseID, assignmentID, submi
 }
 
 func (s *Service) GradeSubmission(ctx context.Context, courseID, assignmentID, submissionID int64, score float64, feedback string, lecturerID int64) error {
-	lecturers, err := s.q.ListCourseLecturers(ctx, courseID)
-	if err != nil {
+	if err := authz.AssertCourseMember(ctx, s.pool, courseID, lecturerID, db.UserRoleLecturer); err != nil {
 		return err
-	}
-	isLecturer := false
-	for _, l := range lecturers {
-		if l.LecturerID == lecturerID {
-			isLecturer = true
-			break
-		}
-	}
-	if !isLecturer {
-		return ErrForbidden
 	}
 
 	sub, err := s.repo.GetSubmissionByID(ctx, submissionID)
@@ -208,12 +207,20 @@ func (s *Service) GradeSubmission(ctx context.Context, courseID, assignmentID, s
 
 	qtx := s.q.WithTx(tx)
 
+	if score < 0 {
+		score = 0
+	} else if score > 100 {
+		score = 100
+	}
+
 	var fdbk pgtype.Text
 	if feedback != "" {
 		fdbk = pgtype.Text{String: feedback, Valid: true}
 	}
 	var num pgtype.Numeric
-	_ = num.Scan(fmt.Sprintf("%f", score))
+	if err := num.Scan(fmt.Sprintf("%f", score)); err != nil {
+		return fmt.Errorf("invalid score format: %w", err)
+	}
 	
 	err = qtx.UpsertSubmissionGrade(ctx, db.UpsertSubmissionGradeParams{
 		ID:       submissionID,

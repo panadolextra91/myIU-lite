@@ -22,6 +22,12 @@ SELECT * FROM quiz_question_options
 WHERE question_id = $1
 ORDER BY id ASC;
 
+-- name: ListOptionsForQuiz :many
+SELECT o.* FROM quiz_question_options o
+JOIN quiz_questions q ON o.question_id = q.id
+WHERE q.quiz_id = $1
+ORDER BY o.id ASC;
+
 -- name: CountQuizQuestions :one
 SELECT count(*) FROM quiz_questions
 WHERE quiz_id = $1;
