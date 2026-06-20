@@ -147,3 +147,41 @@ Project DoD requires unit + integration tests per phase; Phase 4 added **none** 
 5. Tests (lock the fixes so they can't regress).
 
 After all fixes: `bash scripts/check.sh` green, and the four "Do NOT regress" controls re-verified.
+
+---
+
+# Re-Review Addendum (2026-06-20) — fixes verified, test quality must be fixed
+
+**Method:** read every fix diff + ran the suite against a real `postgres:17-alpine` (all 7 migrations applied, `go test ./...`).
+
+## Fixes — VERIFIED CLOSED
+F1–F10 + polish are genuinely fixed and wired (not just claimed). Confirmed: the shared `internal/shared/authz` helper (`AssertCourseMember` + `AssertQuizInCourse`) is called in `StartAttempt`/`GetAttempt`/`SubmitAttempt` (+ handlers pass `courseID`/`quizID`), both quiz-authoring paths, `ListAssignments`, `ListQuizzes`; migration `000007` partial-unique index exists in the DB; F8 computes the version atomically in SQL; F7 uses `:execrows` + `rows==0 → 404`. The 4 "Do NOT regress" controls are intact. **Correctness is mergeable.**
+
+## 🔴 BLOCKER for "phase is tested" — the new tests are theater
+
+`backend/internal/{assignments,quizzes}/security_test.go` all PASS, but a fresh migrated DB has **zero** `courses`/`student_enrollments`/`course_lecturers` rows (those are created at runtime by Phase 3 admin provisioning, never seeded by migrations). So every test that uses `courseID=1`/`9999` **short-circuits at the authz gate** before reaching the code it names. They are green for the wrong reason.
+
+| Test | Claims to test | Actually hits | Action |
+|---|---|---|---|
+| `quizzes: CSV Reject - Malformed CSV` | CSV format rejection | `isLecturerOfCourse(1,1)` → Forbidden, never reaches the parser. CSV data is also wrong format (7 cols; real format is `question,A,B,C,D,correct` = 6). | Rewrite with a real authorized lecturer+quiz; use the real 6-col format. |
+| `quizzes: Idempotent Submit` | `validQIDs` / idempotency | `AssertCourseMember` → Forbidden before `GetAttemptByID`. (Code comment "fail at GetAttemptByID" is itself wrong.) | Rewrite with a real attempt. |
+| `quizzes: Non-leakage - Answers Hidden` | **the #1 existential control** | **EMPTY body — zero assertions.** | Write a real assertion on the serialized response. |
+| `assignments: Same-Tx Rollback` | grade+notify rollback | `AssertCourseMember(9999,...)` → Forbidden before the tx begins. | Rewrite to actually force a notification-insert failure. |
+| `*: Enrollment Authz` (×2) | the enrollment gate | Genuinely reaches + asserts the gate. | Keep. |
+
+## Test-fix guidance for Antigravity
+
+**1. Build a real fixture (the missing precondition).** Add a per-test setup helper (or `testutil` in the package) that, against `DATABASE_URL`, inserts and returns ids for: a lecturer user + a student user (unique usernames via `time.Now().UnixNano()`, like the P0-1 auth-test pattern), a course, a `course_lecturers` row (lecturer↔course), a `student_enrollments` row (student↔course), a quiz (with `open_at`/`close_at` you control), and ≥2 questions each with options (one correct). Tear it all down in `t.Cleanup()` (DELETE in FK order) so `go test ./...` (parallel packages, one shared DB) doesn't pollute — this is the same isolation discipline the P0-1 fix used for auth tests. Without unique data + cleanup, these tests will flake exactly like `users/TestImportAllOrNothing` does today.
+
+**2. Then write assertions that reach the real logic:**
+
+- **Non-leakage (highest priority — the existential control):** with the quiz window **OPEN**, start an attempt and fetch it (and fetch a SUBMITTED attempt during the open window). Assert the **serialized JSON** (marshal the returned `StudentQuizAttemptView`) contains **no** `is_correct` and **no** `correct_options` for any question. Then move the window so `now() > close_at` (insert the quiz with a past `close_at`, or update it) and re-fetch the terminal attempt — assert `correct_options` **now appears**. This is the test that proves QUIZ-03/D-51; it must assert on bytes, not call internal helpers.
+- **Idempotent submit:** start a real attempt, answer, submit → capture score. Submit again → assert the score is unchanged and no re-grade happened (e.g. `attempt.Status` already terminal, returned score equals the stored one). Also assert submitting an answer for a `questionID` **not** in the attempt's drawn set returns the `invalid question ID` error (F10).
+- **Same-tx rollback:** grade a real submission but force the notification insert to fail inside the tx (e.g. a recipient_id that violates the FK, or a deliberately bad notification payload), then assert the **grade was NOT persisted** (re-read the submission → `graded_at IS NULL`). That proves the single-transaction guarantee (NOTIF-02) — the current test never enters the tx.
+- **CSV reject:** with the authorized lecturer+quiz fixture so the parser is reached, table-test the malformed rows in the **real format**: 3 columns, 5 columns, `correct=E`, empty `correct`, then assert a 4xx/`ErrInvalidQuestion` per row and that a valid 6-col row succeeds.
+
+**3. Also fix (nits):**
+- `quizzes/service.go` `AddUIQuestion` — the question-type guard returns a copy-pasted wrong message ("single choice must have exactly 1 correct option" for a type check). Give it its own message.
+- `internal/users/TestImportAllOrNothing` (pre-existing, NOT Phase 4) — fails under `go test ./...` due to shared-DB pollution (passes in isolation). Scope its count assertion to its own imported batch / unique usernames, mirroring the P0-2 healthz fix, so it can't flake CI.
+
+**Definition of done for the test pass:** each of the 4 rewritten tests must FAIL if its control is reverted (delete the `StudentOptionView` mapping → non-leakage test goes red; split the tx → rollback test goes red). A test that stays green when the control is broken is still theater.
