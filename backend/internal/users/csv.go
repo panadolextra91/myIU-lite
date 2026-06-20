@@ -78,9 +78,9 @@ func parseAccountsCSV(r io.Reader, idColumnName string) ([]ParsedAccount, []RowE
 			continue
 		}
 
-		id := strings.TrimSpace(record[idIdx])
-		fn := strings.TrimSpace(record[fnIdx])
-		dob := strings.TrimSpace(record[dobIdx])
+		id := strings.TrimLeft(strings.TrimSpace(record[idIdx]), "=+-@\t\r ")
+		fn := strings.TrimLeft(strings.TrimSpace(record[fnIdx]), "=+-@\t\r ")
+		dob := strings.TrimLeft(strings.TrimSpace(record[dobIdx]), "=+-@\t\r ")
 
 		parsed = append(parsed, ParsedAccount{
 			ID:       id,

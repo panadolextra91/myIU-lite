@@ -73,12 +73,12 @@ export const adminApi = {
     return res.data;
   },
   listCourseStudents: async (id: number) => {
-    const res = await api.get<RosterUser[]>(`/admin/courses/${id}/students`);
-    return res.data;
+    const res = await api.get<{ data: RosterUser[] }>(`/admin/courses/${id}/students`);
+    return res.data.data;
   },
   listCourseLecturers: async (id: number) => {
-    const res = await api.get<RosterUser[]>(`/admin/courses/${id}/lecturers`);
-    return res.data;
+    const res = await api.get<{ data: RosterUser[] }>(`/admin/courses/${id}/lecturers`);
+    return res.data.data;
   },
   importStudentsToCourse: async (courseId: number, file: File) => {
     const formData = new FormData();

@@ -3,6 +3,7 @@ package users
 import (
 	"context"
 	"os"
+	"strconv"
 	"testing"
 	"time"
 
@@ -29,11 +30,13 @@ func TestResetPassword(t *testing.T) {
 	svc := NewService(pool, repo)
 
 	// create a dummy user
-	id, err := svc.CreateAccount(ctx, db.UserRoleStudent, "reset_test_user", "Reset User", "15/08/1999", 1)
-	if err != nil && err.Error() == ErrDuplicateUser.Error() {
-		// handle existing or just use something random
-	}
+	username := "reset_test_" + strconv.FormatInt(time.Now().UnixNano(), 10)
+	id, err := svc.CreateAccount(ctx, db.UserRoleStudent, username, "Reset User", "15/08/1999", 1)
 	require.NoError(t, err)
+
+	defer func() {
+		_, _ = pool.Exec(ctx, "DELETE FROM users WHERE id = $1", id)
+	}()
 
 	// wait a moment so timestamp differences are obvious, though not strictly necessary
 	time.Sleep(10 * time.Millisecond)

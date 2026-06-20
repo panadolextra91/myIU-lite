@@ -66,7 +66,7 @@ func ParseCSV(r io.Reader, role string) ([]ParsedRow, []RowError) {
 			continue
 		}
 
-		username := strings.TrimSpace(record[idIdx])
+		username := strings.TrimLeft(strings.TrimSpace(record[idIdx]), "=+-@\t\r ")
 		if username == "" {
 			rowErrs = append(rowErrs, RowError{Row: rowIndex, Field: expectedHeader, Message: "empty value"})
 			rowIndex++
