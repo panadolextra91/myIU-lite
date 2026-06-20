@@ -1,2 +1,2 @@
--- name: CountUsers :one
+-- name: HealthCountUsers :one
 SELECT count(*) FROM users;

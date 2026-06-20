@@ -12,7 +12,7 @@ func RegisterRoutes(r *gin.Engine, pool *pgxpool.Pool) {
 	queries := db.New(pool)
 	
 	r.GET("/healthz", func(c *gin.Context) {
-		count, err := queries.CountUsers(c.Request.Context())
+		count, err := queries.HealthCountUsers(c.Request.Context())
 		if err != nil {
 			c.JSON(http.StatusServiceUnavailable, gin.H{"status": "db down"})
 			return

@@ -40,12 +40,14 @@ export function AdminSidebar() {
               <SidebarMenu>
                 {items.map((item) => (
                   <SidebarMenuItem key={item.title}>
-                    <SidebarMenuButton asChild isActive={location.pathname === item.url || (item.url !== '/admin' && location.pathname.startsWith(item.url))}>
-                      <Link to={item.url}>
-                        <item.icon />
-                        <span>{item.title}</span>
-                      </Link>
-                    </SidebarMenuButton>
+                    <SidebarMenuButton 
+                    render={<Link to={item.url} />}
+                    isActive={location.pathname.startsWith(item.url)}
+                    tooltip={item.title}
+                  >
+                    <item.icon />
+                    <span>{item.title}</span>
+                  </SidebarMenuButton>
                   </SidebarMenuItem>
                 ))}
               </SidebarMenu>
