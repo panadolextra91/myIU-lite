@@ -10,6 +10,8 @@ import CourseDetail from '@/pages/admin/CourseDetail';
 import Enrollment from '@/pages/admin/Enrollment';
 import LecturerAssignment from '@/pages/admin/LecturerAssignment';
 import AuditLogs from '@/pages/admin/AuditLogs';
+import LecturerAssignments from '@/pages/lecturer/Assignments';
+import StudentAssignments from '@/pages/student/Assignments';
 
 import ProtectedRoute from '@/routes/ProtectedRoute';
 import RoleGuard from '@/routes/RoleGuard';
@@ -45,6 +47,7 @@ export const router = createBrowserRouter([
             element: <RoleGuard allowedRoles={['student']} />,
             children: [
               { index: true, element: <StudentIndex /> },
+              { path: 'assignments', element: <StudentAssignments /> },
             ],
           },
           {
@@ -52,6 +55,7 @@ export const router = createBrowserRouter([
             element: <RoleGuard allowedRoles={['lecturer']} />,
             children: [
               { index: true, element: <LecturerIndex /> },
+              { path: 'assignments', element: <LecturerAssignments /> },
             ],
           },
           {
