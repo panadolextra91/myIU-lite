@@ -177,7 +177,7 @@ func (s *Service) AddUIQuestion(ctx context.Context, courseID, quizID int64, req
 	}
 
 	if req.QuestionType != "single" && req.QuestionType != "multi" {
-		return fmt.Errorf("%w: single choice must have exactly 1 correct option", ErrInvalidQuestion)
+		return fmt.Errorf("%w: invalid question type, must be 'single' or 'multi'", ErrInvalidQuestion)
 	}
 	if req.QuestionType == "single" && correctCount != 1 {
 		return fmt.Errorf("%w: single choice must have exactly 1 correct option", ErrInvalidQuestion)
