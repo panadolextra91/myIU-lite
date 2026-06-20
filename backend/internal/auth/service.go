@@ -26,6 +26,10 @@ func (s *Service) Login(ctx context.Context, username, password string) (db.User
 		return db.User{}, ErrInvalidCredentials
 	}
 
+	if user.IsSystem {
+		return db.User{}, ErrInvalidCredentials
+	}
+
 	err = bcrypt.CompareHashAndPassword([]byte(user.PasswordHash), []byte(password))
 	if err != nil {
 		return db.User{}, ErrInvalidCredentials

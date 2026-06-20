@@ -7,10 +7,95 @@ package db
 
 import (
 	"context"
+
+	"github.com/jackc/pgx/v5/pgtype"
 )
 
+const countUsers = `-- name: CountUsers :one
+SELECT COUNT(*) FROM users
+WHERE deleted_at IS NULL AND is_system = FALSE
+  AND ($1::user_role IS NULL OR role = $1)
+  AND ($2::text IS NULL OR username ILIKE '%' || $2 || '%' OR full_name ILIKE '%' || $2 || '%')
+`
+
+type CountUsersParams struct {
+	Role   NullUserRole
+	Search pgtype.Text
+}
+
+func (q *Queries) CountUsers(ctx context.Context, arg CountUsersParams) (int64, error) {
+	row := q.db.QueryRow(ctx, countUsers, arg.Role, arg.Search)
+	var count int64
+	err := row.Scan(&count)
+	return count, err
+}
+
+const createUser = `-- name: CreateUser :one
+INSERT INTO users (username, password_hash, role, full_name, date_of_birth, must_change_password)
+VALUES ($1, $2, $3, $4, $5, $6)
+RETURNING id
+`
+
+type CreateUserParams struct {
+	Username           string
+	PasswordHash       string
+	Role               UserRole
+	FullName           pgtype.Text
+	DateOfBirth        pgtype.Date
+	MustChangePassword bool
+}
+
+func (q *Queries) CreateUser(ctx context.Context, arg CreateUserParams) (int64, error) {
+	row := q.db.QueryRow(ctx, createUser,
+		arg.Username,
+		arg.PasswordHash,
+		arg.Role,
+		arg.FullName,
+		arg.DateOfBirth,
+		arg.MustChangePassword,
+	)
+	var id int64
+	err := row.Scan(&id)
+	return id, err
+}
+
+const getActiveUsernames = `-- name: GetActiveUsernames :many
+SELECT username FROM users WHERE username = ANY($1::text[]) AND deleted_at IS NULL AND is_system = FALSE
+`
+
+func (q *Queries) GetActiveUsernames(ctx context.Context, dollar_1 []string) ([]string, error) {
+	rows, err := q.db.Query(ctx, getActiveUsernames, dollar_1)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []string
+	for rows.Next() {
+		var username string
+		if err := rows.Scan(&username); err != nil {
+			return nil, err
+		}
+		items = append(items, username)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const getSystemUserID = `-- name: GetSystemUserID :one
+SELECT id FROM users WHERE is_system = TRUE LIMIT 1
+`
+
+func (q *Queries) GetSystemUserID(ctx context.Context) (int64, error) {
+	row := q.db.QueryRow(ctx, getSystemUserID)
+	var id int64
+	err := row.Scan(&id)
+	return id, err
+}
+
 const getUserByID = `-- name: GetUserByID :one
-SELECT id, username, password_hash, role, must_change_password, created_at, updated_at, deleted_at, password_changed_at FROM users WHERE id = $1 AND deleted_at IS NULL
+SELECT id, username, password_hash, role, must_change_password, created_at, updated_at, deleted_at, password_changed_at, full_name, date_of_birth, is_system FROM users WHERE id = $1 AND deleted_at IS NULL
 `
 
 func (q *Queries) GetUserByID(ctx context.Context, id int64) (User, error) {
@@ -26,12 +111,15 @@ func (q *Queries) GetUserByID(ctx context.Context, id int64) (User, error) {
 		&i.UpdatedAt,
 		&i.DeletedAt,
 		&i.PasswordChangedAt,
+		&i.FullName,
+		&i.DateOfBirth,
+		&i.IsSystem,
 	)
 	return i, err
 }
 
 const getUserByUsername = `-- name: GetUserByUsername :one
-SELECT id, username, password_hash, role, must_change_password, created_at, updated_at, deleted_at, password_changed_at FROM users WHERE username = $1 AND deleted_at IS NULL
+SELECT id, username, password_hash, role, must_change_password, created_at, updated_at, deleted_at, password_changed_at, full_name, date_of_birth, is_system FROM users WHERE username = $1 AND deleted_at IS NULL
 `
 
 func (q *Queries) GetUserByUsername(ctx context.Context, username string) (User, error) {
@@ -47,8 +135,79 @@ func (q *Queries) GetUserByUsername(ctx context.Context, username string) (User,
 		&i.UpdatedAt,
 		&i.DeletedAt,
 		&i.PasswordChangedAt,
+		&i.FullName,
+		&i.DateOfBirth,
+		&i.IsSystem,
 	)
 	return i, err
+}
+
+const listUsers = `-- name: ListUsers :many
+SELECT id, username, password_hash, role, must_change_password, created_at, updated_at, deleted_at, password_changed_at, full_name, date_of_birth, is_system FROM users
+WHERE deleted_at IS NULL AND is_system = FALSE
+  AND ($1::user_role IS NULL OR role = $1)
+  AND ($2::text IS NULL OR username ILIKE '%' || $2 || '%' OR full_name ILIKE '%' || $2 || '%')
+ORDER BY created_at DESC
+LIMIT $4 OFFSET $3
+`
+
+type ListUsersParams struct {
+	Role   NullUserRole
+	Search pgtype.Text
+	Offset int32
+	Limit  int32
+}
+
+func (q *Queries) ListUsers(ctx context.Context, arg ListUsersParams) ([]User, error) {
+	rows, err := q.db.Query(ctx, listUsers,
+		arg.Role,
+		arg.Search,
+		arg.Offset,
+		arg.Limit,
+	)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []User
+	for rows.Next() {
+		var i User
+		if err := rows.Scan(
+			&i.ID,
+			&i.Username,
+			&i.PasswordHash,
+			&i.Role,
+			&i.MustChangePassword,
+			&i.CreatedAt,
+			&i.UpdatedAt,
+			&i.DeletedAt,
+			&i.PasswordChangedAt,
+			&i.FullName,
+			&i.DateOfBirth,
+			&i.IsSystem,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const resetUserPassword = `-- name: ResetUserPassword :exec
+UPDATE users SET password_hash = $2, must_change_password = true, password_changed_at = now(), updated_at = now() WHERE id = $1 AND deleted_at IS NULL AND is_system = FALSE
+`
+
+type ResetUserPasswordParams struct {
+	ID           int64
+	PasswordHash string
+}
+
+func (q *Queries) ResetUserPassword(ctx context.Context, arg ResetUserPasswordParams) error {
+	_, err := q.db.Exec(ctx, resetUserPassword, arg.ID, arg.PasswordHash)
+	return err
 }
 
 const updatePasswordAndStamp = `-- name: UpdatePasswordAndStamp :exec

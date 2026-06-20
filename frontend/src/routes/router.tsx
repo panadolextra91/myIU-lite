@@ -4,6 +4,12 @@ import ChangePassword from '@/pages/ChangePassword';
 import StudentIndex from '@/pages/student/Index';
 import LecturerIndex from '@/pages/lecturer/Index';
 import AdminIndex from '@/pages/admin/Index';
+import Accounts from '@/pages/admin/Accounts';
+import Courses from '@/pages/admin/Courses';
+import CourseDetail from '@/pages/admin/CourseDetail';
+import Enrollment from '@/pages/admin/Enrollment';
+import LecturerAssignment from '@/pages/admin/LecturerAssignment';
+import AuditLogs from '@/pages/admin/AuditLogs';
 
 import ProtectedRoute from '@/routes/ProtectedRoute';
 import RoleGuard from '@/routes/RoleGuard';
@@ -53,6 +59,12 @@ export const router = createBrowserRouter([
             element: <RoleGuard allowedRoles={['admin']} />,
             children: [
               { index: true, element: <AdminIndex /> },
+              { path: 'accounts', element: <Accounts /> },
+              { path: 'courses', element: <Courses /> },
+              { path: 'courses/:id', element: <CourseDetail /> },
+              { path: 'enrollment', element: <Enrollment /> },
+              { path: 'lecturers', element: <LecturerAssignment /> },
+              { path: 'audit', element: <AuditLogs /> },
             ],
           },
         ],

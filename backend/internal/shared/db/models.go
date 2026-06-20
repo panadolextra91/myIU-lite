@@ -55,11 +55,41 @@ func (ns NullUserRole) Value() (driver.Value, error) {
 }
 
 type AuditLog struct {
+	ID            int64
+	ActorID       pgtype.Int8
+	Action        string
+	Target        pgtype.Text
+	Metadata      []byte
+	CreatedAt     pgtype.Timestamptz
+	TargetType    pgtype.Text
+	TargetID      pgtype.Int8
+	OperationID   pgtype.UUID
+	AffectedCount pgtype.Int4
+}
+
+type Course struct {
 	ID        int64
-	ActorID   pgtype.Int8
-	Action    string
-	Target    pgtype.Text
-	Metadata  []byte
+	Code      string
+	Name      string
+	Term      string
+	StartDate pgtype.Date
+	EndDate   pgtype.Date
+	CreatedAt pgtype.Timestamptz
+	UpdatedAt pgtype.Timestamptz
+	DeletedAt pgtype.Timestamptz
+}
+
+type CourseLecturer struct {
+	ID         int64
+	CourseID   int64
+	LecturerID int64
+	CreatedAt  pgtype.Timestamptz
+}
+
+type StudentEnrollment struct {
+	ID        int64
+	CourseID  int64
+	StudentID int64
 	CreatedAt pgtype.Timestamptz
 }
 
@@ -73,4 +103,7 @@ type User struct {
 	UpdatedAt          pgtype.Timestamptz
 	DeletedAt          pgtype.Timestamptz
 	PasswordChangedAt  pgtype.Timestamptz
+	FullName           pgtype.Text
+	DateOfBirth        pgtype.Date
+	IsSystem           bool
 }

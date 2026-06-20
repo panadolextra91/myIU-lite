@@ -89,7 +89,24 @@ Decimal phases appear between their surrounding integers in numeric order.
   4. Every admin mutation writes an append-only audit row (actor, action, target, timestamp) that cannot be edited or deleted.
   5. Courses are automatically soft-deleted one month after their end date with no manual action, and each sweep is itself audit-logged.
 
-**Plans**: TBD
+**Plans**: 4 plans
+
+**Wave 1**
+
+- [ ] 03-01-PLAN.md — Foundation slice: migrations 000004 (users cols, courses, membership tables, audit_log cols) + 000005 (append-only triggers + SYSTEM seed), writeAudit helper, read-only audit viewer, admin sidebar shell (ADMIN-08; D-33/34/35/36/38/41)
+
+**Wave 2** *(blocked on Wave 1 completion)*
+
+- [ ] 03-02-PLAN.md — Accounts slice: manual create + all-or-nothing CSV import (422 per-row errors) + admin reset to default DDMMYYYY, Accounts admin page (ADMIN-01/02/03/04; D-24/25/26/27)
+
+**Wave 3** *(blocked on Wave 2 completion)*
+
+- [ ] 03-03-PLAN.md — Courses + sweep slice: course CRUD (soft-delete only), read-only roster page (Overview/Students/Lecturers), in-process daily+startup sweep audit-logged under SYSTEM (ADMIN-05/07; D-28/29/37/39/40/42)
+
+**Wave 4** *(blocked on Wave 3 completion)*
+
+- [ ] 03-04-PLAN.md — Enrollment & assignment slice: idempotent all-or-nothing per-course student/lecturer CSV import + UI-only individual removal from roster (ADMIN-06; D-30/31/32/43)
+
 **UI hint**: yes
 
 ### Phase 4: Assignments & Quizzes
@@ -134,6 +151,6 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5
 |-------|----------------|--------|-----------|
 | 1. Foundation & Data Core | 3/3 | Completed | 2026-06-20 |
 | 2. Auth, RBAC & Forced First-Login | 3/3 | Completed | 2026-06-20 |
-| 3. Admin Provisioning & Course Lifecycle | 0/TBD | Not started | - |
+| 3. Admin Provisioning & Course Lifecycle | 0/4 | Not started | - |
 | 4. Assignments & Quizzes | 0/TBD | Not started | - |
 | 5. Gradebook, Announcements & Requests | 0/TBD | Not started | - |

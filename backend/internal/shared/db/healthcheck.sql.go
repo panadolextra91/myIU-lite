@@ -9,12 +9,12 @@ import (
 	"context"
 )
 
-const countUsers = `-- name: CountUsers :one
+const healthCountUsers = `-- name: HealthCountUsers :one
 SELECT count(*) FROM users
 `
 
-func (q *Queries) CountUsers(ctx context.Context) (int64, error) {
-	row := q.db.QueryRow(ctx, countUsers)
+func (q *Queries) HealthCountUsers(ctx context.Context) (int64, error) {
+	row := q.db.QueryRow(ctx, healthCountUsers)
 	var count int64
 	err := row.Scan(&count)
 	return count, err
