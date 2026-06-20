@@ -160,6 +160,23 @@ func (s *Service) DeleteScheme(ctx context.Context, courseID, lecturerID int64) 
 	defer func() { _ = tx.Rollback(ctx) }()
 	qtx := s.q.WithTx(tx)
 
+	scores, err := qtx.CountSchemeScores(ctx, scheme.ID)
+	if err != nil {
+		return err
+	}
+	pubs, err := qtx.CountSchemePublications(ctx, scheme.ID)
+	if err != nil {
+		return err
+	}
+	if scores > 0 || pubs > 0 {
+		return ErrSchemeImmutable
+	}
+
+	err = qtx.DeleteSchemeComponents(ctx, scheme.ID)
+	if err != nil {
+		return err
+	}
+
 	deleted, err := qtx.DeleteSchemeIfEmpty(ctx, db.DeleteSchemeIfEmptyParams{
 		ID:       scheme.ID,
 		CourseID: courseID,
@@ -168,20 +185,9 @@ func (s *Service) DeleteScheme(ctx context.Context, courseID, lecturerID int64) 
 		return err
 	}
 	if deleted == 0 {
-		return ErrSchemeImmutable
+		return ErrSchemeImmutable // Should not happen since we already checked
 	}
 
-	// DeleteSchemeIfEmpty will only succeed if there are no scores or publications.
-	// But it does not cascade delete components automatically unless we use ON DELETE CASCADE,
-	// so we manually delete components first.
-	err = qtx.DeleteSchemeComponents(ctx, scheme.ID)
-	if err != nil {
-		return err
-	}
-	// Actually, DeleteSchemeComponents should happen *before* DeleteSchemeIfEmpty if there's no cascade.
-	// Wait, Postgres will block DeleteSchemeIfEmpty if components exist.
-	// We need to delete components first, or use a function. We'll fix this below.
-	
 	return tx.Commit(ctx)
 }
 
