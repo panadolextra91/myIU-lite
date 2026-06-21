@@ -69,7 +69,7 @@ Cross-feature dependencies are allowed where business rules need them (e.g. the 
 
 ## 3. Request lifecycle
 
-Every authenticated route runs the same chain. Protected feature routes are registered under an `api := r.Group("/api"); api.Use(AuthMiddleware)` group, with role subgroups (`api.Group("/lecturer").Use(RequireRole(...))`), so authentication always runs **before** role-gating.
+Every authenticated route runs the same chain. Protected feature routes are registered under an `api := r.Group("/api"); api.Use(AuthMiddleware)` group, with role subgroups (`api.Group("/lecturer").Use(RequireRole(...))`), so authentication always runs **before** role-gating. The sole public route is `GET /health` (liveness — the one `RegisterRoutes` that does not attach `AuthMiddleware`).
 
 ```mermaid
 sequenceDiagram
