@@ -60,13 +60,19 @@ func TestSecurity_Assignments(t *testing.T) {
 		tx, _ := pool.Begin(ctx)
 		_, _ = tx.Exec(ctx, "ALTER TABLE notifications RENAME TO notifications_hidden")
 		_ = tx.Commit(ctx)
+		// Restore in a defer so a failed assertion or panic below can never leave the
+		// shared notifications table renamed for the rest of the suite. NOTE: this
+		// rename is GLOBAL/committed — the whole DB suite must run with `go test -p 1`
+		// (see scripts/check.sh / ci.yml) so no parallel package inserts a notification
+		// during this window.
+		defer func() {
+			tx2, _ := pool.Begin(ctx)
+			_, _ = tx2.Exec(ctx, "ALTER TABLE notifications_hidden RENAME TO notifications")
+			_ = tx2.Commit(ctx)
+		}()
 
 		err = service.GradeSubmission(ctx, f.CourseID, assignment.ID, subID, 100, "Good", f.LecturerID)
 		assert.Error(t, err)
-		
-		tx2, _ := pool.Begin(ctx)
-		_, _ = tx2.Exec(ctx, "ALTER TABLE notifications_hidden RENAME TO notifications")
-		_ = tx2.Commit(ctx)
 
 		// GradedAt should be null for the real submission because it was rolled back
 		var gradedAt pgtype.Timestamptz

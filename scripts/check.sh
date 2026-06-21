@@ -75,7 +75,10 @@ if [ -n "${DATABASE_URL:-}" ]; then
   fi
   # -count=1 disables Go's test cache so the gate ALWAYS re-runs against the live DB; a
   # cached 'ok' can mask a real DB-state failure, and CI never caches.
-  step "backend: go test" bash -c "cd backend && go test -count=1 ./..."
+  # -p 1 serializes package binaries: the suite shares ONE Postgres and the assignments
+  # same-tx rollback test briefly RENAMEs the notifications table globally — parallel
+  # packages race that window. KEEP IN SYNC with ci.yml.
+  step "backend: go test" bash -c "cd backend && go test -count=1 -p 1 ./..."
 elif [ "${SKIP_DB_TESTS:-}" = "1" ]; then
   DB_TESTS_SKIPPED=1
   printf '\n\033[33m⚠ backend: go test SKIPPED via SKIP_DB_TESTS=1 — CI will run it on Postgres.\033[0m\n'
