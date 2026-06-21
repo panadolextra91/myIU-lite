@@ -6,6 +6,7 @@ import { NotificationBell } from '@/components/NotificationBell';
 import { api } from '@/lib/api';
 import { SidebarProvider, SidebarTrigger } from '@/components/ui/sidebar';
 import { AdminSidebar } from '@/components/admin/AdminSidebar';
+import { ModeToggle } from '@/components/mode-toggle';
 
 export default function AppLayout() {
   const user = useAuthStore((state) => state.user);
@@ -33,6 +34,7 @@ export default function AppLayout() {
               <span className="text-sm text-muted-foreground hidden sm:inline-block">
                 {user.username} ({user.role})
               </span>
+              <ModeToggle />
               <NotificationBell />
               <Button variant="ghost" size="sm" onClick={handleLogout}>
                 <LogOut className="w-4 h-4 mr-2" />

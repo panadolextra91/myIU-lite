@@ -81,6 +81,12 @@ Cross-cutting security threads to honor (from research PITFALLS):
 - Magic-byte + 10MB upload validation; Cloudinary `authenticated` + signed URLs; quiz answer non-leakage + stable-option-ID shuffle — Phase 4.
 - Append-only audit log + soft-delete partial-unique-index discipline; in-transaction notification writes — Phases 3–5.
 
+## Quick Tasks Completed
+
+| Slug | Description | Date |
+|------|-------------|------|
+| setup-dark-theme-toggle | Implement dark theme specification and add a toggle button | 2026-06-21 |
+
 ## Deferred Items
 
 Items acknowledged and carried forward from previous milestone close:
