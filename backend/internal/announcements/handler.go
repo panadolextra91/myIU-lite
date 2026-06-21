@@ -22,13 +22,16 @@ func RegisterRoutes(r *gin.Engine, pool *pgxpool.Pool, cfg config.Config) {
 	svc := NewService(repo, pool)
 	h := &Handler{svc: svc, cfg: cfg}
 
-	lecturer := r.Group("/api/lecturer", middleware.RequireRole(db.UserRoleLecturer))
+	api := r.Group("/api")
+	api.Use(middleware.AuthMiddleware(pool, cfg))
+
+	lecturer := api.Group("/lecturer", middleware.RequireRole(db.UserRoleLecturer))
 	{
 		lecturer.POST("/courses/:id/announcements", h.CreateAnnouncement)
 		lecturer.GET("/courses/:id/announcements", h.ListForCourse)
 	}
 
-	student := r.Group("/api/student", middleware.RequireRole(db.UserRoleStudent))
+	student := api.Group("/student", middleware.RequireRole(db.UserRoleStudent))
 	{
 		student.GET("/courses/:id/announcements", h.ListForStudent)
 		student.GET("/announcements/:id", h.GetAnnouncement)

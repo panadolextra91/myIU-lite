@@ -23,7 +23,10 @@ func RegisterRoutes(r *gin.Engine, pool *pgxpool.Pool, cfg config.Config) {
 	svc := NewService(repo, pool)
 	h := &Handler{svc: svc, pool: pool}
 
-	student := r.Group("/api/student", middleware.RequireRole(db.UserRoleStudent))
+	api := r.Group("/api")
+	api.Use(middleware.AuthMiddleware(pool, cfg))
+
+	student := api.Group("/student", middleware.RequireRole(db.UserRoleStudent))
 	{
 		student.POST("/courses/:id/requests", h.CreateRequest)
 		student.GET("/requests", h.ListStudentRequests)
@@ -31,7 +34,7 @@ func RegisterRoutes(r *gin.Engine, pool *pgxpool.Pool, cfg config.Config) {
 		student.GET("/requests/:id", h.GetRequest)
 	}
 
-	lecturer := r.Group("/api/lecturer", middleware.RequireRole(db.UserRoleLecturer))
+	lecturer := api.Group("/lecturer", middleware.RequireRole(db.UserRoleLecturer))
 	{
 		lecturer.GET("/requests", h.ListLecturerRequests)
 		lecturer.POST("/requests/:id/reply", h.ReplyRequest)

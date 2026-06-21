@@ -59,7 +59,12 @@ jobs:
 
       - name: Run Go Tests
         working-directory: backend
-        run: go test ./...
+        # -p 1: the integration tests share ONE Postgres. The assignments same-tx
+        # rollback test briefly RENAMEs the notifications table globally; running
+        # package binaries in parallel races that window against other packages'
+        # notification inserts ("relation notifications does not exist"). Serialize
+        # package binaries to keep the shared DB consistent. KEEP IN SYNC with check.sh.
+        run: go test -p 1 -count=1 ./...
 
       - name: Setup Node
         uses: actions/setup-node@v4
