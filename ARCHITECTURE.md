@@ -86,7 +86,7 @@ sequenceDiagram
     B->>C: request + access_token cookie
     C->>AM: allowed origin (credentials)
     AM->>PG: GetUserByID (validate token, not deleted)
-    Note over AM: reject token older than last password change (D-13); forced-reset allow-list (D-15)
+    Note over AM: reject token older than last password change (D-13), forced-reset allow-list (D-15)
     AM->>RR: c.Set user_id, c.Set role
     RR->>H: role in allow-list? else 403
     H->>SV: parsed input + user_id from JWT (never from body)
@@ -95,7 +95,7 @@ sequenceDiagram
     R->>PG: SQL
     PG-->>SV: rows
     SV-->>H: result or sentinel error
-    H-->>B: JSON DTO, or {"error":{"code","message"}}
+    H-->>B: JSON DTO, or error envelope (code, message)
 ```
 
 Identity always comes from the JWT-derived `user_id`/`role` set by `AuthMiddleware` — **never** from a client-supplied id in the body or query. Errors use a uniform `{"error":{"code","message"}}` envelope.
@@ -247,16 +247,16 @@ sequenceDiagram
     participant AH as auth.Handler
     participant AS as auth.Service
     participant PG as Postgres
-    B->>AH: POST /auth/login {username,password}
+    B->>AH: POST /auth/login (username, password)
     AH->>AS: Login
     AS->>PG: GetUserByUsername (reject is_system)
     AS->>AS: bcrypt.CompareHashAndPassword
     AH-->>B: set access+refresh HttpOnly cookies, MustChangePassword=true
     B->>B: ProtectedRoute redirects to /change-password
     B->>AH: POST /auth/change-password (cookie)
-    AH->>AS: ChangePassword (verify current, ≥6, not same)
+    AH->>AS: ChangePassword (verify current, min length 6, not same)
     AS->>PG: update hash + password_changed_at, clear must_change_password
-    AH-->>B: 200 "please log in again" + clear cookies
+    AH-->>B: 200 please log in again + clear cookies
     Note over B: old tokens now fail the password-change check
 ```
 
@@ -269,12 +269,12 @@ sequenceDiagram
     participant RH as requests.Handler
     participant RS as requests.Service
     participant PG as Postgres
-    B->>RH: POST /api/lecturer/requests/:id/reply {decision, note}
-    Note over RH: AuthMiddleware + RequireRole(lecturer); lecturerID from JWT
+    B->>RH: POST /api/lecturer/requests/:id/reply (decision, note)
+    Note over RH: AuthMiddleware + RequireRole(lecturer), lecturerID from JWT
     RH->>RS: ReplyRequest
     RS->>PG: GetRequestByID (404 / not-targeted / already-closed guards)
     RS->>PG: BEGIN
-    RS->>PG: ReplyRequest (status, reply_note, replied_at) — guarded WHERE status='PENDING'
+    RS->>PG: ReplyRequest (status, reply_note, replied_at) guarded WHERE status is PENDING
     RS->>PG: InsertNotification (recipient=student, REQUEST_REPLIED)
     RS->>PG: COMMIT
     Note over RS,PG: request update + notification land together, or neither
