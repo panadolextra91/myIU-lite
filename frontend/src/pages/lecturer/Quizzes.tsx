@@ -5,11 +5,12 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { useParams } from 'react-router';
-import { Plus, Upload, Trash } from 'lucide-react';
+import { Plus, Upload, Trash2, Calendar, ArrowRight, Save } from 'lucide-react';
 import { courseworkApi, type UIQuestionRequest, type UIOptionRequest } from '@/lib/coursework-api';
 
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
@@ -155,14 +156,17 @@ export default function LecturerQuizzes() {
   };
 
   if (isLoading) {
-    return <div className="p-8"><div className="h-32 bg-gray-100 rounded-lg animate-pulse" /></div>;
+    return <div className="p-8"><div className="h-32 bg-muted rounded-lg animate-pulse" /></div>;
   }
 
   return (
-    <div className="p-8 max-w-6xl mx-auto space-y-8">
-      <div className="flex justify-between items-center">
-        <h1 className="text-3xl font-bold tracking-tight">Quizzes</h1>
-        <Button onClick={() => setCreateOpen(true)}><Plus className="mr-2 h-4 w-4" /> Create Quiz</Button>
+    <div className="mx-auto max-w-6xl space-y-12 p-8">
+      {/* Header */}
+      <section className="flex flex-col gap-4 border-b pb-6 md:flex-row md:items-end md:justify-between">
+        <h1 className="text-4xl font-normal tracking-tight text-primary">Quizzes</h1>
+        <Button onClick={() => setCreateOpen(true)} className="h-11">
+          <Plus className="mr-2 h-4 w-4" strokeWidth={1.5} /> Create Quiz
+        </Button>
         <Dialog open={createOpen} onOpenChange={setCreateOpen}>
           <DialogContent className="sm:max-w-[425px]">
             <DialogHeader>
@@ -205,55 +209,109 @@ export default function LecturerQuizzes() {
             </Form>
           </DialogContent>
         </Dialog>
-      </div>
+      </section>
 
-      <div className="grid gap-4 md:grid-cols-2">
+      {/* Quiz grid */}
+      <section className="grid grid-cols-1 gap-6 md:grid-cols-2">
         {quizzes?.map((quiz) => (
-          <Card key={quiz.id} className="cursor-pointer hover:shadow-md transition-shadow" onClick={() => setActiveQuizId(quiz.id)}>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-xl">{quiz.title}</CardTitle>
+          <Card
+            key={quiz.id}
+            onClick={() => setActiveQuizId(quiz.id)}
+            className="group relative cursor-pointer overflow-hidden transition-colors hover:border-primary"
+          >
+            <div className="pointer-events-none absolute right-4 top-4 opacity-0 transition-opacity group-hover:opacity-100">
+              <ArrowRight className="h-5 w-5 text-primary" strokeWidth={1.5} />
+            </div>
+            <CardHeader>
+              <CardTitle className="text-2xl font-normal tracking-tight">{quiz.title}</CardTitle>
             </CardHeader>
-            <CardContent>
-              <div className="text-sm text-gray-500 mb-2">Pool: {quiz.pool_size} | Questions: {quiz.max_questions} | Max Grade: {quiz.max_grade}</div>
-              <div className="text-xs text-gray-400">
-                {quiz.open_at ? new Date(quiz.open_at).toLocaleString() : 'No open date'} - {quiz.close_at ? new Date(quiz.close_at).toLocaleString() : 'No close date'}
+            <CardContent className="space-y-4">
+              <div className="flex flex-wrap gap-x-6 gap-y-2 font-mono text-sm tabular-nums text-muted-foreground">
+                <span>Pool: {quiz.pool_size}</span>
+                <span>Questions: {quiz.max_questions}</span>
+                <span>Max Grade: {quiz.max_grade}</span>
               </div>
+              <p className="flex items-center gap-2 text-sm text-primary">
+                <Calendar className="h-4 w-4" strokeWidth={1.5} />
+                <span className="font-mono tabular-nums">
+                  Available: {quiz.open_at ? new Date(quiz.open_at).toLocaleString() : 'No open date'} - {quiz.close_at ? new Date(quiz.close_at).toLocaleString() : 'No close date'}
+                </span>
+              </p>
             </CardContent>
           </Card>
         ))}
-        {quizzes?.length === 0 && <div className="col-span-2 text-center text-gray-500 py-12">No quizzes created yet</div>}
-      </div>
+        {quizzes?.length === 0 && (
+          <div className="col-span-full py-12 text-center text-muted-foreground">No quizzes created yet</div>
+        )}
+      </section>
 
+      {/* Authoring panel */}
       {activeQuizId && (
-        <Card className="mt-8 border-t-4 border-t-blue-500">
+        <Card className="border-t-4 border-t-primary">
           <CardHeader>
-            <CardTitle>Author Questions for Quiz #{activeQuizId}</CardTitle>
+            <CardTitle className="text-3xl font-normal tracking-tight">
+              Author Questions for Quiz <span className="font-mono tabular-nums">#{activeQuizId}</span>
+            </CardTitle>
+            <div className="mt-4 h-px w-16 bg-border" />
           </CardHeader>
-          <CardContent className="space-y-8">
-            <div className="border p-6 rounded-lg bg-gray-50">
-              <h3 className="text-lg font-medium mb-4">Import via CSV</h3>
-              <div className="flex gap-4 items-center">
-                <Input type="file" accept=".csv" onChange={(e) => setCsvFile(e.target.files?.[0] || null)} />
-                <Button onClick={() => csvFile && importMutation.mutate({ quizId: activeQuizId, file: csvFile })} disabled={!csvFile || importMutation.isPending}>
-                  <Upload className="mr-2 h-4 w-4" /> Import CSV
-                </Button>
+          <CardContent>
+            <div className="grid grid-cols-1 gap-12 lg:grid-cols-12">
+              {/* (a) Import via CSV */}
+              <div className="lg:col-span-4">
+                <h3 className="mb-4 text-xs font-medium uppercase tracking-wider text-muted-foreground">Import via CSV</h3>
+                <div className="flex flex-col items-center gap-3 rounded-lg border border-dashed border-border bg-muted/40 p-6 text-center">
+                  <Label
+                    htmlFor="csv-upload"
+                    className="cursor-pointer text-xs font-medium uppercase tracking-wider text-muted-foreground transition-colors hover:text-primary"
+                  >
+                    {csvFile ? csvFile.name : 'Select File'}
+                  </Label>
+                  <input
+                    id="csv-upload"
+                    type="file"
+                    accept=".csv"
+                    className="hidden"
+                    onChange={(e) => setCsvFile(e.target.files?.[0] || null)}
+                  />
+                  <Upload className="h-8 w-8 text-muted-foreground" strokeWidth={1.5} />
+                  <p className="max-w-[220px] text-sm italic text-muted-foreground">
+                    Format: question,A,B,C,D,correct (where correct is A, B, C, or D)
+                  </p>
+                  <Button
+                    size="sm"
+                    className="mt-2"
+                    onClick={() => csvFile && importMutation.mutate({ quizId: activeQuizId, file: csvFile })}
+                    disabled={!csvFile || importMutation.isPending}
+                  >
+                    <Upload className="mr-2 h-4 w-4" strokeWidth={1.5} /> Import CSV
+                  </Button>
+                </div>
               </div>
-              <p className="text-xs text-gray-500 mt-2">Format: question,A,B,C,D,correct (where correct is A, B, C, or D)</p>
-            </div>
 
-            <div className="border p-6 rounded-lg">
-              <h3 className="text-lg font-medium mb-4">Add UI Question</h3>
-              <div className="space-y-4">
-                <Input placeholder="Question prompt..." value={uiPrompt} onChange={(e) => setUiPrompt(e.target.value)} />
-                
-                <RadioGroup value={uiType} onValueChange={(v) => setUiType(v as 'single' | 'multi')} className="flex gap-4">
-                  <div className="flex items-center space-x-2"><RadioGroupItem value="single" id="single" /><FormLabel htmlFor="single">Single Choice</FormLabel></div>
-                  <div className="flex items-center space-x-2"><RadioGroupItem value="multi" id="multi" /><FormLabel htmlFor="multi">Multi Choice</FormLabel></div>
-                </RadioGroup>
+              {/* (b) Add UI Question */}
+              <div className="space-y-6 border-t pt-6 lg:col-span-8 lg:border-l lg:border-t-0 lg:pl-12 lg:pt-0">
+                <h3 className="text-xs font-medium uppercase tracking-wider text-muted-foreground">Add UI Question</h3>
 
                 <div className="space-y-2">
+                  <Label htmlFor="ui-prompt" className="text-xs font-medium uppercase tracking-wider text-muted-foreground">Question Text</Label>
+                  <Input id="ui-prompt" placeholder="Question prompt..." value={uiPrompt} onChange={(e) => setUiPrompt(e.target.value)} />
+                </div>
+
+                <RadioGroup value={uiType} onValueChange={(v) => setUiType(v as 'single' | 'multi')} className="flex gap-6">
+                  <div className="flex items-center gap-2">
+                    <RadioGroupItem value="single" id="single" />
+                    <Label htmlFor="single" className="cursor-pointer font-normal">Single Choice</Label>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <RadioGroupItem value="multi" id="multi" />
+                    <Label htmlFor="multi" className="cursor-pointer font-normal">Multi Choice</Label>
+                  </div>
+                </RadioGroup>
+
+                <div className="space-y-3">
+                  <Label className="text-xs font-medium uppercase tracking-wider text-muted-foreground">Options</Label>
                   {uiOptions.map((opt, i) => (
-                    <div key={i} className="flex gap-2 items-center">
+                    <div key={i} className="flex items-center gap-3">
                       {uiType === 'single' ? (
                         <RadioGroup value={opt.is_correct ? String(i) : ''} onValueChange={() => handleOptionCorrectChange(i, true)}>
                           <RadioGroupItem value={String(i)} id={`opt-${i}`} />
@@ -261,18 +319,22 @@ export default function LecturerQuizzes() {
                       ) : (
                         <Checkbox checked={opt.is_correct} onCheckedChange={(c) => handleOptionCorrectChange(i, !!c)} />
                       )}
-                      <Input value={opt.text} onChange={(e) => handleOptionTextChange(i, e.target.value)} placeholder={`Option ${i + 1}`} />
+                      <Input className="flex-grow" value={opt.text} onChange={(e) => handleOptionTextChange(i, e.target.value)} placeholder={`Option ${i + 1}`} />
                       {uiOptions.length > 2 && (
-                        <Button variant="ghost" size="icon" onClick={() => handleRemoveOption(i)}><Trash className="h-4 w-4 text-red-500" /></Button>
+                        <Button variant="ghost" size="icon" onClick={() => handleRemoveOption(i)}>
+                          <Trash2 className="h-4 w-4 text-muted-foreground transition-colors hover:text-destructive" strokeWidth={1.5} />
+                        </Button>
                       )}
                     </div>
                   ))}
+                  <Button variant="outline" size="sm" onClick={handleAddOption}>
+                    <Plus className="mr-2 h-4 w-4" strokeWidth={1.5} /> Add Option
+                  </Button>
                 </div>
-                <Button variant="outline" size="sm" onClick={handleAddOption}><Plus className="mr-2 h-4 w-4" /> Add Option</Button>
-                
-                <div className="pt-4 border-t">
-                  <Button onClick={handleSubmitQuestion} disabled={addQuestionMutation.isPending} className="w-full">Save Question</Button>
-                </div>
+
+                <Button onClick={handleSubmitQuestion} disabled={addQuestionMutation.isPending} className="h-12 w-full">
+                  <Save className="mr-2 h-4 w-4" strokeWidth={1.5} /> Save Question
+                </Button>
               </div>
             </div>
           </CardContent>

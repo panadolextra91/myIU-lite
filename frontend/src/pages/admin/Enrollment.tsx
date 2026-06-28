@@ -2,6 +2,7 @@ import { useState, useRef } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { isAxiosError } from 'axios';
 import { toast } from 'sonner';
+import { Info, Upload } from 'lucide-react';
 
 import { adminApi } from '@/lib/admin-api';
 import { Button } from '@/components/ui/button';
@@ -12,7 +13,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 export default function Enrollment() {
   const queryClient = useQueryClient();
   const fileInputRef = useRef<HTMLInputElement>(null);
-  
+
   const [courseId, setCourseId] = useState<string>('');
   const [errors, setErrors] = useState<Array<{ row: number; field: string; message: string }>>([]);
 
@@ -54,49 +55,70 @@ export default function Enrollment() {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="max-w-3xl space-y-12">
       <div>
-        <h2 className="text-2xl font-bold tracking-tight">Student Enrollment</h2>
+        <h1 className="mb-2 text-3xl tracking-tight">Student Enrollment</h1>
         <p className="text-muted-foreground">Enroll students into active courses via CSV upload.</p>
       </div>
 
-      <div className="flex flex-col sm:flex-row gap-4 sm:items-center">
-        {isLoading ? (
-          <Skeleton className="h-10 w-[280px]" />
-        ) : (
-          <Select value={courseId} onValueChange={setCourseId}>
-            <SelectTrigger className="w-[280px]">
-              <SelectValue placeholder="Select a course..." />
-            </SelectTrigger>
-            <SelectContent>
-              {coursesData?.data.map(c => (
-                <SelectItem key={c.id} value={c.id.toString()}>{c.code} - {c.name} ({c.term})</SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        )}
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-end">
+        <div className="flex flex-col gap-2">
+          <label className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
+            Target Course
+          </label>
+          {isLoading ? (
+            <Skeleton className="h-11 w-[280px]" />
+          ) : (
+            <Select value={courseId} onValueChange={setCourseId}>
+              <SelectTrigger className="h-11 w-[280px]">
+                <SelectValue placeholder="Select a course..." />
+              </SelectTrigger>
+              <SelectContent>
+                {coursesData?.data.map(c => (
+                  <SelectItem key={c.id} value={c.id.toString()}>{c.code} - {c.name} ({c.term})</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          )}
+        </div>
 
         <label className="cursor-pointer">
-          <Button render={<span />} disabled={importMutation.isPending || !courseId}>
+          <Button render={<span />} variant="outline" className="h-11 gap-2 px-6" disabled={importMutation.isPending || !courseId}>
+            <Upload strokeWidth={1.5} />
             Import Student CSV
           </Button>
           <input ref={fileInputRef} type="file" className="hidden" accept=".csv" onChange={onImportFile} disabled={!courseId} />
         </label>
       </div>
 
-      <div className="rounded-md border p-4 bg-muted/50">
-        <h3 className="font-semibold mb-2">CSV Format Requirements</h3>
-        <ul className="list-disc pl-5 text-sm text-muted-foreground space-y-1">
-          <li>Must contain a column named <code>student_id</code> in the header.</li>
-          <li>Each row must have a valid, active student ID (e.g., <code>ITITIU19000</code>).</li>
-          <li>File will be rejected if ANY row contains an invalid ID or if there are duplicates in the file.</li>
-          <li>Already enrolled students in the file will be silently skipped (idempotent).</li>
+      <section className="rounded-lg border bg-card p-6">
+        <div className="mb-4 flex items-center gap-3">
+          <Info className="text-gold" strokeWidth={1.5} />
+          <h2 className="text-xl tracking-tight">CSV Format Requirements</h2>
+        </div>
+        <ul className="space-y-3">
+          <li className="flex items-start">
+            <span className="mr-3 text-gold">•</span>
+            <span className="text-muted-foreground">Must contain a column named <code className="rounded bg-muted px-1 font-mono">student_id</code> in the header.</span>
+          </li>
+          <li className="flex items-start">
+            <span className="mr-3 text-gold">•</span>
+            <span className="text-muted-foreground">Each row must have a valid, active student ID (e.g., <code className="rounded bg-muted px-1 font-mono">ITITIU19000</code>).</span>
+          </li>
+          <li className="flex items-start">
+            <span className="mr-3 text-gold">•</span>
+            <span className="text-muted-foreground">File will be rejected if ANY row contains an invalid ID or if there are duplicates in the file.</span>
+          </li>
+          <li className="flex items-start">
+            <span className="mr-3 text-gold">•</span>
+            <span className="text-muted-foreground">Already enrolled students in the file will be silently skipped (idempotent).</span>
+          </li>
         </ul>
-      </div>
+      </section>
 
       {errors.length > 0 && (
         <div className="space-y-4">
-          <div className="text-destructive font-medium border-l-4 border-destructive pl-4 py-1">
+          <div className="border-l-4 border-destructive py-1 pl-4 font-medium text-destructive">
             Import failed. Please fix the following errors and try again. No students were enrolled.
           </div>
           <div className="rounded-md border border-destructive/50">
@@ -111,7 +133,7 @@ export default function Enrollment() {
               <TableBody>
                 {errors.map((e, i) => (
                   <TableRow key={i}>
-                    <TableCell className="font-medium text-destructive">{e.row}</TableCell>
+                    <TableCell className="font-mono font-medium tabular-nums text-destructive">{e.row}</TableCell>
                     <TableCell className="text-destructive">{e.field}</TableCell>
                     <TableCell className="text-destructive">{e.message}</TableCell>
                   </TableRow>

@@ -6,6 +6,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { isAxiosError } from 'axios';
 import { toast } from 'sonner';
 import { Link } from 'react-router';
+import { Search, Calendar } from 'lucide-react';
 
 import { adminApi } from '@/lib/admin-api';
 import type { CourseResponse } from '@/lib/admin-api';
@@ -115,10 +116,10 @@ export default function Courses() {
   };
 
   return (
-    <div className="space-y-6">
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-center justify-between">
-        <div>
-          <h2 className="text-2xl font-bold tracking-tight">Courses</h2>
+    <div className="space-y-8">
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-end justify-between">
+        <div className="space-y-1">
+          <h1 className="text-3xl font-normal tracking-tight">Courses</h1>
           <p className="text-muted-foreground">Manage courses and lifecycles.</p>
         </div>
 
@@ -207,21 +208,33 @@ export default function Courses() {
       </div>
 
       <div className="flex flex-col sm:flex-row gap-4">
-        <Input 
-          placeholder="Search code or name..." 
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          className="max-w-sm"
-        />
-        <Input 
-          placeholder="Filter by term..." 
-          value={termFilter}
-          onChange={(e) => setTermFilter(e.target.value)}
-          className="max-w-xs"
-        />
+        <div className="relative w-full sm:max-w-sm sm:flex-grow">
+          <Search
+            strokeWidth={1.5}
+            className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground"
+          />
+          <Input
+            placeholder="Search code or name..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            className="pl-10"
+          />
+        </div>
+        <div className="relative w-full sm:w-48">
+          <Calendar
+            strokeWidth={1.5}
+            className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground"
+          />
+          <Input
+            placeholder="Filter by term..."
+            value={termFilter}
+            onChange={(e) => setTermFilter(e.target.value)}
+            className="pl-10"
+          />
+        </div>
       </div>
 
-      <div className="rounded-md border">
+      <div className="overflow-x-auto rounded-md border bg-card">
         <Table>
           <TableHeader>
             <TableRow>
@@ -230,31 +243,35 @@ export default function Courses() {
               <TableHead>Term</TableHead>
               <TableHead>Start Date</TableHead>
               <TableHead>End Date</TableHead>
-              <TableHead className="w-[150px]"></TableHead>
+              <TableHead className="w-[140px]">Actions</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {isLoading ? (
-              <TableRow><TableCell colSpan={6} className="text-center">Loading...</TableCell></TableRow>
+              <TableRow><TableCell colSpan={6} className="text-center text-muted-foreground">Loading...</TableCell></TableRow>
             ) : data?.data.length === 0 ? (
-              <TableRow><TableCell colSpan={6} className="text-center">No courses found.</TableCell></TableRow>
+              <TableRow><TableCell colSpan={6} className="text-center text-muted-foreground">No courses found.</TableCell></TableRow>
             ) : (
               data?.data.map((c) => (
                 <TableRow key={c.id}>
-                  <TableCell className="font-medium">
-                    <Button render={<Link to={`/admin/courses/${c.id}`} />} variant="link" className="px-0">
+                  <TableCell>
+                    <Button
+                      render={<Link to={`/admin/courses/${c.id}`} />}
+                      variant="link"
+                      className="px-0 font-mono font-medium underline underline-offset-4"
+                    >
                       {c.code}
                     </Button>
                   </TableCell>
                   <TableCell>{c.name}</TableCell>
                   <TableCell>{c.term}</TableCell>
-                  <TableCell>{c.start_date}</TableCell>
-                  <TableCell>{c.end_date}</TableCell>
+                  <TableCell className="font-mono tabular-nums text-muted-foreground">{c.start_date}</TableCell>
+                  <TableCell className="font-mono tabular-nums text-muted-foreground">{c.end_date}</TableCell>
                   <TableCell>
                     <div className="flex items-center gap-2">
                       <Button variant="ghost" size="sm" onClick={() => handleEdit(c)}>Edit</Button>
                       <AlertDialog>
-                        <AlertDialogTrigger render={<Button variant="ghost" size="sm" className="text-destructive" />}>
+                        <AlertDialogTrigger render={<Button variant="ghost" size="sm" className="text-destructive hover:text-destructive" />}>
                           Delete
                         </AlertDialogTrigger>
                         <AlertDialogContent>
@@ -287,7 +304,7 @@ export default function Courses() {
       {data && data.total > pageSize && (
         <div className="flex items-center justify-between">
           <p className="text-sm text-muted-foreground">
-            Showing {page * pageSize + 1} to {Math.min((page + 1) * pageSize, data.total)} of {data.total}
+            Showing <span className="font-mono tabular-nums">{page * pageSize + 1}</span> to <span className="font-mono tabular-nums">{Math.min((page + 1) * pageSize, data.total)}</span> of <span className="font-mono tabular-nums">{data.total}</span>
           </p>
           <div className="flex gap-2">
             <Button variant="outline" size="sm" disabled={page === 0} onClick={() => setPage(p => p - 1)}>Previous</Button>

@@ -48,15 +48,17 @@ export default function CourseDetail() {
     onError: () => toast.error('Failed to unassign lecturer'),
   });
 
-  if (loadingCourse) return <div>Loading course...</div>;
-  if (!course) return <div>Course not found</div>;
+  if (loadingCourse) return <div className="text-muted-foreground">Loading course...</div>;
+  if (!course) return <div className="text-muted-foreground">Course not found</div>;
 
   return (
-    <div className="space-y-6">
-      <div>
-        <h2 className="text-2xl font-bold tracking-tight">{course.code} - {course.name}</h2>
-        <p className="text-muted-foreground">{course.term} • {course.start_date} to {course.end_date}</p>
-      </div>
+    <div className="space-y-12">
+      <header className="space-y-2">
+        <h1 className="text-3xl font-normal tracking-tight">{course.code} - {course.name}</h1>
+        <p className="text-sm text-muted-foreground">
+          {course.term} • <span className="font-mono tabular-nums">{course.start_date}</span> to <span className="font-mono tabular-nums">{course.end_date}</span>
+        </p>
+      </header>
 
       <Tabs defaultValue="overview">
         <TabsList>
@@ -64,19 +66,21 @@ export default function CourseDetail() {
           <TabsTrigger value="students">Students</TabsTrigger>
           <TabsTrigger value="lecturers">Lecturers</TabsTrigger>
         </TabsList>
-        <TabsContent value="overview" className="space-y-4 pt-4">
-          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-            <div className="rounded-xl border bg-card text-card-foreground shadow-sm p-6">
-              <h3 className="tracking-tight text-sm font-medium text-muted-foreground">Students Enrolled</h3>
-              <div className="text-2xl font-bold">{students?.length || 0}</div>
+
+        <TabsContent value="overview" className="pt-6">
+          <div className="grid gap-6 sm:grid-cols-2">
+            <div className="rounded-lg border bg-card p-6">
+              <h4 className="text-xs font-medium uppercase tracking-wider text-muted-foreground">Students Enrolled</h4>
+              <div className="mt-3 font-mono tabular-nums text-5xl leading-none text-primary">{students?.length || 0}</div>
             </div>
-            <div className="rounded-xl border bg-card text-card-foreground shadow-sm p-6">
-              <h3 className="tracking-tight text-sm font-medium text-muted-foreground">Lecturers</h3>
-              <div className="text-2xl font-bold">{lecturers?.length || 0}</div>
+            <div className="rounded-lg border bg-card p-6">
+              <h4 className="text-xs font-medium uppercase tracking-wider text-muted-foreground">Lecturers</h4>
+              <div className="mt-3 font-mono tabular-nums text-5xl leading-none text-primary">{lecturers?.length || 0}</div>
             </div>
           </div>
         </TabsContent>
-        <TabsContent value="students" className="pt-4">
+
+        <TabsContent value="students" className="pt-6">
           <div className="rounded-md border">
             <Table>
               <TableHeader>
@@ -88,13 +92,13 @@ export default function CourseDetail() {
               </TableHeader>
               <TableBody>
                 {loadingStudents ? (
-                  <TableRow><TableCell colSpan={3} className="text-center">Loading...</TableCell></TableRow>
+                  <TableRow><TableCell colSpan={3} className="text-center text-muted-foreground">Loading...</TableCell></TableRow>
                 ) : students?.length === 0 ? (
-                  <TableRow><TableCell colSpan={3} className="text-center">No students enrolled.</TableCell></TableRow>
+                  <TableRow><TableCell colSpan={3} className="text-center text-muted-foreground">No students enrolled.</TableCell></TableRow>
                 ) : (
                   students?.map((s) => (
                     <TableRow key={s.id}>
-                      <TableCell className="font-medium">{s.username}</TableCell>
+                      <TableCell className="font-mono font-medium">{s.username}</TableCell>
                       <TableCell>{s.full_name}</TableCell>
                       <TableCell>
                         <AlertDialog>
@@ -124,7 +128,8 @@ export default function CourseDetail() {
             </Table>
           </div>
         </TabsContent>
-        <TabsContent value="lecturers" className="pt-4">
+
+        <TabsContent value="lecturers" className="pt-6">
           <div className="rounded-md border">
             <Table>
               <TableHeader>
@@ -136,13 +141,13 @@ export default function CourseDetail() {
               </TableHeader>
               <TableBody>
                 {loadingLecturers ? (
-                  <TableRow><TableCell colSpan={3} className="text-center">Loading...</TableCell></TableRow>
+                  <TableRow><TableCell colSpan={3} className="text-center text-muted-foreground">Loading...</TableCell></TableRow>
                 ) : lecturers?.length === 0 ? (
-                  <TableRow><TableCell colSpan={3} className="text-center">No lecturers assigned.</TableCell></TableRow>
+                  <TableRow><TableCell colSpan={3} className="text-center text-muted-foreground">No lecturers assigned.</TableCell></TableRow>
                 ) : (
                   lecturers?.map((l) => (
                     <TableRow key={l.id}>
-                      <TableCell className="font-medium">{l.username}</TableCell>
+                      <TableCell className="font-mono font-medium">{l.username}</TableCell>
                       <TableCell>{l.full_name}</TableCell>
                       <TableCell>
                         <AlertDialog>

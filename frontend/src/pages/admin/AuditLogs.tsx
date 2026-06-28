@@ -9,6 +9,7 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Skeleton } from '@/components/ui/skeleton';
 import { format } from 'date-fns';
 
 type AuditLog = {
@@ -37,19 +38,25 @@ export default function AuditLogs() {
   });
 
   return (
-    <div className="space-y-6">
-      <div>
-        <h2 className="text-2xl font-bold tracking-tight">Audit Logs</h2>
-        <p className="text-muted-foreground">System-wide audit trail of all administrative actions.</p>
-      </div>
+    <div className="space-y-8">
+      <header className="border-b pb-6">
+        <h1 className="text-3xl font-normal tracking-tight">Audit Logs</h1>
+        <p className="mt-2 text-muted-foreground">
+          System-wide audit trail of all administrative actions.
+        </p>
+      </header>
 
       <Card>
         <CardHeader>
-          <CardTitle>Recent Activity</CardTitle>
+          <CardTitle className="text-xl font-normal tracking-tight">Recent Activity</CardTitle>
         </CardHeader>
         <CardContent>
           {isLoading ? (
-            <p>Loading...</p>
+            <div className="space-y-3">
+              {Array.from({ length: 6 }).map((_, i) => (
+                <Skeleton key={i} className="h-10 w-full" />
+              ))}
+            </div>
           ) : (
             <div className="rounded-md border">
               <Table>
@@ -59,24 +66,28 @@ export default function AuditLogs() {
                     <TableHead>Actor ID</TableHead>
                     <TableHead>Action</TableHead>
                     <TableHead>Target</TableHead>
-                    <TableHead>Affected</TableHead>
+                    <TableHead className="text-right">Affected</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {data?.data.map((log, idx) => (
                     <TableRow key={idx}>
-                      <TableCell>{format(new Date(log.created_at), 'yyyy-MM-dd HH:mm:ss')}</TableCell>
-                      <TableCell>{log.actor_id ?? 'SYSTEM'}</TableCell>
-                      <TableCell className="font-mono text-xs">{log.action}</TableCell>
-                      <TableCell>
+                      <TableCell className="font-mono tabular-nums text-muted-foreground">
+                        {format(new Date(log.created_at), 'yyyy-MM-dd HH:mm:ss')}
+                      </TableCell>
+                      <TableCell className="font-mono tabular-nums">{log.actor_id ?? 'SYSTEM'}</TableCell>
+                      <TableCell className="font-mono tabular-nums text-xs">{log.action}</TableCell>
+                      <TableCell className="font-mono tabular-nums text-muted-foreground">
                         {log.target_type} {log.target_id ? `#${log.target_id}` : ''}
                       </TableCell>
-                      <TableCell>{log.affected_count}</TableCell>
+                      <TableCell className="text-right font-mono tabular-nums">{log.affected_count}</TableCell>
                     </TableRow>
                   ))}
                   {data?.data.length === 0 && (
                     <TableRow>
-                      <TableCell colSpan={5} className="text-center">No logs found.</TableCell>
+                      <TableCell colSpan={5} className="py-10 text-center text-muted-foreground">
+                        No logs found.
+                      </TableCell>
                     </TableRow>
                   )}
                 </TableBody>

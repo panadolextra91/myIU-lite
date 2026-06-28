@@ -4,9 +4,11 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
+import { Plus, CircleCheck } from 'lucide-react';
 import { courseworkApi } from '@/lib/coursework-api';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
@@ -42,14 +44,14 @@ export default function LecturerAssignments() {
   });
 
   const form = useForm<FormValues>({
-    
+
     resolver: zodResolver(schema) as any,
     defaultValues: { accept_late: false, title: '', description: '', deadline: '', max_score: 100 },
   });
 
   const [gradeAssignmentId, setGradeAssignmentId] = useState<number | null>(null);
   const gradeForm = useForm<GradeValues>({
-    
+
     resolver: zodResolver(gradeSchema) as any,
     defaultValues: { score: 0, feedback: '' },
   });
@@ -120,19 +122,25 @@ export default function LecturerAssignments() {
   };
 
   return (
-    <div className="p-6 max-w-6xl mx-auto space-y-6">
-      <div className="flex items-center justify-between">
-        <h1 className="text-3xl font-bold">Assignments</h1>
-        <div className="flex items-center space-x-2">
-          <Input 
-            type="number" 
-            value={courseId} 
-            onChange={(e) => setCourseId(Number(e.target.value))} 
-            className="w-24"
-            placeholder="Course ID"
-          />
+    <div className="mx-auto max-w-6xl space-y-8 p-6">
+      <div className="flex items-end justify-between border-b pb-4">
+        <h1 className="text-4xl font-normal tracking-tight">Assignments</h1>
+        <div className="flex items-end gap-4">
+          <div className="flex flex-col gap-1">
+            <Label className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
+              Course ID
+            </Label>
+            <Input
+              type="number"
+              value={courseId}
+              onChange={(e) => setCourseId(Number(e.target.value))}
+              className="w-24 text-center font-mono tabular-nums"
+              placeholder="ID"
+            />
+          </div>
           <Dialog open={open} onOpenChange={setOpen}>
             <DialogTrigger render={<Button />}>
+              <Plus strokeWidth={1.5} />
               Create Assignment
             </DialogTrigger>
             <DialogContent>
@@ -142,8 +150,8 @@ export default function LecturerAssignments() {
               <Form {...form}>
                 <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
                   <FormField
-                    
-                    
+
+
                     control={form.control as any}
                     name="title"
                     render={({ field }) => (
@@ -157,8 +165,8 @@ export default function LecturerAssignments() {
                     )}
                   />
                   <FormField
-                    
-                    
+
+
                     control={form.control as any}
                     name="description"
                     render={({ field }) => (
@@ -172,8 +180,8 @@ export default function LecturerAssignments() {
                     )}
                   />
                   <FormField
-                    
-                    
+
+
                     control={form.control as any}
                     name="deadline"
                     render={({ field }) => (
@@ -187,8 +195,8 @@ export default function LecturerAssignments() {
                     )}
                   />
                   <FormField
-                    
-                    
+
+
                     control={form.control as any}
                     name="accept_late"
                     render={({ field }) => (
@@ -201,7 +209,7 @@ export default function LecturerAssignments() {
                     )}
                   />
                   <FormField
-                    
+
                     control={form.control as any}
                     name="late_threshold_days"
                     render={({ field }) => (
@@ -215,7 +223,7 @@ export default function LecturerAssignments() {
                     )}
                   />
                   <FormField
-                    
+
                     control={form.control as any}
                     name="max_score"
                     render={({ field }) => (
@@ -236,46 +244,65 @@ export default function LecturerAssignments() {
         </div>
       </div>
 
-      <Table>
-        <TableHeader>
-          <TableRow>
-            <TableHead>ID</TableHead>
-            <TableHead>Title</TableHead>
-            <TableHead>Deadline</TableHead>
-            <TableHead>Max Score</TableHead>
-            <TableHead>Accept Late</TableHead>
-            <TableHead>Finalized</TableHead>
-            <TableHead className="w-[180px]">Actions</TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {assignments?.map((a) => (
-            <TableRow key={a.id}>
-              <TableCell>{a.id}</TableCell>
-              <TableCell>{a.title}</TableCell>
-              <TableCell>{new Date(a.deadline).toLocaleString()}</TableCell>
-              <TableCell>{a.max_score}</TableCell>
-              <TableCell>{a.accept_late ? `Yes (${a.late_threshold_days || 'unlimited'} days)` : 'No'}</TableCell>
-              <TableCell>{a.grading_finalized_at ? '✅ ' + new Date(a.grading_finalized_at).toLocaleDateString() : '—'}</TableCell>
-              <TableCell className="space-x-1">
-                <Button variant="outline" size="sm" onClick={() => setGradeAssignmentId(a.id)}>
-                  Grade
-                </Button>
-                {!a.grading_finalized_at && (
-                  <Button variant="outline" size="sm" onClick={() => finalizeMutation.mutate(a.id)} disabled={finalizeMutation.isPending}>
-                    Finalize
-                  </Button>
-                )}
-              </TableCell>
-            </TableRow>
-          ))}
-          {assignments?.length === 0 && (
+      <div className="overflow-x-auto">
+        <Table>
+          <TableHeader>
             <TableRow>
-              <TableCell colSpan={7} className="text-center text-muted-foreground">No assignments found</TableCell>
+              <TableHead>ID</TableHead>
+              <TableHead>Title</TableHead>
+              <TableHead className="text-right">Deadline</TableHead>
+              <TableHead className="text-right">Max Score</TableHead>
+              <TableHead className="text-center">Accept Late</TableHead>
+              <TableHead className="text-right">Finalized</TableHead>
+              <TableHead className="w-[180px] text-right">Actions</TableHead>
             </TableRow>
-          )}
-        </TableBody>
-      </Table>
+          </TableHeader>
+          <TableBody>
+            {assignments?.map((a) => (
+              <TableRow key={a.id}>
+                <TableCell className="font-mono tabular-nums">{a.id}</TableCell>
+                <TableCell className="text-base">{a.title}</TableCell>
+                <TableCell className="text-right font-mono tabular-nums">{new Date(a.deadline).toLocaleString()}</TableCell>
+                <TableCell className="text-right font-mono tabular-nums">{a.max_score}</TableCell>
+                <TableCell className="text-center italic">
+                  {a.accept_late ? (
+                    <span className="text-primary">Yes ({a.late_threshold_days || 'unlimited'} days)</span>
+                  ) : (
+                    <span className="text-muted-foreground">No</span>
+                  )}
+                </TableCell>
+                <TableCell className="text-right font-mono tabular-nums">
+                  {a.grading_finalized_at ? (
+                    <span className="inline-flex items-center justify-end gap-1.5 text-primary">
+                      <CircleCheck className="size-3.5" strokeWidth={1.5} />
+                      {new Date(a.grading_finalized_at).toLocaleDateString()}
+                    </span>
+                  ) : (
+                    <span className="text-muted-foreground/40">—</span>
+                  )}
+                </TableCell>
+                <TableCell className="text-right">
+                  <div className="flex justify-end gap-2">
+                    <Button variant="outline" size="sm" onClick={() => setGradeAssignmentId(a.id)}>
+                      Grade
+                    </Button>
+                    {!a.grading_finalized_at && (
+                      <Button variant="outline" size="sm" onClick={() => finalizeMutation.mutate(a.id)} disabled={finalizeMutation.isPending}>
+                        Finalize
+                      </Button>
+                    )}
+                  </div>
+                </TableCell>
+              </TableRow>
+            ))}
+            {assignments?.length === 0 && (
+              <TableRow>
+                <TableCell colSpan={7} className="text-center text-muted-foreground">No assignments found</TableCell>
+              </TableRow>
+            )}
+          </TableBody>
+        </Table>
+      </div>
 
       <Dialog open={gradeAssignmentId !== null} onOpenChange={(open) => !open && setGradeAssignmentId(null)}>
         <DialogContent>
@@ -285,7 +312,7 @@ export default function LecturerAssignments() {
           <Form {...gradeForm}>
             <form onSubmit={gradeForm.handleSubmit((v) => gradeMutation.mutate(v))} className="space-y-4">
               <FormField
-                
+
                 control={gradeForm.control}
                 name="submission_id"
                 render={({ field }) => (
@@ -295,9 +322,9 @@ export default function LecturerAssignments() {
                       <FormControl>
                         <Input type="number" {...field} />
                       </FormControl>
-                      <Button 
-                        type="button" 
-                        variant="outline" 
+                      <Button
+                        type="button"
+                        variant="outline"
                         onClick={() => field.value && handleDownload(gradeAssignmentId!, Number(field.value))}
                         disabled={!field.value}
                       >
@@ -309,7 +336,7 @@ export default function LecturerAssignments() {
                 )}
               />
               <FormField
-                
+
                 control={gradeForm.control}
                 name="score"
                 render={({ field }) => (
@@ -323,7 +350,7 @@ export default function LecturerAssignments() {
                 )}
               />
               <FormField
-                
+
                 control={gradeForm.control}
                 name="feedback"
                 render={({ field }) => (
