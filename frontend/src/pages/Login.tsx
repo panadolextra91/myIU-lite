@@ -3,7 +3,7 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { useNavigate } from 'react-router';
-import { LogIn } from 'lucide-react';
+import { Lock, CircleAlert } from 'lucide-react';
 import axios from 'axios';
 import { api } from '@/lib/api';
 import { useAuthStore } from '@/stores/auth';
@@ -18,7 +18,6 @@ import {
   FormMessage,
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
-import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
 
 const formSchema = z.object({
   username: z.string().min(1, 'Username is required'),
@@ -67,54 +66,61 @@ export default function Login() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-muted/50 p-4">
-      <Card className="w-full max-w-md shadow-lg">
-        <CardHeader className="space-y-1">
-          <CardTitle className="text-2xl font-bold flex items-center gap-2">
-            <LogIn className="w-6 h-6" />
-            Login
-          </CardTitle>
-          <CardDescription>Enter your credentials to access your account</CardDescription>
-        </CardHeader>
-        <CardContent>
-          {error && (
-            <div className="mb-4 p-3 text-sm text-destructive-foreground bg-destructive/90 rounded-md">
-              {error}
-            </div>
-          )}
-          <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-              <FormField
-                control={form.control}
-                name="username"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Username</FormLabel>
-                    <FormControl>
-                      <Input placeholder="Enter username" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="password"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Password</FormLabel>
-                    <FormControl>
-                      <Input type="password" placeholder="Enter password" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <Button type="submit" className="w-full">Sign in</Button>
-            </form>
-          </Form>
-        </CardContent>
-      </Card>
+    <div className="min-h-screen flex items-center justify-center bg-background p-4">
+      <div className="w-full max-w-md flex flex-col gap-6 rounded-lg border bg-card p-10">
+        <header className="flex flex-col items-center text-center">
+          <Lock className="size-11 text-primary/80 mb-4" strokeWidth={1.25} />
+          <h1 className="font-heading text-3xl tracking-tight">Login</h1>
+          <p className="mt-1 text-sm text-muted-foreground">
+            Enter your credentials to access your account
+          </p>
+        </header>
+
+        {error && (
+          <div className="flex items-center justify-center gap-2 rounded-md bg-destructive p-3 text-center text-sm text-destructive-foreground">
+            <CircleAlert className="size-4 shrink-0" />
+            {error}
+          </div>
+        )}
+
+        <Form {...form}>
+          <form onSubmit={form.handleSubmit(onSubmit)} className="flex flex-col gap-5">
+            <FormField
+              control={form.control}
+              name="username"
+              render={({ field }) => (
+                <FormItem className="gap-2">
+                  <FormLabel className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
+                    Username
+                  </FormLabel>
+                  <FormControl>
+                    <Input className="h-12" placeholder="Enter username" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="password"
+              render={({ field }) => (
+                <FormItem className="gap-2">
+                  <FormLabel className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
+                    Password
+                  </FormLabel>
+                  <FormControl>
+                    <Input className="h-12" type="password" placeholder="Enter password" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <Button type="submit" className="mt-1 h-12 w-full">
+              Sign in
+            </Button>
+          </form>
+        </Form>
+      </div>
     </div>
   );
 }
