@@ -4,9 +4,12 @@ import { useQuery, useMutation } from '@tanstack/react-query';
 import { useParams } from 'react-router';
 import { courseworkApi, type StudentQuizAttemptView } from '@/lib/coursework-api';
 import { Button } from '@/components/ui/button';
-import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
+import { Card } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Checkbox } from '@/components/ui/checkbox';
+import { Skeleton } from '@/components/ui/skeleton';
+import { ArrowLeft, ListChecks, Award, Inbox } from 'lucide-react';
 import { toast } from 'sonner';
 
 export default function StudentQuizzes() {
@@ -61,123 +64,159 @@ export default function StudentQuizzes() {
   };
 
   if (isLoading) {
-    return <div className="p-8"><div className="h-32 bg-gray-100 rounded-lg animate-pulse" /></div>;
+    return (
+      <div className="p-8 max-w-6xl mx-auto space-y-8">
+        <Skeleton className="h-9 w-64" />
+        <div className="grid gap-6 md:grid-cols-2">
+          {Array.from({ length: 4 }).map((_, i) => (
+            <Skeleton key={i} className="h-56 w-full rounded-xl" />
+          ))}
+        </div>
+      </div>
+    );
   }
 
   if (activeAttempt && activeQuizId) {
     const isTerminal = activeAttempt.status !== 'IN_PROGRESS';
+    const activeQuiz = quizzes?.find((q) => q.id === activeQuizId);
     return (
-      <div className="p-8 max-w-4xl mx-auto space-y-8">
-        <div className="flex justify-between items-center">
-          <h1 className="text-3xl font-bold tracking-tight">Attempt #{activeAttempt.attempt_number}</h1>
-          <Button variant="outline" onClick={() => { setActiveAttempt(null); setActiveQuizId(null); }}>
+      <div className="p-8 max-w-5xl mx-auto space-y-12">
+        {/* Header Row */}
+        <header className="flex justify-between items-end gap-4">
+          <div>
+            <h1 className="text-3xl tracking-tight text-foreground leading-none">
+              Attempt #<span className="font-mono tabular-nums">{activeAttempt.attempt_number}</span>
+            </h1>
+            {activeQuiz && (
+              <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground mt-3">
+                {activeQuiz.title}
+              </p>
+            )}
+          </div>
+          <Button
+            variant="outline"
+            onClick={() => { setActiveAttempt(null); setActiveQuizId(null); }}
+          >
+            <ArrowLeft strokeWidth={1.5} />
             Back to Quizzes
           </Button>
-        </div>
+        </header>
 
+        {/* Result Banner */}
         {isTerminal && (
-          <Card className="bg-blue-50 border-blue-200">
-            <CardContent className="pt-6">
-              <div className="text-xl font-semibold">
-                Score: {activeAttempt.score?.toFixed(2)}
+          <Card className="bg-primary text-primary-foreground border-primary p-6 flex flex-col md:flex-row md:items-center md:justify-between gap-6">
+            <div className="flex items-center gap-6">
+              <div className="border-r border-primary-foreground/20 pr-6">
+                <p className="text-xs font-medium uppercase tracking-wider opacity-80 mb-1">Score</p>
+                <span className="font-mono tabular-nums text-5xl leading-none">
+                  {activeAttempt.score?.toFixed(2)}
+                </span>
               </div>
-              <div className="text-sm text-gray-500 mt-1">
-                {activeAttempt.correct_options ? 'Window is closed. Correct answers are revealed.' : 'Window is still open. Correct answers will be revealed after the quiz closes.'}
+              <div>
+                <h2 className="text-2xl text-primary-foreground">Attempt Result</h2>
+                <p className="text-sm opacity-90 max-w-md mt-1">
+                  {activeAttempt.correct_options
+                    ? 'Window is closed. Correct answers are revealed.'
+                    : 'Window is still open. Correct answers will be revealed after the quiz closes.'}
+                </p>
               </div>
-            </CardContent>
+            </div>
           </Card>
         )}
 
-        <div className="space-y-6">
+        {/* Question Stack */}
+        <div className="space-y-8">
           {activeAttempt.questions.map((q, idx) => {
             const selected = answers[q.id] || [];
             const corrects = activeAttempt.correct_options?.[q.id];
 
             return (
-              <Card key={q.id}>
-                <CardHeader>
-                  <CardTitle className="text-lg">Question {idx + 1}</CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <p>{q.prompt}</p>
-                  <div className="space-y-2">
-                    {q.options.map((opt) => {
-                      const isSelected = selected.includes(opt.id);
-                      let borderClass = 'border-transparent';
-                      let bgClass = 'bg-gray-50';
+              <Card key={q.id} className="p-6 gap-5">
+                <div className="flex justify-between items-start gap-4">
+                  <h3 className="text-xl text-primary">Question {idx + 1}</h3>
+                  {q.question_type === 'multi' && (
+                    <Badge variant="secondary">Select all that apply</Badge>
+                  )}
+                </div>
+                <p className="text-base text-foreground leading-relaxed">{q.prompt}</p>
+                <div className={q.question_type === 'multi' ? 'grid grid-cols-1 md:grid-cols-2 gap-3' : 'space-y-3'}>
+                  {q.options.map((opt) => {
+                    const isSelected = selected.includes(opt.id);
+                    let borderClass = 'border-border';
+                    let bgClass = 'bg-muted/40';
 
-                      if (isTerminal) {
-                        if (corrects) {
-                          // Window closed: show green for correct options, red for wrong selected
-                          const isActuallyCorrect = corrects.includes(opt.id);
-                          if (isActuallyCorrect) {
-                            bgClass = 'bg-green-100';
-                            borderClass = 'border-green-500';
-                          } else if (isSelected) {
-                            bgClass = 'bg-red-100';
-                            borderClass = 'border-red-500';
-                          }
-                        } else {
-                          // Window open: highlight their selection
-                          if (isSelected) {
-                            bgClass = 'bg-blue-100';
-                            borderClass = 'border-blue-500';
-                          }
+                    if (isTerminal) {
+                      if (corrects) {
+                        // Window closed: show green for correct options, red for wrong selected
+                        const isActuallyCorrect = corrects.includes(opt.id);
+                        if (isActuallyCorrect) {
+                          bgClass = 'bg-success/10';
+                          borderClass = 'border-success';
+                        } else if (isSelected) {
+                          bgClass = 'bg-destructive/10';
+                          borderClass = 'border-destructive';
                         }
                       } else {
-                        // In progress: highlight selection softly
+                        // Window open: highlight their selection
                         if (isSelected) {
-                          bgClass = 'bg-blue-50';
-                          borderClass = 'border-blue-300';
+                          bgClass = 'bg-primary/10';
+                          borderClass = 'border-primary';
                         }
                       }
+                    } else {
+                      // In progress: highlight selection softly
+                      if (isSelected) {
+                        bgClass = 'bg-primary/10';
+                        borderClass = 'border-primary';
+                      }
+                    }
 
-                      return (
-                        <div key={opt.id} className={`flex items-center space-x-3 p-3 rounded-lg border ${borderClass} ${bgClass} transition-colors`}>
-                          {q.question_type === 'single' ? (
-                            <RadioGroup value={selected[0]?.toString() || ''} onValueChange={() => handleToggleOption(q.id, opt.id, true)} disabled={isTerminal}>
-                              <RadioGroupItem value={opt.id.toString()} id={`opt-${opt.id}`} />
-                            </RadioGroup>
-                          ) : (
-                            <Checkbox checked={isSelected} onCheckedChange={() => handleToggleOption(q.id, opt.id, false)} disabled={isTerminal} />
-                          )}
-                          <label htmlFor={`opt-${opt.id}`} className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 flex-grow cursor-pointer">
-                            {opt.text}
-                          </label>
-                        </div>
-                      );
-                    })}
-                  </div>
-                </CardContent>
+                    return (
+                      <div key={opt.id} className={`flex items-center gap-4 p-4 rounded-lg border ${borderClass} ${bgClass} transition-colors`}>
+                        {q.question_type === 'single' ? (
+                          <RadioGroup value={selected[0]?.toString() || ''} onValueChange={() => handleToggleOption(q.id, opt.id, true)} disabled={isTerminal}>
+                            <RadioGroupItem value={opt.id.toString()} id={`opt-${opt.id}`} />
+                          </RadioGroup>
+                        ) : (
+                          <Checkbox checked={isSelected} onCheckedChange={() => handleToggleOption(q.id, opt.id, false)} disabled={isTerminal} />
+                        )}
+                        <label htmlFor={`opt-${opt.id}`} className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 flex-grow cursor-pointer">
+                          {opt.text}
+                        </label>
+                      </div>
+                    );
+                  })}
+                </div>
               </Card>
             );
           })}
         </div>
 
+        {/* Footer Action */}
         {!isTerminal && (
-          <div className="flex justify-end pt-4 border-t">
+          <footer className="flex justify-end pt-6 border-t border-border">
             <Button onClick={() => submitMutation.mutate()} disabled={submitMutation.isPending} size="lg">
               Submit Attempt
             </Button>
-          </div>
+          </footer>
         )}
       </div>
     );
   }
 
   return (
-    <div className="p-8 max-w-6xl mx-auto space-y-8">
-      <h1 className="text-3xl font-bold tracking-tight">Course Quizzes</h1>
+    <div className="p-8 max-w-6xl mx-auto space-y-10">
+      <h1 className="text-3xl tracking-tight text-foreground">Course Quizzes</h1>
 
-      <div className="grid gap-4 md:grid-cols-2">
+      <div className="grid gap-6 md:grid-cols-2">
         {quizzes?.map((quiz) => {
           const now = new Date();
           const openAt = quiz.open_at ? new Date(quiz.open_at) : null;
           const closeAt = quiz.close_at ? new Date(quiz.close_at) : null;
-          
+
           let statusText = 'Available';
           let canTake = true;
-          
+
           if (openAt && now < openAt) {
             statusText = `Opens at ${openAt.toLocaleString()}`;
             canTake = false;
@@ -186,28 +225,51 @@ export default function StudentQuizzes() {
             // Let them fetch attempts anyway, but "startAttempt" handles auto-submit and review
           }
 
+          const isUpcoming = !!(openAt && now < openAt);
+          const isClosed = !!(closeAt && now > closeAt);
+          const statusLabel = isUpcoming ? 'Upcoming' : isClosed ? 'Closed' : 'Available';
+          const statusVariant = isUpcoming ? 'secondary' : isClosed ? 'outline' : 'success';
+
           return (
-            <Card key={quiz.id}>
-              <CardHeader className="pb-2">
-                <CardTitle className="text-xl flex justify-between">
-                  <span>{quiz.title}</span>
-                  <span className="text-sm font-normal text-gray-500">{statusText}</span>
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="text-sm text-gray-500 mb-4">Questions: {quiz.max_questions} | Max Grade: {quiz.max_grade}</div>
-                <Button 
-                  onClick={() => startMutation.mutate(quiz.id)} 
-                  disabled={!canTake && !closeAt} // Allow review if closed
-                  className="w-full"
-                >
-                  {closeAt && now > closeAt ? 'Review Attempt' : 'Take / Resume Quiz'}
-                </Button>
-              </CardContent>
+            <Card key={quiz.id} className="flex flex-col justify-between gap-5 p-6">
+              <div className="space-y-3">
+                <div className="flex items-start justify-between gap-3">
+                  <Badge variant={statusVariant}>{statusLabel}</Badge>
+                </div>
+                <h2 className="text-2xl text-foreground">{quiz.title}</h2>
+                {(isUpcoming || isClosed) && (
+                  <p className={`text-sm italic font-mono ${isUpcoming ? 'text-destructive' : 'text-muted-foreground'}`}>
+                    {statusText}
+                  </p>
+                )}
+                <div className="flex flex-wrap gap-6 pt-1 text-sm text-muted-foreground">
+                  <div className="flex items-center gap-1.5">
+                    <ListChecks className="size-4 shrink-0" strokeWidth={1.5} />
+                    <span>Questions: <span className="font-mono tabular-nums text-foreground">{quiz.max_questions}</span></span>
+                  </div>
+                  <div className="flex items-center gap-1.5">
+                    <Award className="size-4 shrink-0" strokeWidth={1.5} />
+                    <span>Max Grade: <span className="font-mono tabular-nums text-foreground">{quiz.max_grade}</span></span>
+                  </div>
+                </div>
+              </div>
+              <Button
+                onClick={() => startMutation.mutate(quiz.id)}
+                disabled={!canTake && !closeAt} // Allow review if closed
+                variant={closeAt && now > closeAt ? 'outline' : 'default'}
+                className="w-full"
+              >
+                {closeAt && now > closeAt ? 'Review Attempt' : 'Take / Resume Quiz'}
+              </Button>
             </Card>
           );
         })}
-        {quizzes?.length === 0 && <div className="col-span-2 text-center text-gray-500 py-12">No quizzes available</div>}
+        {quizzes?.length === 0 && (
+          <Card className="col-span-2 flex flex-col items-center justify-center gap-3 py-16 text-muted-foreground">
+            <Inbox className="size-8" strokeWidth={1.5} />
+            <p className="text-sm">No quizzes available</p>
+          </Card>
+        )}
       </div>
     </div>
   );

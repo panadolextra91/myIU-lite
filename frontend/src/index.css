@@ -1,7 +1,9 @@
 @import "tailwindcss";
 @import "tw-animate-css";
 @import "shadcn/tailwind.css";
-@import "@fontsource-variable/geist";
+@import "@fontsource-variable/inter";
+@import "@fontsource-variable/cormorant-garamond";
+@import "@fontsource-variable/jetbrains-mono";
 
 @custom-variant dark (&:is(.dark *));
 
@@ -9,6 +11,7 @@
   --radius-lg: var(--radius);
   --radius-md: calc(var(--radius) - 2px);
   --radius-sm: calc(var(--radius) - 4px);
+  --radius-xl: var(--radius);
 
   --color-background: var(--background);
   --color-foreground: var(--foreground);
@@ -34,97 +37,114 @@
   --color-destructive: var(--destructive);
   --color-destructive-foreground: var(--destructive-foreground);
 
+  /* Dark Academia semantic accents (use as bg-success / text-gold / etc.) */
+  --color-success: var(--success);
+  --color-warning: var(--warning);
+  --color-gold: var(--gold);
+  --color-info: var(--info);
+
   --color-border: var(--border);
   --color-input: var(--input);
   --color-ring: var(--ring);
 
-  --font-sans: 'Geist Variable', sans-serif;
-  --font-heading: var(--font-sans);
+  /* Typography — serif headings, Inter body, mono for data */
+  --font-sans: 'Inter Variable', system-ui, sans-serif;
+  --font-serif: 'Cormorant Garamond Variable', 'EB Garamond', Georgia, serif;
+  --font-heading: var(--font-serif);
+  --font-mono: 'JetBrains Mono Variable', ui-monospace, monospace;
 }
 
 @layer base {
   :root {
-    /* Light Theme - from DESIGN-SYSTEM.md */
-    --background: #F8FAFC;
-    --foreground: #0F172A;
-    --card: #FFFFFF;
-    --card-foreground: #0F172A;
-    --popover: #FFFFFF;
-    --popover-foreground: #0F172A;
-    
-    /* Primary Accent: #2563EB */
-    --primary: #2563EB;
-    --primary-foreground: #FFFFFF;
-    
-    /* Secondary Text: #64748B */
-    --secondary: #F1F5F9;
-    --secondary-foreground: #0F172A;
-    
-    --muted: #F1F5F9;
-    --muted-foreground: #64748B;
-    
-    --accent: #F1F5F9;
-    --accent-foreground: #0F172A;
-    
-    --destructive: #EF4444;
-    --destructive-foreground: #FFFFFF;
-    
-    --border: #E2E8F0;
-    --input: #E2E8F0;
-    --ring: #2563EB;
-    
-    --radius: 6px;
-    
-    --sidebar: #F8FAFC;
-    --sidebar-foreground: #0F172A;
-    --sidebar-primary: #2563EB;
-    --sidebar-primary-foreground: #FFFFFF;
-    --sidebar-accent: #F1F5F9;
-    --sidebar-accent-foreground: #0F172A;
-    --sidebar-border: #E2E8F0;
-    --sidebar-ring: #2563EB;
+    /* Light — The Reading Room (Dark Academia) */
+    --background: #F6F2EA;       /* Paper */
+    --foreground: #1F1D1A;       /* Ink Black */
+    --card: #FBF8F3;             /* Ivory */
+    --card-foreground: #1F1D1A;
+    --popover: #FBF8F3;
+    --popover-foreground: #1F1D1A;
+
+    /* Primary Accent: Forest Green */
+    --primary: #3F5B4B;
+    --primary-foreground: #FBF8F3;
+
+    --secondary: #E7E0D6;        /* Stone */
+    --secondary-foreground: #1F1D1A;
+
+    --muted: #ECE6DB;
+    --muted-foreground: #5D564F; /* Warm Gray */
+
+    --accent: #EAE3D7;
+    --accent-foreground: #1F1D1A;
+
+    --destructive: #8B3A3A;      /* Muted Wine */
+    --destructive-foreground: #FBF8F3;
+
+    --success: #476A52;
+    --warning: #A07A3F;
+    --gold: #A7864B;             /* Antique Gold */
+    --info: #243447;             /* Oxford Blue */
+
+    --border: #D7CEC2;
+    --input: #D7CEC2;
+    --ring: #3F5B4B;
+
+    --radius: 8px;
+
+    --sidebar: #F6F2EA;
+    --sidebar-foreground: #1F1D1A;
+    --sidebar-primary: #3F5B4B;
+    --sidebar-primary-foreground: #FBF8F3;
+    --sidebar-accent: #EAE3D7;
+    --sidebar-accent-foreground: #1F1D1A;
+    --sidebar-border: #D7CEC2;
+    --sidebar-ring: #3F5B4B;
   }
 
   .dark {
-    /* Dark Theme - from DESIGN-SYSTEM.md */
-    --background: #0F172A;
-    --foreground: #F8FAFC;
-    --card: #1E293B;
-    --card-foreground: #F8FAFC;
-    --popover: #1E293B;
-    --popover-foreground: #F8FAFC;
-    
-    /* Primary Accent: #3B82F6 */
-    --primary: #3B82F6;
-    --primary-foreground: #FFFFFF;
-    
-    /* Secondary Text: #94A3B8 */
-    --secondary: #1E293B;
-    --secondary-foreground: #F8FAFC;
-    
-    --muted: #1E293B;
-    --muted-foreground: #94A3B8;
-    
-    --accent: #1E293B;
-    --accent-foreground: #F8FAFC;
-    
-    --destructive: #EF4444;
-    --destructive-foreground: #FFFFFF;
-    
-    --border: #334155;
-    --input: #334155;
-    --ring: #3B82F6;
-    
-    --sidebar: #0F172A;
-    --sidebar-foreground: #F8FAFC;
-    --sidebar-primary: #3B82F6;
-    --sidebar-primary-foreground: #FFFFFF;
-    --sidebar-accent: #1E293B;
-    --sidebar-accent-foreground: #F8FAFC;
-    --sidebar-border: #334155;
-    --sidebar-ring: #3B82F6;
+    /* Dark — The Archive (walnut reading room at night) */
+    --background: #1C1813;       /* Walnut Night */
+    --foreground: #ECE5D8;       /* Parchment */
+    --card: #24201A;             /* Aged Oak */
+    --card-foreground: #ECE5D8;
+    --popover: #2C2720;          /* Lamplit Wood */
+    --popover-foreground: #ECE5D8;
+
+    /* Primary Accent: Sage Green (Forest, lifted) */
+    --primary: #7BA088;
+    --primary-foreground: #1C1813;
+
+    --secondary: #2C2720;
+    --secondary-foreground: #ECE5D8;
+
+    --muted: #24201A;
+    --muted-foreground: #ACA290; /* Faded Ink */
+
+    --accent: #2C2720;
+    --accent-foreground: #ECE5D8;
+
+    --destructive: #BD6B6B;      /* Muted Wine, lifted */
+    --destructive-foreground: #1C1813;
+
+    --success: #6FA07D;
+    --warning: #C39A5A;
+    --gold: #C6A867;             /* Brass */
+    --info: #7C97B2;             /* Steel Blue */
+
+    --border: #3A3328;           /* Dim Walnut */
+    --input: #3A3328;
+    --ring: #7BA088;
+
+    --sidebar: #1C1813;
+    --sidebar-foreground: #ECE5D8;
+    --sidebar-primary: #7BA088;
+    --sidebar-primary-foreground: #1C1813;
+    --sidebar-accent: #2C2720;
+    --sidebar-accent-foreground: #ECE5D8;
+    --sidebar-border: #3A3328;
+    --sidebar-ring: #7BA088;
   }
-  
+
   * {
     @apply border-border outline-ring/50;
   }
@@ -133,5 +153,9 @@
   }
   html {
     @apply font-sans;
+  }
+  /* Serif headings everywhere (Dark Academia identity). Weight kept light per-screen. */
+  h1, h2, h3, h4 {
+    @apply font-heading;
   }
 }

@@ -27,7 +27,7 @@ export default function AppLayout() {
         <div className="container mx-auto flex h-14 items-center justify-between px-4">
           <div className="flex items-center gap-2">
             {user?.role === 'admin' && <SidebarTrigger />}
-            <div className="font-bold">myIU Lite</div>
+            <div className="font-heading text-lg tracking-tight">myIU Lite</div>
           </div>
           {user && (
             <div className="flex items-center gap-4">

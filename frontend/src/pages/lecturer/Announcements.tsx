@@ -5,9 +5,11 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { toast } from 'sonner';
 import { formatDistanceToNow } from 'date-fns';
+import { Info, History } from 'lucide-react';
 
 import { announcementsApi } from '@/lib/announcements-api';
 import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
@@ -30,6 +32,8 @@ const formSchema = z.object({
   message: 'Must select at least one student for specific audience',
   path: ['student_ids'],
 });
+
+const labelCaps = 'text-xs font-medium uppercase tracking-wider text-muted-foreground';
 
 export default function LecturerAnnouncements() {
   const { id } = useParams<{ id: string }>();
@@ -82,172 +86,183 @@ export default function LecturerAnnouncements() {
   };
 
   return (
-    <div className="max-w-4xl mx-auto p-8 space-y-8">
-      <div>
-        <h1 className="text-3xl font-bold mb-2">Announcements</h1>
-        <p className="text-muted-foreground">Send announcements and view your history.</p>
-      </div>
+    <div className="max-w-6xl mx-auto p-8 space-y-8">
+      {/* Page Header */}
+      <header className="border-b pb-6">
+        <h1 className="text-3xl font-normal tracking-tight">Announcements</h1>
+        <p className="text-muted-foreground mt-2">Send announcements and view your history.</p>
+      </header>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Compose Announcement</CardTitle>
-          <CardDescription>Announcements cannot be edited or deleted once sent.</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-              <FormField
-                control={form.control}
-                name="title"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Title</FormLabel>
-                    <FormControl>
-                      <Input placeholder="E.g., Midterm Exam Room Update" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                control={form.control}
-                name="body"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Body</FormLabel>
-                    <FormControl>
-                      <Textarea 
-                        className="flex min-h-[120px] w-full"
-                        placeholder="Type your announcement here..."
-                        {...field} 
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                control={form.control}
-                name="audience_type"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Audience</FormLabel>
-                    <Select onValueChange={field.onChange} defaultValue={field.value}>
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select audience" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        <SelectItem value="ALL_STUDENTS">All Enrolled Students</SelectItem>
-                        <SelectItem value="SPECIFIC_STUDENTS">Specific Students</SelectItem>
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              {audienceType === 'SPECIFIC_STUDENTS' && (
+      {/* Layout Grid */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+        {/* Compose Announcement */}
+        <Card className="lg:col-span-7">
+          <CardHeader>
+            <CardTitle className="text-2xl font-normal tracking-tight text-primary">Compose Announcement</CardTitle>
+            <CardDescription className="flex items-center gap-2 text-destructive">
+              <Info className="h-[18px] w-[18px]" strokeWidth={1.5} />
+              Announcements cannot be edited or deleted once sent.
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <Form {...form}>
+              <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
                 <FormField
                   control={form.control}
-                  name="student_ids"
-                  render={() => (
+                  name="title"
+                  render={({ field }) => (
                     <FormItem>
-                      <div className="mb-4">
-                        <FormLabel className="text-base">Select Students</FormLabel>
-                      </div>
-                      <div className="grid grid-cols-2 gap-4 border p-4 rounded-md max-h-[300px] overflow-y-auto">
-                        {loadingStudents ? (
-                          <Skeleton className="h-6 w-full" />
-                        ) : students.length === 0 ? (
-                          <div className="text-sm text-muted-foreground col-span-2">No students enrolled.</div>
-                        ) : (
-                          students.map((student) => (
-                            <FormField
-                              key={student.student_id}
-                              control={form.control}
-                              name="student_ids"
-                              render={({ field }) => {
-                                return (
-                                  <FormItem
-                                    key={student.student_id}
-                                    className="flex flex-row items-start space-x-3 space-y-0"
-                                  >
-                                    <FormControl>
-                                      <Checkbox
-                                        checked={field.value?.includes(student.student_id)}
-                                        onCheckedChange={(checked) => {
-                                          const current = field.value || [];
-                                          return checked
-                                            ? field.onChange([...current, student.student_id])
-                                            : field.onChange(
-                                                current.filter((val) => val !== student.student_id)
-                                              );
-                                        }}
-                                      />
-                                    </FormControl>
-                                    <FormLabel className="font-normal">
-                                      {student.full_name} ({student.username})
-                                    </FormLabel>
-                                  </FormItem>
-                                );
-                              }}
-                            />
-                          ))
-                        )}
-                      </div>
+                      <FormLabel className={labelCaps}>Title</FormLabel>
+                      <FormControl>
+                        <Input placeholder="E.g., Midterm Exam Room Update" {...field} />
+                      </FormControl>
                       <FormMessage />
                     </FormItem>
                   )}
                 />
-              )}
 
-              <Button type="submit" disabled={createMutation.isPending}>
-                {createMutation.isPending ? 'Sending...' : 'Send Announcement'}
-              </Button>
-            </form>
-          </Form>
-        </CardContent>
-      </Card>
+                <FormField
+                  control={form.control}
+                  name="body"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className={labelCaps}>Body</FormLabel>
+                      <FormControl>
+                        <Textarea
+                          className="flex min-h-[120px] w-full"
+                          placeholder="Type your announcement here..."
+                          {...field}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
 
-      <div>
-        <h2 className="text-2xl font-bold mb-4">Sent Announcements</h2>
-        {loadingAnnc ? (
-          <div className="space-y-4">
-            {[1, 2].map((i) => (
-              <Card key={i}>
-                <CardHeader><Skeleton className="h-6 w-1/3" /></CardHeader>
-                <CardContent><Skeleton className="h-4 w-full" /></CardContent>
-              </Card>
-            ))}
-          </div>
-        ) : announcements?.length === 0 ? (
-          <p className="text-muted-foreground">You haven't sent any announcements yet.</p>
-        ) : (
-          <div className="space-y-4">
-            {announcements?.map((a) => (
-              <Card key={a.id}>
-                <CardHeader>
-                  <CardTitle className="flex justify-between items-start">
-                    <span>{a.title}</span>
-                    <span className="text-sm font-normal text-muted-foreground">
-                      {formatDistanceToNow(new Date(a.created_at), { addSuffix: true })}
-                    </span>
-                  </CardTitle>
-                  <CardDescription>
-                    To: {a.audience_type === 'ALL_STUDENTS' ? 'All Students' : 'Specific Students'}
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <p className="whitespace-pre-wrap text-sm">{a.body}</p>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-        )}
+                <FormField
+                  control={form.control}
+                  name="audience_type"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className={labelCaps}>Audience</FormLabel>
+                      <Select onValueChange={field.onChange} defaultValue={field.value}>
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select audience" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          <SelectItem value="ALL_STUDENTS">All Enrolled Students</SelectItem>
+                          <SelectItem value="SPECIFIC_STUDENTS">Specific Students</SelectItem>
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                {audienceType === 'SPECIFIC_STUDENTS' && (
+                  <FormField
+                    control={form.control}
+                    name="student_ids"
+                    render={() => (
+                      <FormItem>
+                        <FormLabel className={labelCaps}>Select Students</FormLabel>
+                        <div className="border rounded-md p-4 max-h-[300px] overflow-y-auto bg-muted/30 space-y-3">
+                          {loadingStudents ? (
+                            <Skeleton className="h-6 w-full" />
+                          ) : students.length === 0 ? (
+                            <div className="text-sm text-muted-foreground">No students enrolled.</div>
+                          ) : (
+                            students.map((student) => (
+                              <FormField
+                                key={student.student_id}
+                                control={form.control}
+                                name="student_ids"
+                                render={({ field }) => {
+                                  return (
+                                    <FormItem
+                                      key={student.student_id}
+                                      className="flex flex-row items-center gap-3 space-y-0"
+                                    >
+                                      <FormControl>
+                                        <Checkbox
+                                          checked={field.value?.includes(student.student_id)}
+                                          onCheckedChange={(checked) => {
+                                            const current = field.value || [];
+                                            return checked
+                                              ? field.onChange([...current, student.student_id])
+                                              : field.onChange(
+                                                  current.filter((val) => val !== student.student_id)
+                                                );
+                                          }}
+                                        />
+                                      </FormControl>
+                                      <FormLabel className="flex flex-col gap-0.5 font-normal cursor-pointer">
+                                        <span className="text-sm text-foreground">{student.full_name}</span>
+                                        <span className="font-mono text-xs text-muted-foreground">{student.username}</span>
+                                      </FormLabel>
+                                    </FormItem>
+                                  );
+                                }}
+                              />
+                            ))
+                          )}
+                        </div>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                )}
+
+                <Button type="submit" className="w-full" disabled={createMutation.isPending}>
+                  {createMutation.isPending ? 'Sending...' : 'Send Announcement'}
+                </Button>
+              </form>
+            </Form>
+          </CardContent>
+        </Card>
+
+        {/* Sent Announcements */}
+        <section className="lg:col-span-5 space-y-6">
+          <h2 className="text-2xl font-normal tracking-tight flex items-center gap-3">
+            <History className="h-6 w-6 text-primary" strokeWidth={1.5} />
+            Sent Announcements
+          </h2>
+          {loadingAnnc ? (
+            <div className="space-y-4">
+              {[1, 2].map((i) => (
+                <Card key={i}>
+                  <CardHeader><Skeleton className="h-6 w-1/3" /></CardHeader>
+                  <CardContent><Skeleton className="h-4 w-full" /></CardContent>
+                </Card>
+              ))}
+            </div>
+          ) : announcements?.length === 0 ? (
+            <p className="text-muted-foreground">You haven't sent any announcements yet.</p>
+          ) : (
+            <div className="space-y-4">
+              {announcements?.map((a) => (
+                <Card key={a.id}>
+                  <CardContent className="p-6">
+                    <div className="flex justify-between items-start gap-3 mb-3">
+                      <span className="font-mono text-xs uppercase tracking-widest text-muted-foreground tabular-nums">
+                        {formatDistanceToNow(new Date(a.created_at), { addSuffix: true })}
+                      </span>
+                      <Badge variant="secondary" className="shrink-0">
+                        To: {a.audience_type === 'ALL_STUDENTS' ? 'All Students' : 'Specific Students'}
+                      </Badge>
+                    </div>
+                    <h3 className="text-xl font-normal tracking-tight text-primary mb-3">{a.title}</h3>
+                    <p className="whitespace-pre-wrap text-sm text-muted-foreground leading-relaxed border-l-2 pl-4">
+                      {a.body}
+                    </p>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          )}
+        </section>
       </div>
     </div>
   );

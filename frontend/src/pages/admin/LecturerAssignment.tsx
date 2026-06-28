@@ -2,6 +2,7 @@ import { useState, useRef } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { isAxiosError } from 'axios';
 import { toast } from 'sonner';
+import { Info, CircleCheck, CircleAlert, RefreshCw } from 'lucide-react';
 
 import { adminApi } from '@/lib/admin-api';
 import { Button } from '@/components/ui/button';
@@ -12,7 +13,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 export default function LecturerAssignment() {
   const queryClient = useQueryClient();
   const fileInputRef = useRef<HTMLInputElement>(null);
-  
+
   const [courseId, setCourseId] = useState<string>('');
   const [errors, setErrors] = useState<Array<{ row: number; field: string; message: string }>>([]);
 
@@ -54,18 +55,18 @@ export default function LecturerAssignment() {
   };
 
   return (
-    <div className="space-y-6">
-      <div>
-        <h2 className="text-2xl font-bold tracking-tight">Lecturer Assignment</h2>
+    <div className="max-w-3xl space-y-12">
+      <header className="space-y-2">
+        <h1 className="text-3xl font-normal tracking-tight text-foreground">Lecturer Assignment</h1>
         <p className="text-muted-foreground">Assign lecturers to active courses via CSV upload.</p>
-      </div>
+      </header>
 
-      <div className="flex flex-col sm:flex-row gap-4 sm:items-center">
+      <section className="flex flex-wrap items-center gap-6">
         {isLoading ? (
-          <Skeleton className="h-10 w-[280px]" />
+          <Skeleton className="h-12 w-[280px]" />
         ) : (
           <Select value={courseId} onValueChange={setCourseId}>
-            <SelectTrigger className="w-[280px]">
+            <SelectTrigger className="h-12 w-[280px]">
               <SelectValue placeholder="Select a course..." />
             </SelectTrigger>
             <SelectContent>
@@ -77,26 +78,47 @@ export default function LecturerAssignment() {
         )}
 
         <label className="cursor-pointer">
-          <Button render={<span />} disabled={importMutation.isPending || !courseId}>
+          <Button
+            variant="outline"
+            render={<span />}
+            className="h-12 px-8"
+            disabled={importMutation.isPending || !courseId}
+          >
             Import Lecturer CSV
           </Button>
           <input ref={fileInputRef} type="file" className="hidden" accept=".csv" onChange={onImportFile} disabled={!courseId} />
         </label>
-      </div>
+      </section>
 
-      <div className="rounded-md border p-4 bg-muted/50">
-        <h3 className="font-semibold mb-2">CSV Format Requirements</h3>
-        <ul className="list-disc pl-5 text-sm text-muted-foreground space-y-1">
-          <li>Must contain a column named <code>lecturer_id</code> in the header.</li>
-          <li>Each row must have a valid, active lecturer ID.</li>
-          <li>File will be rejected if ANY row contains an invalid ID or if there are duplicates in the file.</li>
-          <li>Already assigned lecturers in the file will be silently skipped (idempotent).</li>
+      <section className="rounded-lg border bg-card p-6 sm:p-8">
+        <h3 className="mb-6 text-2xl font-normal tracking-tight text-foreground">CSV Format Requirements</h3>
+        <ul className="list-none space-y-4 p-0 text-muted-foreground">
+          <li className="flex gap-4">
+            <Info className="mt-0.5 size-5 shrink-0 text-gold" strokeWidth={1.5} />
+            <span>
+              Must contain a column named{' '}
+              <code className="rounded border bg-background px-1.5 py-0.5 font-mono text-sm">lecturer_id</code>{' '}
+              in the header.
+            </span>
+          </li>
+          <li className="flex gap-4">
+            <CircleCheck className="mt-0.5 size-5 shrink-0 text-gold" strokeWidth={1.5} />
+            <span>Each row must have a valid, active lecturer ID.</span>
+          </li>
+          <li className="flex gap-4">
+            <CircleAlert className="mt-0.5 size-5 shrink-0 text-gold" strokeWidth={1.5} />
+            <span>File will be rejected if ANY row contains an invalid ID or if there are duplicates in the file.</span>
+          </li>
+          <li className="flex gap-4">
+            <RefreshCw className="mt-0.5 size-5 shrink-0 text-gold" strokeWidth={1.5} />
+            <span>Already assigned lecturers in the file will be silently skipped (idempotent).</span>
+          </li>
         </ul>
-      </div>
+      </section>
 
       {errors.length > 0 && (
-        <div className="space-y-4">
-          <div className="text-destructive font-medium border-l-4 border-destructive pl-4 py-1">
+        <section className="space-y-4">
+          <div className="border-l-4 border-destructive py-1 pl-4 font-medium text-destructive">
             Import failed. Please fix the following errors and try again. No lecturers were assigned.
           </div>
           <div className="rounded-md border border-destructive/50">
@@ -111,7 +133,7 @@ export default function LecturerAssignment() {
               <TableBody>
                 {errors.map((e, i) => (
                   <TableRow key={i}>
-                    <TableCell className="font-medium text-destructive">{e.row}</TableCell>
+                    <TableCell className="font-mono font-medium tabular-nums text-destructive">{e.row}</TableCell>
                     <TableCell className="text-destructive">{e.field}</TableCell>
                     <TableCell className="text-destructive">{e.message}</TableCell>
                   </TableRow>
@@ -119,7 +141,7 @@ export default function LecturerAssignment() {
               </TableBody>
             </Table>
           </div>
-        </div>
+        </section>
       )}
     </div>
   );

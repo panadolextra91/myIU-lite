@@ -5,9 +5,11 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useForm, useFieldArray } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
+import { Plus, Trash2 } from 'lucide-react';
 import { gradesApi } from '@/lib/grades-api';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Badge } from '@/components/ui/badge';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
@@ -127,34 +129,47 @@ export default function LecturerGradebook() {
   }
 
   return (
-    <div className="p-8 space-y-8">
-      <div className="flex justify-between items-center">
-        <h1 className="text-3xl font-bold">Gradebook</h1>
-        <div className="flex gap-4">
+    <div className="p-8 flex flex-col gap-12">
+      {/* Title Row */}
+      <div className="flex items-end justify-between">
+        <h1 className="font-heading text-4xl font-normal tracking-tight text-foreground">Gradebook</h1>
+        <div className="flex items-center gap-4">
           {scheme && (
-            <Button variant="destructive" onClick={() => deleteMutation.mutate()}>
+            <Button
+              variant="outline"
+              onClick={() => deleteMutation.mutate()}
+              className="h-11 border-destructive px-5 text-xs font-medium uppercase tracking-widest text-destructive hover:bg-destructive/10 hover:text-destructive"
+            >
+              <Trash2 strokeWidth={1.5} />
               Delete Scheme
             </Button>
           )}
           {!scheme && (
             <Dialog open={open} onOpenChange={setOpen}>
-              <DialogTrigger render={<Button />}>
+              <DialogTrigger
+                render={
+                  <Button className="h-11 px-5 text-xs font-medium uppercase tracking-widest" />
+                }
+              >
+                <Plus strokeWidth={1.5} />
                 Create Scheme
               </DialogTrigger>
-              <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+              <DialogContent className="max-h-[80vh] max-w-2xl overflow-y-auto">
                 <DialogHeader>
-                  <DialogTitle>Create Grade Scheme</DialogTitle>
+                  <DialogTitle className="font-heading text-2xl font-normal tracking-tight">
+                    Create Grade Scheme
+                  </DialogTitle>
                 </DialogHeader>
                 <Form {...form}>
                   <form onSubmit={form.handleSubmit((v) => createMutation.mutate(v))} className="space-y-4">
                     {fields.map((field, index) => (
-                      <div key={field.id} className="flex gap-2 items-end border p-2 rounded">
+                      <div key={field.id} className="flex items-end gap-2 rounded-lg border bg-muted/20 p-3">
                         <FormField
                           control={form.control}
                           name={`components.${index}.name`}
                           render={({ field }) => (
                             <FormItem className="flex-1">
-                              <FormLabel>Name</FormLabel>
+                              <FormLabel className="text-xs font-medium uppercase tracking-wider text-muted-foreground">Name</FormLabel>
                               <FormControl><Input {...field} /></FormControl>
                               <FormMessage />
                             </FormItem>
@@ -165,8 +180,8 @@ export default function LecturerGradebook() {
                           name={`components.${index}.weight`}
                           render={({ field }) => (
                             <FormItem className="w-20">
-                              <FormLabel>Weight</FormLabel>
-                              <FormControl><Input type="number" step="0.1" {...field} /></FormControl>
+                              <FormLabel className="text-xs font-medium uppercase tracking-wider text-muted-foreground">Weight</FormLabel>
+                              <FormControl><Input type="number" step="0.1" className="font-mono tabular-nums" {...field} /></FormControl>
                               <FormMessage />
                             </FormItem>
                           )}
@@ -176,7 +191,7 @@ export default function LecturerGradebook() {
                           name={`components.${index}.source_type`}
                           render={({ field }) => (
                             <FormItem className="w-28">
-                              <FormLabel>Source</FormLabel>
+                              <FormLabel className="text-xs font-medium uppercase tracking-wider text-muted-foreground">Source</FormLabel>
                               <Select onValueChange={field.onChange} defaultValue={field.value}>
                                 <FormControl>
                                   <SelectTrigger><SelectValue placeholder="Select" /></SelectTrigger>
@@ -196,7 +211,7 @@ export default function LecturerGradebook() {
                             name={`components.${index}.auto_kind`}
                             render={({ field }) => (
                               <FormItem className="w-40">
-                                <FormLabel>Auto Kind</FormLabel>
+                                <FormLabel className="text-xs font-medium uppercase tracking-wider text-muted-foreground">Auto Kind</FormLabel>
                                 <Select onValueChange={field.onChange} defaultValue={field.value}>
                                   <FormControl>
                                     <SelectTrigger><SelectValue placeholder="Select" /></SelectTrigger>
@@ -215,18 +230,21 @@ export default function LecturerGradebook() {
                           name={`components.${index}.parent_index`}
                           render={({ field }) => (
                             <FormItem className="w-24">
-                              <FormLabel>Parent Idx</FormLabel>
-                              <FormControl><Input type="number" {...field} value={field.value ?? ''} /></FormControl>
+                              <FormLabel className="text-xs font-medium uppercase tracking-wider text-muted-foreground">Parent Idx</FormLabel>
+                              <FormControl><Input type="number" className="font-mono tabular-nums" {...field} value={field.value ?? ''} /></FormControl>
                             </FormItem>
                           )}
                         />
-                        <Button type="button" variant="ghost" onClick={() => remove(index)}>X</Button>
+                        <Button type="button" variant="ghost" size="icon" onClick={() => remove(index)}>
+                          <Trash2 strokeWidth={1.5} />
+                        </Button>
                       </div>
                     ))}
                     <Button type="button" variant="secondary" onClick={() => append({ name: '', weight: 0, source_type: 'MANUAL', auto_kind: '' })}>
+                      <Plus strokeWidth={1.5} />
                       Add Component
                     </Button>
-                    <div className="pt-4 flex justify-end">
+                    <div className="flex justify-end pt-4">
                       <Button type="submit" disabled={createMutation.isPending}>Save Scheme</Button>
                     </div>
                   </form>
@@ -238,79 +256,102 @@ export default function LecturerGradebook() {
       </div>
 
       {scheme && (
-        <div className="space-y-6">
-          <div className="border rounded-lg p-4">
-            <h2 className="text-xl font-semibold mb-4">Scheme Structure</h2>
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Component</TableHead>
-                  <TableHead>Weight</TableHead>
-                  <TableHead>Source</TableHead>
-                  <TableHead>Actions</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {scheme.components.map(c => (
-                  <TableRow key={c.id}>
-                    <TableCell>{c.parent_id ? `— ${c.name}` : c.name}</TableCell>
-                    <TableCell>{c.weight}%</TableCell>
-                    <TableCell>{c.source_type || 'Composite'} {c.auto_kind ? `(${c.auto_kind})` : ''}</TableCell>
-                    <TableCell>
-                      <div className="flex items-center gap-2">
-                        {c.source_type === 'MANUAL' && (
-                          <Input
-                          type="file"
-                          accept=".csv"
-                          onChange={(e) => handleFileUpload(e, c.id)}
-                          disabled={uploadMutation.isPending}
-                        />
-                        )}
-                        {!c.parent_id && (
-                          <Button 
-                            variant="secondary" 
-                            size="sm"
-                            disabled={publishMutation.isPending}
-                            onClick={() => publishMutation.mutate(c.id)}
-                          >
-                            Publish
-                          </Button>
-                        )}
-                      </div>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </div>
-
-          {grades && grades.length > 0 && (
-            <div className="border rounded-lg p-4">
-              <h2 className="text-xl font-semibold mb-4">Live Overall Grades</h2>
+        <div className="flex flex-col gap-12">
+          {/* Section 1: Scheme Structure */}
+          <section className="rounded-lg border bg-card p-8">
+            <h2 className="mb-6 font-heading text-2xl font-normal tracking-tight text-foreground">Scheme Structure</h2>
+            <div className="overflow-x-auto">
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead>Student ID</TableHead>
-                    {scheme.components.filter(c => !c.parent_id).map(c => (
-                      <TableHead key={c.id}>{c.name}</TableHead>
-                    ))}
-                    <TableHead className="font-bold">Overall</TableHead>
+                    <TableHead>Component</TableHead>
+                    <TableHead className="text-right">Weight</TableHead>
+                    <TableHead>Source</TableHead>
+                    <TableHead className="text-right">Actions</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {grades.map(g => (
-                    <TableRow key={g.student_id}>
-                      <TableCell>{g.student_id}</TableCell>
-                      {scheme.components.filter(c => !c.parent_id).map(c => {
-                        const score = g.components.find(gc => gc.component_id === c.id)?.score || 0;
-                        return <TableCell key={c.id}>{score}</TableCell>;
-                      })}
-                      <TableCell className="font-bold text-lg">{g.overall}</TableCell>
+                  {scheme.components.map(c => (
+                    <TableRow key={c.id} className={c.parent_id ? 'bg-muted/20' : undefined}>
+                      <TableCell className={c.parent_id ? 'pl-8 italic text-muted-foreground' : 'font-medium text-foreground'}>
+                        {c.parent_id ? `— ${c.name}` : c.name}
+                      </TableCell>
+                      <TableCell className={`text-right font-mono tabular-nums ${c.parent_id ? 'text-muted-foreground' : ''}`}>{c.weight}%</TableCell>
+                      <TableCell>
+                        {c.parent_id ? (
+                          <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground/70">
+                            {c.source_type || 'Composite'} {c.auto_kind ? `(${c.auto_kind})` : ''}
+                          </span>
+                        ) : (
+                          <Badge variant="secondary" className="text-[11px] font-bold tracking-wider">
+                            {c.source_type || 'Composite'} {c.auto_kind ? `(${c.auto_kind})` : ''}
+                          </Badge>
+                        )}
+                      </TableCell>
+                      <TableCell className="text-right">
+                        <div className="flex items-center justify-end gap-3">
+                          {c.source_type === 'MANUAL' && (
+                            <Input
+                              type="file"
+                              accept=".csv"
+                              onChange={(e) => handleFileUpload(e, c.id)}
+                              disabled={uploadMutation.isPending}
+                              className="w-44"
+                            />
+                          )}
+                          {!c.parent_id && (
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              disabled={publishMutation.isPending}
+                              onClick={() => publishMutation.mutate(c.id)}
+                              className="border-primary text-xs uppercase tracking-wider text-primary hover:bg-primary hover:text-primary-foreground"
+                            >
+                              Publish
+                            </Button>
+                          )}
+                          {c.source_type !== 'MANUAL' && c.parent_id && (
+                            <span className="italic text-muted-foreground">—</span>
+                          )}
+                        </div>
+                      </TableCell>
                     </TableRow>
                   ))}
                 </TableBody>
               </Table>
             </div>
+          </section>
+
+          {/* Section 2: Live Overall Grades */}
+          {grades && grades.length > 0 && (
+            <section className="rounded-lg border bg-card p-8">
+              <h2 className="mb-6 font-heading text-2xl font-normal tracking-tight text-foreground">Live Overall Grades</h2>
+              <div className="overflow-x-auto">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Student ID</TableHead>
+                      {scheme.components.filter(c => !c.parent_id).map(c => (
+                        <TableHead key={c.id} className="text-right">{c.name}</TableHead>
+                      ))}
+                      <TableHead className="text-right text-primary">Overall</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {grades.map(g => (
+                      <TableRow key={g.student_id}>
+                        <TableCell className="font-mono tabular-nums text-muted-foreground">{g.student_id}</TableCell>
+                        {scheme.components.filter(c => !c.parent_id).map(c => {
+                          const score = g.components.find(gc => gc.component_id === c.id)?.score || 0;
+                          return <TableCell key={c.id} className="text-right font-mono tabular-nums">{score}</TableCell>;
+                        })}
+                        <TableCell className="text-right font-mono tabular-nums font-bold text-primary">{g.overall}</TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
+            </section>
           )}
         </div>
       )}
