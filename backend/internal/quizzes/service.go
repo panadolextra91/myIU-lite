@@ -45,6 +45,13 @@ func (s *Service) CreateQuiz(ctx context.Context, courseID int64, req CreateQuiz
 		return db.Quiz{}, ErrForbidden
 	}
 
+	// Block creating a quiz on a soft-deleted (archived) course — GetCourseByID
+	// filters `deleted_at IS NULL`. ponytail: the membership query above already
+	// confirmed the DB is reachable, so any error here means the course is gone.
+	if _, err := s.q.GetCourseByID(ctx, courseID); err != nil {
+		return db.Quiz{}, ErrForbidden
+	}
+
 	if req.MaxQuestions > req.PoolSize {
 		return db.Quiz{}, ErrPoolTooSmall
 	}

@@ -76,7 +76,30 @@ func (h *Handler) CreateQuiz(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusCreated, gin.H{"data": quiz})
+	c.JSON(http.StatusCreated, gin.H{"data": mapQuiz(quiz)})
+}
+
+func mapQuiz(q db.Quiz) QuizResponse {
+	var openAt, closeAt *time.Time
+	if q.OpenAt.Valid {
+		openAt = &q.OpenAt.Time
+	}
+	if q.CloseAt.Valid {
+		closeAt = &q.CloseAt.Time
+	}
+	maxGrade, _ := q.MaxGrade.Float64Value()
+	return QuizResponse{
+		ID:           q.ID,
+		Title:        q.Title,
+		PoolSize:     q.PoolSize.Int32,
+		MaxQuestions: q.MaxQuestions.Int32,
+		MaxGrade:     maxGrade.Float64,
+		Shuffle:      q.Shuffle.Bool,
+		RetakeCount:  q.RetakeCount.Int32,
+		OpenAt:       openAt,
+		CloseAt:      closeAt,
+		CreatedAt:    q.CreatedAt.Time,
+	}
 }
 
 func (h *Handler) ListQuizzes(c *gin.Context) {
@@ -100,29 +123,9 @@ func (h *Handler) ListQuizzes(c *gin.Context) {
 		return
 	}
 	
-	// Format the response array (simplified mapping)
 	res := make([]QuizResponse, len(quizzes))
 	for i, q := range quizzes {
-		var openAt, closeAt *time.Time
-		if q.OpenAt.Valid {
-			openAt = &q.OpenAt.Time
-		}
-		if q.CloseAt.Valid {
-			closeAt = &q.CloseAt.Time
-		}
-		maxGrade, _ := q.MaxGrade.Float64Value()
-		res[i] = QuizResponse{
-			ID:           q.ID,
-			Title:        q.Title,
-			PoolSize:     q.PoolSize.Int32,
-			MaxQuestions: q.MaxQuestions.Int32,
-			MaxGrade:     maxGrade.Float64,
-			Shuffle:      q.Shuffle.Bool,
-			RetakeCount:  q.RetakeCount.Int32,
-			OpenAt:       openAt,
-			CloseAt:      closeAt,
-			CreatedAt:    q.CreatedAt.Time,
-		}
+		res[i] = mapQuiz(q)
 	}
 
 	c.JSON(http.StatusOK, gin.H{"data": res})
