@@ -47,6 +47,13 @@ func (s *Service) CreateAssignment(ctx context.Context, courseID int64, req Crea
 		return db.Assignment{}, ErrForbidden
 	}
 
+	// Block creating coursework on a soft-deleted (archived) course — GetCourseByID
+	// filters `deleted_at IS NULL`. ponytail: the membership query above already
+	// confirmed the DB is reachable, so any error here means the course is gone.
+	if _, err := s.q.GetCourseByID(ctx, courseID); err != nil {
+		return db.Assignment{}, ErrForbidden
+	}
+
 	var threshold pgtype.Int4
 	if req.LateThresholdDays != nil {
 		threshold = pgtype.Int4{Int32: *req.LateThresholdDays, Valid: true}

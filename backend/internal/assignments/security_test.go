@@ -31,6 +31,18 @@ func TestSecurity_Assignments(t *testing.T) {
 	repo := assignments.NewRepository(db.New(pool))
 	service := assignments.NewService(pool, repo, nil) // cld not needed for these tests
 
+	t.Run("Soft-Deleted Course Blocks Assignment Creation", func(t *testing.T) {
+		f := testutil.SetupQuizzesFixture(t, ctx, pool)
+		// Archive the course, then the assigned lecturer must NOT be able to create coursework on it.
+		require.NoError(t, db.New(pool).SoftDeleteCourse(ctx, f.CourseID))
+		_, err := service.CreateAssignment(ctx, f.CourseID, assignments.CreateAssignmentRequest{
+			Title:    "Should be blocked",
+			Deadline: time.Now().Add(24 * time.Hour),
+			MaxScore: 100,
+		}, f.LecturerID)
+		assert.ErrorIs(t, err, assignments.ErrForbidden)
+	})
+
 	t.Run("Same-Tx Rollback - Grading Failure", func(t *testing.T) {
 		f := testutil.SetupQuizzesFixture(t, ctx, pool)
 		// We can reuse the same helper even though it creates quizzes

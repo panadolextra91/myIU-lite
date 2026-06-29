@@ -32,6 +32,19 @@ func TestSecurity_Quizzes(t *testing.T) {
 	repo := quizzes.NewRepository(db.New(pool))
 	service := quizzes.NewService(pool, repo)
 
+	t.Run("Soft-Deleted Course Blocks Quiz Creation", func(t *testing.T) {
+		f := testutil.SetupQuizzesFixture(t, ctx, pool)
+		require.NoError(t, db.New(pool).SoftDeleteCourse(ctx, f.CourseID))
+		_, err := service.CreateQuiz(ctx, f.CourseID, quizzes.CreateQuizRequest{
+			Title:        "Should be blocked",
+			PoolSize:     5,
+			MaxQuestions: 3,
+			MaxGrade:     100,
+			RetakeCount:  1,
+		}, f.LecturerID)
+		assert.ErrorIs(t, err, quizzes.ErrForbidden)
+	})
+
 	t.Run("Enrollment Authz - Student Not Enrolled", func(t *testing.T) {
 		f := testutil.SetupQuizzesFixture(t, ctx, pool)
 		// Mock another student not enrolled
