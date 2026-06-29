@@ -6,6 +6,19 @@ A lite student-management platform for a university. **myIU** gives three actors
 
 ---
 
+## Screenshots
+
+Redesigned in a **"Dark Academia"** visual language — editorial typography (Cormorant Garamond · Inter · JetBrains Mono), a warm paper/walnut palette, and first-class **light + dark** themes.
+
+| | |
+|---|---|
+| ![Login](docs/screenshots/login.png) | ![Role dashboard](docs/screenshots/dashboard.png) |
+| **Login** — forced first-login password change | **Role dashboard** — editorial table-of-contents landing |
+| ![Quizzes](docs/screenshots/quizzes.png) | ![Courses — dark mode](docs/screenshots/courses-dark.png) |
+| **Quizzes** — question-bank authoring & availability windows | **Courses (dark mode)** — admin sidebar + editorial data table |
+
+---
+
 ## Features
 
 | Area | What it does | Actors |
