@@ -30,3 +30,6 @@ backend/bin/
 *.dylib
 *.test
 *.out
+
+# Playwright MCP output (screenshots/snapshots)
+.playwright-mcp/

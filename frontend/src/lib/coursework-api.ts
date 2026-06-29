@@ -112,35 +112,35 @@ export interface SubmitAttemptResponse {
 
 export const courseworkApi = {
   listAssignments: async (courseId: number, role: 'student' | 'lecturer') => {
-    const res = await api.get<{ data: AssignmentResponse[] }>(`/${role}/courses/${courseId}/assignments`);
+    const res = await api.get<{ data: AssignmentResponse[] }>(`/api/${role}/courses/${courseId}/assignments`);
     return res.data.data;
   },
   createAssignment: async (courseId: number, body: CreateAssignmentRequest) => {
-    const res = await api.post<AssignmentResponse>(`/lecturer/courses/${courseId}/assignments`, body);
+    const res = await api.post<AssignmentResponse>(`/api/lecturer/courses/${courseId}/assignments`, body);
     return res.data;
   },
   listSubmissions: async (courseId: number, assignmentId: number) => {
-    const res = await api.get<{ data: SubmissionResponse[] }>(`/student/courses/${courseId}/assignments/${assignmentId}/submissions`);
+    const res = await api.get<{ data: SubmissionResponse[] }>(`/api/student/courses/${courseId}/assignments/${assignmentId}/submissions`);
     return res.data.data;
   },
   submitAssignment: async (courseId: number, assignmentId: number, file: File) => {
     const formData = new FormData();
     formData.append('file', file);
-    const res = await api.post<{ data: SubmissionResponse }>(`/student/courses/${courseId}/assignments/${assignmentId}/submissions`, formData, {
+    const res = await api.post<{ data: SubmissionResponse }>(`/api/student/courses/${courseId}/assignments/${assignmentId}/submissions`, formData, {
       headers: { 'Content-Type': 'multipart/form-data' },
     });
     return res.data.data;
   },
   getDownloadUrl: async (courseId: number, assignmentId: number, submissionId: number, role: 'student' | 'lecturer') => {
-    const res = await api.get<{ url: string }>(`/${role}/courses/${courseId}/assignments/${assignmentId}/submissions/${submissionId}/download-url`);
+    const res = await api.get<{ url: string }>(`/api/${role}/courses/${courseId}/assignments/${assignmentId}/submissions/${submissionId}/download-url`);
     return res.data.url;
   },
   gradeSubmission: async (courseId: number, assignmentId: number, submissionId: number, payload: { score: number; feedback?: string }) => {
-    const res = await api.post(`/lecturer/courses/${courseId}/assignments/${assignmentId}/submissions/${submissionId}/grade`, payload);
+    const res = await api.post(`/api/lecturer/courses/${courseId}/assignments/${assignmentId}/submissions/${submissionId}/grade`, payload);
     return res.data;
   },
   finalizeAssignmentGrading: async (courseId: number, assignmentId: number) => {
-    const res = await api.post<AssignmentResponse>(`/lecturer/courses/${courseId}/assignments/${assignmentId}/finalize`);
+    const res = await api.post<AssignmentResponse>(`/api/lecturer/courses/${courseId}/assignments/${assignmentId}/finalize`);
     return res.data;
   },
   listNotifications: async () => {
@@ -156,41 +156,41 @@ export const courseworkApi = {
     return res.data;
   },
   listQuizzes: async (courseId: number) => {
-    const res = await api.get<{ data: QuizResponse[] }>(`/lecturer/courses/${courseId}/quizzes`);
+    const res = await api.get<{ data: QuizResponse[] }>(`/api/lecturer/courses/${courseId}/quizzes`);
     return res.data.data;
   },
   createQuiz: async (courseId: number, req: CreateQuizRequest) => {
-    const res = await api.post<{ data: QuizResponse }>(`/lecturer/courses/${courseId}/quizzes`, req);
+    const res = await api.post<{ data: QuizResponse }>(`/api/lecturer/courses/${courseId}/quizzes`, req);
     return res.data.data;
   },
   importQuizCSV: async (courseId: number, quizId: number, file: File) => {
     const formData = new FormData();
     formData.append('file', file);
     const res = await api.post<{ status: string }>(
-      `/lecturer/courses/${courseId}/quizzes/${quizId}/questions/import`,
+      `/api/lecturer/courses/${courseId}/quizzes/${quizId}/questions/import`,
       formData,
       { headers: { 'Content-Type': 'multipart/form-data' } }
     );
     return res.data;
   },
   addUIQuestion: async (courseId: number, quizId: number, req: UIQuestionRequest) => {
-    const res = await api.post<{ status: string }>(`/lecturer/courses/${courseId}/quizzes/${quizId}/questions`, req);
+    const res = await api.post<{ status: string }>(`/api/lecturer/courses/${courseId}/quizzes/${quizId}/questions`, req);
     return res.data;
   },
   listStudentQuizzes: async (courseId: number) => {
-    const res = await api.get<{ data: QuizResponse[] }>(`/student/courses/${courseId}/quizzes`);
+    const res = await api.get<{ data: QuizResponse[] }>(`/api/student/courses/${courseId}/quizzes`);
     return res.data.data;
   },
   startAttempt: async (courseId: number, quizId: number) => {
-    const res = await api.post<{ data: StudentQuizAttemptView }>(`/student/courses/${courseId}/quizzes/${quizId}/attempts`);
+    const res = await api.post<{ data: StudentQuizAttemptView }>(`/api/student/courses/${courseId}/quizzes/${quizId}/attempts`);
     return res.data.data;
   },
   getAttempt: async (courseId: number, quizId: number, attemptId: number) => {
-    const res = await api.get<{ data: StudentQuizAttemptView }>(`/student/courses/${courseId}/quizzes/${quizId}/attempts/${attemptId}`);
+    const res = await api.get<{ data: StudentQuizAttemptView }>(`/api/student/courses/${courseId}/quizzes/${quizId}/attempts/${attemptId}`);
     return res.data.data;
   },
   submitAttempt: async (courseId: number, quizId: number, attemptId: number, answers: Record<number, number[]>) => {
-    const res = await api.post<{ data: SubmitAttemptResponse }>(`/student/courses/${courseId}/quizzes/${quizId}/attempts/${attemptId}/submit`, { answers });
+    const res = await api.post<{ data: SubmitAttemptResponse }>(`/api/student/courses/${courseId}/quizzes/${quizId}/attempts/${attemptId}/submit`, { answers });
     return res.data.data;
   },
 };
