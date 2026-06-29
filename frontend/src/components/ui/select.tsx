@@ -4,7 +4,38 @@ import { Select as SelectPrimitive } from "@base-ui/react/select"
 import { cn } from "@/lib/utils"
 import { ChevronDownIcon, CheckIcon, ChevronUpIcon } from "lucide-react"
 
-const Select = SelectPrimitive.Root
+// ponytail: base-ui's Select.Value renders the raw value unless Root gets an
+// `items` value→label map. Auto-derive that map by walking the <SelectItem>
+// children so every Select shows the label (not the value) with no per-usage
+// wiring. Explicit `items` still wins.
+function collectSelectItems(
+  node: React.ReactNode,
+  out: Record<string, React.ReactNode>
+) {
+  React.Children.forEach(node, (child) => {
+    if (!React.isValidElement(child)) return
+    const props = child.props as { value?: unknown; children?: React.ReactNode }
+    if (typeof props.value === "string") out[props.value] = props.children
+    if (props.children != null) collectSelectItems(props.children, out)
+  })
+}
+
+function Select({
+  items,
+  children,
+  ...props
+}: React.ComponentProps<typeof SelectPrimitive.Root>) {
+  const autoItems = React.useMemo(() => {
+    const out: Record<string, React.ReactNode> = {}
+    collectSelectItems(children, out)
+    return out
+  }, [children])
+  return (
+    <SelectPrimitive.Root items={items ?? autoItems} {...props}>
+      {children}
+    </SelectPrimitive.Root>
+  )
+}
 
 function SelectGroup({ className, ...props }: SelectPrimitive.Group.Props) {
   return (
