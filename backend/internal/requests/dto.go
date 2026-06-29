@@ -53,6 +53,24 @@ func mapToResponse(req db.Request) RequestResponse {
 	return res
 }
 
+type LecturerOption struct {
+	LecturerID int64  `json:"lecturer_id"`
+	Username   string `json:"username"`
+	FullName   string `json:"full_name"`
+}
+
+func mapLecturerOptions(rows []db.ListCourseLecturersRow) []LecturerOption {
+	out := make([]LecturerOption, 0, len(rows))
+	for _, r := range rows {
+		out = append(out, LecturerOption{
+			LecturerID: r.LecturerID,
+			Username:   r.Username,
+			FullName:   r.FullName.String,
+		})
+	}
+	return out
+}
+
 func errorEnvelope(code, message string) map[string]interface{} {
 	return map[string]interface{}{
 		"error": map[string]string{

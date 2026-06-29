@@ -179,5 +179,5 @@ func (h *Handler) ListCourseLecturers(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, gin.H{"data": lecturers})
+	c.JSON(http.StatusOK, gin.H{"data": mapLecturerOptions(lecturers)})
 }
