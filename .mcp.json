@@ -13,6 +13,10 @@
       "headers": {
         "X-Goog-Api-Key": "${STITCH_API_KEY}"
       }
+    },
+    "playwright": {
+      "command": "playwright-mcp",
+      "args": ["--headless"]
     }
   }
 }
